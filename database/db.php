@@ -1,4 +1,6 @@
 <?php
+session_start();
+
 $config = include(__DIR__ . '/../config/config.php');
 
 try {

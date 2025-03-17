@@ -33,7 +33,8 @@ if (!$product) {
             <p class="price"><?= number_format($product['price'], 2, '.', ''); ?> ₽</p>
             <p class="stock"><?= $product['stock'] > 0 ? 'В наличии' : 'Нет в наличии'; ?></p>
 
-            <button class="btn-cart">🛒 Добавить в корзину</button>
+            <button class="btn-cart" onclick="addToCart(<?= $product['id']; ?>)">🛒 Добавить в корзину</button>
+
             <button class="btn-fav">❤️ В избранное</button>
 
             <h3>Описание</h3>
@@ -50,6 +51,18 @@ if (!$product) {
 <script>
 function changeImage(img) {
     document.getElementById('mainImage').src = img.src;
+}
+
+function addToCart(productId) {
+    fetch('/mysterymakers/public/add_to_cart.php', {
+        method: 'POST',
+        body: new URLSearchParams({ id: productId }),
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert('Товар добавлен в корзину! Количество товаров: ' + data.cart_count);
+    });
 }
 </script>
 
