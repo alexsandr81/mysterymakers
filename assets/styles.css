@@ -44,3 +44,63 @@ footer {
     color: white;
     margin-top: 20px;
 }
+
+
+
+
+.product-page {
+    display: flex;
+    gap: 30px;
+    padding: 20px;
+}
+
+.gallery {
+    width: 40%;
+}
+
+.gallery img {
+    width: 100%;
+    border: 1px solid #ddd;
+}
+
+.thumbnails {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.thumbnails img {
+    width: 80px;
+    cursor: pointer;
+    border: 1px solid #ddd;
+}
+
+.details {
+    width: 50%;
+}
+
+.price {
+    font-size: 22px;
+    color: #e60000;
+}
+
+.stock {
+    color: green;
+    font-weight: bold;
+}
+
+.btn-cart, .btn-fav {
+    display: block;
+    width: 200px;
+    margin: 10px 0;
+    padding: 10px;
+    text-align: center;
+    background: #ff6600;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-fav {
+    background: #cc0000;
+}
