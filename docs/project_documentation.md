@@ -179,3 +179,8 @@ session_start() теперь вызывается корректно
 ✔ Выход из админки (logout.php)
 ✔ Стилизация админки (styles.css)
 Исправляем стили в admin/login.php
+
+✔ Список товаров (products.php)
+✔ Добавление товара (add_product.php)
+✔ Редактирование товара (edit_product.php)
+✔ Удаление товара (delete_product.php)
