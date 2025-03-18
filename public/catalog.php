@@ -37,7 +37,7 @@
             $query .= " ORDER BY price DESC";
         }
 
-        $stmt = $pdo->prepare($query);
+        $stmt = $conn->prepare($query);
 
         if ($category) {
             $stmt->bindParam(':category', $category);

@@ -33,7 +33,7 @@ $total_price = 0;
 $order_number = 'MM' . time() . rand(100, 999);
 
 // Создаём заказ в таблице `orders`
-$stmt = $pdo->prepare("INSERT INTO orders (user_id, order_number, total_price, status, name, phone, email, delivery, payment) 
+$stmt = $conn->prepare("INSERT INTO orders (user_id, order_number, total_price, status, name, phone, email, delivery, payment) 
 VALUES (:user_id, :order_number, :total_price, 'Новый', :name, :phone, :email, :delivery, :payment)");
 $stmt->execute([
     ':user_id' => $user_id,
@@ -46,12 +46,12 @@ $stmt->execute([
     ':payment' => $payment
 ]);
 
-$order_id = $pdo->lastInsertId(); // Получаем ID заказа
+$order_id = $conn->lastInsertId(); // Получаем ID заказа
 
 // Добавляем товары в `order_items`
 foreach ($_SESSION['cart'] as $product_id => $quantity) {
     // Получаем цену товара
-    $stmt = $pdo->prepare("SELECT price FROM products WHERE id = :product_id");
+    $stmt = $conn->prepare("SELECT price FROM products WHERE id = :product_id");
     $stmt->execute([':product_id' => $product_id]);
     $product = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -60,7 +60,7 @@ foreach ($_SESSION['cart'] as $product_id => $quantity) {
         $total_price += $quantity * $price;
 
         // Записываем товар в заказ
-        $stmt = $pdo->prepare("INSERT INTO order_items (order_id, product_id, quantity, price) 
+        $stmt = $conn->prepare("INSERT INTO order_items (order_id, product_id, quantity, price) 
         VALUES (:order_id, :product_id, :quantity, :price)");
         $stmt->execute([
             ':order_id' => $order_id,
@@ -72,7 +72,7 @@ foreach ($_SESSION['cart'] as $product_id => $quantity) {
 }
 
 // Обновляем общую сумму заказа
-$stmt = $pdo->prepare("UPDATE orders SET total_price = :total_price WHERE id = :order_id");
+$stmt = $conn->prepare("UPDATE orders SET total_price = :total_price WHERE id = :order_id");
 $stmt->execute([
     ':total_price' => $total_price,
     ':order_id' => $order_id

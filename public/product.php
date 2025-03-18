@@ -6,7 +6,7 @@
 $id = $_GET['id'] ?? 0;
 
 // Загружаем информацию о товаре
-$stmt = $pdo->prepare("SELECT * FROM products WHERE id = :id");
+$stmt = $conn->prepare("SELECT * FROM products WHERE id = :id");
 $stmt->execute(['id' => $id]);
 $product = $stmt->fetch(PDO::FETCH_ASSOC);
 

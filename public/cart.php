@@ -19,7 +19,7 @@ $cart = $_SESSION['cart'] ?? [];
         <?php
         // Получаем товары из БД, если корзина не пуста
         $ids = implode(',', array_keys($cart));
-        $stmt = $pdo->query("SELECT * FROM products WHERE id IN ($ids)");
+        $stmt = $conn->query("SELECT * FROM products WHERE id IN ($ids)");
         $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
         ?>
 

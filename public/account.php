@@ -19,12 +19,12 @@ $user_name = htmlspecialchars($_SESSION['user_name'], ENT_QUOTES, 'UTF-8');
 // echo "<p>Ваш user_id: " . $user_id . "</p>";
 
 // Проверяем, что подключение к БД работает
-if (!$pdo) {
+if (!$conn) {
     die("Ошибка подключения к базе данных.");
 }
 
 // Проверяем, есть ли заказы у текущего пользователя
-$stmt = $pdo->prepare("SELECT order_number, total_price, status, created_at FROM orders WHERE user_id = ? ORDER BY created_at DESC");
+$stmt = $conn->prepare("SELECT order_number, total_price, status, created_at FROM orders WHERE user_id = ? ORDER BY created_at DESC");
 $stmt->execute([$user_id]);
 $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
