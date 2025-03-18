@@ -1,4 +1,5 @@
 <?php
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -6,14 +7,14 @@ if (session_status() === PHP_SESSION_NONE) {
 // Загружаем конфиг
 $configPath = __DIR__ . '/../config/config.php';
 if (!file_exists($configPath)) {
-    die("Ошибка: отсутствует файл конфигурации.");
+    die("❌ Ошибка: отсутствует файл конфигурации '$configPath'.");
 }
 
-$config = include($configPath);
+$config = include $configPath;
 
-// Проверяем, задано ли имя БД
-if (empty($config['db_name'])) {
-    die("Ошибка: имя базы данных не задано.");
+// Проверяем, что конфиг загружен корректно и содержит нужные параметры
+if (!isset($config['db_host'], $config['db_name'], $config['db_user'], $config['db_pass'])) {
+    die("❌ Ошибка: Конфигурация базы данных некорректна.");
 }
 
 try {
@@ -27,6 +28,5 @@ try {
         ]
     );
 } catch (PDOException $e) {
-    die("Ошибка подключения к базе данных: " . $e->getMessage());
+    die("❌ Ошибка подключения к базе данных: " . $e->getMessage());
 }
-?>

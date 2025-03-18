@@ -1,6 +1,6 @@
 <?php 
 include 'header.php'; 
-include '../database/db.php';
+require_once '../database/db.php'; // Проверяем, что путь верный!
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -15,8 +15,16 @@ if (!isset($_SESSION['user_id'])) {
 $user_id = $_SESSION['user_id'];
 $user_name = htmlspecialchars($_SESSION['user_name'], ENT_QUOTES, 'UTF-8');
 
-// Подготовленный запрос на получение заказов пользователя
-$stmt = $pdo->prepare("SELECT id, total_price, created_at FROM orders WHERE user_id = ? ORDER BY created_at DESC");
+// Выводим user_id для отладки
+// echo "<p>Ваш user_id: " . $user_id . "</p>";
+
+// Проверяем, что подключение к БД работает
+if (!$pdo) {
+    die("Ошибка подключения к базе данных.");
+}
+
+// Проверяем, есть ли заказы у текущего пользователя
+$stmt = $pdo->prepare("SELECT order_number, total_price, status, created_at FROM orders WHERE user_id = ? ORDER BY created_at DESC");
 $stmt->execute([$user_id]);
 $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
@@ -27,28 +35,27 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     <h2>История заказов</h2>
 
-    <?php if (!empty($orders)): ?>
-        <table class="order-history">
-            <thead>
+    <table border="1">
+        <tr>
+            <th>Номер заказа</th>
+            <th>Сумма</th>
+            <th>Статус</th>
+            <th>Дата</th>
+        </tr>
+
+        <?php if (!empty($orders)): ?>
+            <?php foreach ($orders as $order): ?>
                 <tr>
-                    <th>Номер заказа</th>
-                    <th>Сумма</th>
-                    <th>Дата</th>
+                    <td><?= htmlspecialchars($order['order_number']); ?></td>
+                    <td><?= htmlspecialchars($order['total_price']); ?> грн</td>
+                    <td><?= htmlspecialchars($order['status']); ?></td>
+                    <td><?= htmlspecialchars($order['created_at']); ?></td>
                 </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($orders as $order): ?>
-                    <tr>
-                        <td>#<?= htmlspecialchars($order['id']); ?></td>
-                        <td><?= number_format($order['total_price'], 2, '.', ''); ?> ₽</td>
-                        <td><?= date("d.m.Y H:i", strtotime($order['created_at'])); ?></td>
-                    </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
-    <?php else: ?>
-        <p>Вы ещё не совершали покупок.</p>
-    <?php endif; ?>
+            <?php endforeach; ?>
+        <?php else: ?>
+            <tr><td colspan="4">У вас пока нет заказов.</td></tr>
+        <?php endif; ?>
+    </table>
 
     <a href="logout.php" class="logout-btn">Выйти</a>
 </main>
