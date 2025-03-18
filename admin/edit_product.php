@@ -32,6 +32,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $stmt->execute([$name, $description, $price, $category, $stock, $id]);
 
     header("Location: products.php");
+    require_once 'log_helper.php';
+log_admin_action($_SESSION['admin_id'], "Изменил товар ID: $id");
     exit();
 }
 ?>
