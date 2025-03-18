@@ -30,24 +30,33 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     foreach ($_FILES['images']['tmp_name'] as $key => $tmp_name) {
         if ($_FILES['images']['size'][$key] > 0) {
-            $file_ext = pathinfo($_FILES['images']['name'][$key], PATHINFO_EXTENSION);
+            // Проверяем MIME-тип файла
+            $file_info = getimagesize($tmp_name);
+            if (!$file_info) {
+                die("Файл {$_FILES['images']['name'][$key]} не является изображением.");
+            }
+
+            $file_ext = strtolower(pathinfo($_FILES['images']['name'][$key], PATHINFO_EXTENSION));
             $allowed_ext = ['jpg', 'jpeg', 'png', 'gif'];
 
-            if (!in_array(strtolower($file_ext), $allowed_ext)) {
+            if (!in_array($file_ext, $allowed_ext)) {
                 die("Недопустимый формат файла: {$_FILES['images']['name'][$key]}");
             }
 
-            $file_name = time() . "_" . uniqid() . "." . $file_ext;
+            // Хешируем имя файла
+            $file_name = md5(uniqid(rand(), true)) . "." . $file_ext;
             $file_path = $upload_dir . $file_name;
 
             if (move_uploaded_file($tmp_name, $file_path)) {
                 $image_paths[] = 'assets/products/' . $file_name; // Путь для хранения в БД
+            } else {
+                die("Ошибка загрузки файла: {$_FILES['images']['name'][$key]}");
             }
         }
     }
 
     // Сохраняем изображения в JSON-формате
-    $images_json = json_encode($image_paths, JSON_UNESCAPED_SLASHES);
+    $images_json = json_encode($image_paths, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
 
     // Добавляем товар в базу данных
     $stmt = $conn->prepare("INSERT INTO products (name, description, price, category, stock, images) VALUES (?, ?, ?, ?, ?, ?)");

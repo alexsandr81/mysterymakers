@@ -30,16 +30,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (!empty($_FILES['images']['name'][0])) {
         $image_paths = [];
         $upload_dir = '../assets/products/';
-
+    
         foreach ($_FILES['images']['tmp_name'] as $key => $tmp_name) {
             if ($_FILES['images']['size'][$key] > 0) {
-                $file_name = time() . "_" . basename($_FILES['images']['name'][$key]);
+                $extension = pathinfo($_FILES['images']['name'][$key], PATHINFO_EXTENSION);
+                $file_name = md5(uniqid(rand(), true)) . '.' . $extension;
                 $file_path = $upload_dir . $file_name;
                 move_uploaded_file($tmp_name, $file_path);
                 $image_paths[] = str_replace('../', '', $file_path);
             }
         }
-
+    
         $images_json = json_encode($image_paths);
     } else {
         $images_json = $product['images'];
