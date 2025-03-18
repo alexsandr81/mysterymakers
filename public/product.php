@@ -15,30 +15,37 @@ if (!$product) {
     include 'footer.php';
     exit;
 }
+
+// Получаем изображения товара
+$images = json_decode($product['images'], true) ?? [];
+$images = array_map(fn($img) => str_replace('\\', '/', $img), $images);
 ?>
 
 <main>
     <div class="product-page">
         <div class="gallery">
-            <img id="mainImage" src="/mysterymakers/assets/<?= $product['image']; ?>" alt="<?= $product['name']; ?>">
-            <div class="thumbnails">
-                <img src="/mysterymakers/assets/<?= $product['image']; ?>" onclick="changeImage(this)">
-                <img src="/mysterymakers/assets/sample1.jpg" onclick="changeImage(this)">
-                <img src="/mysterymakers/assets/sample2.jpg" onclick="changeImage(this)">
-            </div>
+            <?php if (!empty($images)): ?>
+                <img id="mainImage" src="/mysterymakers/<?= htmlspecialchars($images[0]); ?>" alt="<?= htmlspecialchars($product['name']); ?>">
+                <div class="thumbnails">
+                    <?php foreach ($images as $img): ?>
+                        <img src="/mysterymakers/<?= htmlspecialchars($img); ?>" alt="<?= htmlspecialchars($product['name']); ?>" onclick="changeImage(this)">
+                    <?php endforeach; ?>
+                </div>
+            <?php else: ?>
+                <p>Изображения отсутствуют</p>
+            <?php endif; ?>
         </div>
 
         <div class="details">
-            <h1><?= $product['name']; ?></h1>
+            <h1><?= htmlspecialchars($product['name']); ?></h1>
             <p class="price"><?= number_format($product['price'], 2, '.', ''); ?> ₽</p>
             <p class="stock"><?= $product['stock'] > 0 ? 'В наличии' : 'Нет в наличии'; ?></p>
 
             <button class="btn-cart" onclick="addToCart(<?= $product['id']; ?>)">🛒 Добавить в корзину</button>
-
             <button class="btn-fav">❤️ В избранное</button>
 
             <h3>Описание</h3>
-            <p><?= $product['description']; ?></p>
+            <p><?= nl2br(htmlspecialchars($product['description'])); ?></p>
 
             <h3>Отзывы</h3>
             <div class="reviews">

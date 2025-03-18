@@ -2,16 +2,13 @@
 session_start();
 require_once '../database/db.php';
 
-// Проверяем, авторизован ли админ
 if (!isset($_SESSION['admin_id'])) {
     header("Location: login.php");
     exit();
 }
 
-// Получаем ID товара
 $id = $_GET['id'] ?? 0;
 
-// Загружаем товар из базы
 $stmt = $conn->prepare("SELECT * FROM products WHERE id = ?");
 $stmt->execute([$id]);
 $product = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -20,7 +17,8 @@ if (!$product) {
     die("Товар не найден!");
 }
 
-// Обрабатываем обновление товара
+$current_images = json_decode($product['images'], true) ?? [];
+
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $name = trim($_POST['name']);
     $description = trim($_POST['description']);
@@ -28,12 +26,29 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $category = trim($_POST['category']);
     $stock = intval($_POST['stock']);
 
-    $stmt = $conn->prepare("UPDATE products SET name=?, description=?, price=?, category=?, stock=? WHERE id=?");
-    $stmt->execute([$name, $description, $price, $category, $stock, $id]);
+    // Обновляем изображения (если загружены новые)
+    if (!empty($_FILES['images']['name'][0])) {
+        $image_paths = [];
+        $upload_dir = '../assets/products/';
+
+        foreach ($_FILES['images']['tmp_name'] as $key => $tmp_name) {
+            if ($_FILES['images']['size'][$key] > 0) {
+                $file_name = time() . "_" . basename($_FILES['images']['name'][$key]);
+                $file_path = $upload_dir . $file_name;
+                move_uploaded_file($tmp_name, $file_path);
+                $image_paths[] = str_replace('../', '', $file_path);
+            }
+        }
+
+        $images_json = json_encode($image_paths);
+    } else {
+        $images_json = $product['images'];
+    }
+
+    $stmt = $conn->prepare("UPDATE products SET name=?, description=?, price=?, category=?, stock=?, images=? WHERE id=?");
+    $stmt->execute([$name, $description, $price, $category, $stock, $images_json, $id]);
 
     header("Location: products.php");
-    require_once 'log_helper.php';
-log_admin_action($_SESSION['admin_id'], "Изменил товар ID: $id");
     exit();
 }
 ?>
@@ -49,7 +64,7 @@ log_admin_action($_SESSION['admin_id'], "Изменил товар ID: $id");
 
 <h2>Редактировать товар</h2>
 
-<form method="POST">
+<form method="POST" enctype="multipart/form-data">
     <label>Название:</label>
     <input type="text" name="name" value="<?= htmlspecialchars($product['name']); ?>" required><br><br>
 
@@ -64,6 +79,14 @@ log_admin_action($_SESSION['admin_id'], "Изменил товар ID: $id");
 
     <label>Количество:</label>
     <input type="number" name="stock" value="<?= $product['stock']; ?>" required><br><br>
+
+    <label>Текущие изображения:</label><br>
+    <?php foreach ($current_images as $img): ?>
+        <img src="/mysterymakers/<?= $img; ?>" width="100"><br>
+    <?php endforeach; ?>
+
+    <label>Новые изображения (заменят текущие):</label>
+    <input type="file" name="images[]" multiple accept="image/*"><br><br>
 
     <button type="submit">Сохранить</button>
 </form>
