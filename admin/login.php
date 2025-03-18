@@ -24,13 +24,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Вход в админку</title>
+    <link rel="stylesheet" href="styles.css"> <!-- Подключаем стили -->
 </head>
 <body>
 
 <h2>Админ-панель – Вход</h2>
 
-<?php if (isset($error)) echo "<p style='color:red;'>$error</p>"; ?>
+<?php if (isset($error)) echo "<p class='error'>$error</p>"; ?>
 
 <form method="POST">
     <label>Email:</label>
@@ -44,3 +46,4 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
 </body>
 </html>
+
