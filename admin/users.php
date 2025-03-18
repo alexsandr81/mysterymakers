@@ -2,14 +2,38 @@
 session_start();
 require_once '../database/db.php';
 
-// Проверяем, авторизован ли админ
 if (!isset($_SESSION['admin_id'])) {
     header("Location: login.php");
     exit();
 }
 
-// Получаем список пользователей
-$stmt = $conn->query("SELECT * FROM users ORDER BY created_at DESC");
+// Фильтры
+$status_filter = $_GET['status'] ?? '';
+$date_filter = $_GET['date'] ?? '';
+
+$query = "SELECT * FROM users WHERE 1";
+
+if ($status_filter) {
+    $query .= " AND status = :status";
+}
+
+if ($date_filter) {
+    $query .= " AND created_at >= :date";
+}
+
+$query .= " ORDER BY created_at DESC";
+
+$stmt = $conn->prepare($query);
+
+if ($status_filter) {
+    $stmt->bindParam(':status', $status_filter);
+}
+
+if ($date_filter) {
+    $stmt->bindParam(':date', $date_filter);
+}
+
+$stmt->execute();
 $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
@@ -23,6 +47,21 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <body>
 
 <h2>Пользователи</h2>
+
+<!-- Фильтры -->
+<form method="GET">
+    <label>Фильтр по статусу:</label>
+    <select name="status">
+        <option value="">Все</option>
+        <option value="active" <?= $status_filter == 'active' ? 'selected' : ''; ?>>Активные</option>
+        <option value="blocked" <?= $status_filter == 'blocked' ? 'selected' : ''; ?>>Заблокированные</option>
+    </select>
+
+    <label>Дата регистрации с:</label>
+    <input type="date" name="date" value="<?= $date_filter; ?>">
+
+    <button type="submit">Фильтровать</button>
+</form>
 
 <table border="1">
     <tr>
