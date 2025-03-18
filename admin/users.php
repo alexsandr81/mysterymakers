@@ -42,7 +42,7 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <head>
     <meta charset="UTF-8">
     <title>Управление пользователями</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="/mysterymakers/admin/styles.css">
 </head>
 <body>
 

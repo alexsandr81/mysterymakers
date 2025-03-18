@@ -49,17 +49,17 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         <td><?= number_format($order['total_price'], 2, '.', ''); ?> ₽</td>
         <td>
-            <form method="POST" action="update_order_status.php">
-                <input type="hidden" name="order_id" value="<?= $order['id']; ?>">
-                <select name="status" onchange="this.form.submit()">
-                    <option value="Новый" <?= $order['status'] == 'Новый' ? 'selected' : ''; ?>>Новый</option>
-                    <option value="В обработке" <?= $order['status'] == 'В обработке' ? 'selected' : ''; ?>>В обработке</option>
-                    <option value="Отправлен" <?= $order['status'] == 'Отправлен' ? 'selected' : ''; ?>>Отправлен</option>
-                    <option value="Доставлен" <?= $order['status'] == 'Доставлен' ? 'selected' : ''; ?>>Доставлен</option>
-                    <option value="Отменён" <?= $order['status'] == 'Отменён' ? 'selected' : ''; ?>>Отменён</option>
-                </select>
-            </form>
-        </td>
+    <form method="POST" action="update_order_status.php">
+        <input type="hidden" name="order_id" value="<?= $order['id']; ?>">
+        <select name="status" class="status-<?= strtolower(str_replace(' ', '-', $order['status'])); ?>" onchange="this.form.submit()">
+            <option value="Новый" <?= $order['status'] == 'Новый' ? 'selected' : ''; ?>>Новый</option>
+            <option value="В обработке" <?= $order['status'] == 'В обработке' ? 'selected' : ''; ?>>В обработке</option>
+            <option value="Отправлен" <?= $order['status'] == 'Отправлен' ? 'selected' : ''; ?>>Отправлен</option>
+            <option value="Доставлен" <?= $order['status'] == 'Доставлен' ? 'selected' : ''; ?>>Доставлен</option>
+            <option value="Отменён" <?= $order['status'] == 'Отменён' ? 'selected' : ''; ?>>Отменён</option>
+        </select>
+    </form>
+</td>
         <td><?= $order['created_at']; ?></td>
         <td><a href="order_details.php?id=<?= $order['id']; ?>">📄 Подробнее</a></td>
     </tr>
