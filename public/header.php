@@ -39,6 +39,7 @@ if (session_status() === PHP_SESSION_NONE) {
     </div>
     
     <div class="icons">
+    <a href="#">❤️</a>
         <a href="/mysterymakers/public/cart.php">🛒</a>
         <?php if (!empty($_SESSION['user_id'])): ?>
             <a href="/mysterymakers/public/account.php">👤 <?= htmlspecialchars($_SESSION['user_name'] ?? 'Профиль'); ?></a>
