@@ -80,6 +80,10 @@ if (!empty($sort_options)) {
 } else {
     $query .= " ORDER BY p.created_at DESC"; // По умолчанию - сортировка по дате
 }
+if (isset($_GET['status']) && $_GET['status'] !== '') {
+    $query .= " AND p.status = ?";
+    $params[] = $_GET['status'];
+}
 
 $stmt = $conn->prepare($query);
 $stmt->execute($params);
@@ -199,6 +203,16 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <option value="DESC" <?= ($date_sort == 'DESC') ? 'selected' : ''; ?>>Новые сначала</option>
             </select>
         </th>
+        <th>
+    Статус<br>
+    <select name="status" onchange="filterProducts()">
+        <option value="">Все</option>
+        <option value="1" <?= (isset($_GET['status']) && $_GET['status'] === "1") ? 'selected' : ''; ?>>Активные</option>
+        <option value="0" <?= (isset($_GET['status']) && $_GET['status'] === "0") ? 'selected' : ''; ?>>Скрытые</option>
+    </select>
+</th>
+
+
         <th>Действия</th>
     </tr>
 
@@ -227,6 +241,12 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </td>
         <td><?= $product['created_at']; ?></td>
         <td>
+    <?= ($product['status'] == 1) ? '✅ Активен' : '❌ Скрыт'; ?>
+</td>
+        <td>
+        <button onclick="toggleStatus(<?= $product['id']; ?>)">
+        <?= ($product['status'] == 1) ? '🔽 Скрыть' : '🔼 Показать'; ?>
+    </button>
             <a href="edit_product.php?id=<?= $product['id']; ?>">✏ Редактировать</a>
             <a href="delete_product.php?id=<?= $product['id']; ?>" onclick="return confirm('Удалить товар?');">🗑 Удалить</a>
         </td>
@@ -243,6 +263,15 @@ function filterProducts() {
     });
 
     window.location.search = params.toString();
+}
+function toggleStatus(productId) {
+    fetch('toggle_product_status.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'id=' + productId
+    }).then(response => response.text())
+      .then(data => location.reload())
+      .catch(error => console.error('Ошибка:', error));
 }
 </script>
 
