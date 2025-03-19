@@ -49,6 +49,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['name'])) {
         <td><?= $material['id']; ?></td>
         <td><?= htmlspecialchars($material['name']); ?></td>
         <td>
+        <a href="edit_material.php?id=<?= $material['id']; ?>">✏ Редактировать</a> | 
             <a href="delete_material.php?id=<?= $material['id']; ?>" onclick="return confirm('Удалить материал?');">🗑 Удалить</a>
         </td>
     </tr>

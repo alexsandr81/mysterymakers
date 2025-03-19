@@ -48,6 +48,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['name'])) {
         <td><?= $cat['id']; ?></td>
         <td><?= htmlspecialchars($cat['name']); ?></td>
         <td>
+        <a href="edit_category.php?id=<?= $cat['id']; ?>">✏ Редактировать</a> | 
             <a href="delete_category.php?id=<?= $cat['id']; ?>" onclick="return confirm('Удалить категорию?');">🗑 Удалить</a>
         </td>
     </tr>

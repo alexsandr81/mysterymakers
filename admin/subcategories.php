@@ -65,6 +65,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['name'], $_POST['categ
         <td><?= htmlspecialchars($sub['category_name']); ?></td>
         <td><?= htmlspecialchars($sub['name']); ?></td>
         <td>
+        <a href="edit_subcategory.php?id=<?= $sub['id']; ?>">✏ Редактировать</a> | 
             <a href="delete_subcategory.php?id=<?= $sub['id']; ?>" onclick="return confirm('Удалить подкатегорию?');">🗑 Удалить</a>
         </td>
     </tr>

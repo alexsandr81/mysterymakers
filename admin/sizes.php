@@ -48,6 +48,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['name'])) {
         <td><?= $size['id']; ?></td>
         <td><?= htmlspecialchars($size['name']); ?></td>
         <td>
+        <a href="edit_size.php?id=<?= $size['id']; ?>">✏ Редактировать</a> |
             <a href="delete_size.php?id=<?= $size['id']; ?>" onclick="return confirm('Удалить?');">🗑 Удалить</a>
         </td>
     </tr>
