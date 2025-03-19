@@ -10,7 +10,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $stmt->execute([$email]);
     $admin = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if ($admin && $password === $admin['password']) { // Позже заменим на password_verify()
+    if ($admin && password_verify($password, $admin['password'])) {
         $_SESSION['admin_id'] = $admin['id'];
         header("Location: index.php");
         exit();
