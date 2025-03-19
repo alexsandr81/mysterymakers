@@ -2,13 +2,11 @@
 session_start();
 require_once '../database/db.php';
 
-// Проверяем, авторизован ли админ
 if (!isset($_SESSION['admin_id'])) {
     header("Location: login.php");
     exit();
 }
 
-// Получаем ID товара
 $id = $_GET['id'] ?? 0;
 $stmt = $conn->prepare("SELECT * FROM products WHERE id = ?");
 $stmt->execute([$id]);
@@ -18,13 +16,13 @@ if (!$product) {
     die("Товар не найден!");
 }
 
-// Получаем списки категорий, подкатегорий, размеров и материалов
 $categories = $conn->query("SELECT * FROM categories ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
 $subcategories = $conn->query("SELECT * FROM subcategories ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
 $sizes = $conn->query("SELECT * FROM sizes ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
 $materials = $conn->query("SELECT * FROM materials ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
 
-// Обрабатываем обновление товара
+$current_images = json_decode($product['images'], true) ?? [];
+
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $name = trim($_POST['name']);
     $description = trim($_POST['description']);
@@ -36,18 +34,49 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $sku = trim($_POST['sku']);
     $stock = intval($_POST['stock']);
 
-    // Обновляем данные в БД
-    $stmt = $conn->prepare("UPDATE products 
-        SET name=?, description=?, price=?, category=?, subcategory=?, size=?, material=?, sku=?, stock=? 
+    // --- Обновляем основную информацию о товаре ---
+    $stmt = $conn->prepare("UPDATE products SET 
+        name=?, description=?, price=?, category=?, subcategory=?, size=?, material=?, sku=?, stock=? 
         WHERE id=?");
     $stmt->execute([$name, $description, $price, $category_id, $subcategory_id, $size_id, $material_id, $sku, $stock, $id]);
+
+    // --- Обрабатываем загрузку новых изображений ---
+    $upload_dir = __DIR__ . '/../assets/products/';
+    if (!is_dir($upload_dir)) {
+        mkdir($upload_dir, 0777, true);
+    }
+
+    if (!empty($_FILES['images']['name'][0])) {
+        $image_paths = $current_images; // Сохраняем текущие фото
+        foreach ($_FILES['images']['tmp_name'] as $key => $tmp_name) {
+            if ($_FILES['images']['size'][$key] > 0) {
+                $file_ext = strtolower(pathinfo($_FILES['images']['name'][$key], PATHINFO_EXTENSION));
+                $allowed_ext = ['jpg', 'jpeg', 'png', 'gif'];
+                if (!in_array($file_ext, $allowed_ext)) {
+                    die("Недопустимый формат файла: {$_FILES['images']['name'][$key]}");
+                }
+
+                $file_name = md5(uniqid(rand(), true)) . "." . $file_ext;
+                $file_path = $upload_dir . $file_name;
+                if (move_uploaded_file($tmp_name, $file_path)) {
+                    $image_paths[] = 'assets/products/' . $file_name;
+                } else {
+                    die("Ошибка загрузки файла: {$_FILES['images']['name'][$key]}");
+                }
+            }
+        }
+
+        // Оставляем максимум 5 фото
+        $image_paths = array_slice($image_paths, 0, 5);
+
+        // Обновляем изображения в базе
+        $stmt = $conn->prepare("UPDATE products SET images = ? WHERE id = ?");
+        $stmt->execute([json_encode($image_paths), $id]);
+    }
 
     header("Location: products.php");
     exit();
 }
-
-// Получаем изображения товара
-$current_images = json_decode($product['images'], true) ?? [];
 ?>
 
 <!DOCTYPE html>
