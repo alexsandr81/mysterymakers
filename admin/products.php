@@ -116,10 +116,12 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 <h2>Товары</h2>
 <a href="add_product.php">➕ Добавить товар</a>
+<a href="export_products.php">📥 Экспорт в CSV</a>
 
 <table border="1">
     <tr>
         <th>ID</th>
+        <th>Изображение</th>
         <th>
             Название файла<br>
             <select name="name_sort" onchange="filterProducts()">
@@ -202,6 +204,14 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <?php foreach ($products as $product): ?>
     <tr <?= ($product['stock'] < 5) ? 'style="background-color: #ffcccc;"' : ''; ?>>
         <td><?= $product['id']; ?></td>
+        <td>
+            <?php 
+            $images = json_decode($product['images'], true);
+            if (!empty($images)) {
+                echo '<img src="/mysterymakers/' . $images[0] . '" width="50">';
+            }
+            ?>
+        </td>
         <td><?= htmlspecialchars($product['name']); ?></td>
         <td><?= htmlspecialchars($product['category_name']); ?></td>
         <td><?= htmlspecialchars($product['subcategory_name']); ?></td>
