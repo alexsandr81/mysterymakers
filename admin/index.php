@@ -45,6 +45,10 @@ if (!isset($_SESSION['admin_id'])) {
         <li class="list-group-item"><a href="users.php">👥 Пользователи</a></li>
         <li class="list-group-item"><a href="admins.php">🛠️ Администраторы</a></li>
         <li class="list-group-item"><a href="logs.php">📜 Логи действий</a></li>
+        <li class="list-group-item"><a href="categories.php">📂 Категории</a></li>
+        <li class="list-group-item"><a href="subcategories.php">📂 Подкатегории</a></li>
+        <li class="list-group-item"><a href="sizes.php">📏 Размеры</a></li>
+        <li class="list-group-item"><a href="materials.php">🧵 Материалы</a></li>
         <li class="list-group-item text-danger"><a href="logout.php">🚪 Выйти</a></li>
     </ul>
 </div>
