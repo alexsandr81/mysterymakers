@@ -35,7 +35,7 @@
         $category = $_GET['category'] ?? '';
         $sort = $_GET['sort'] ?? '';
 
-        $query = "SELECT * FROM products WHERE 1";
+        $query = "SELECT * FROM products WHERE status = 1"; // ✅ Добавлено условие "WHERE status = 1"
 
         if ($category) {
             $query .= " AND category = :category";
