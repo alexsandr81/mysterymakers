@@ -12,6 +12,7 @@ $categories = $conn->query("SELECT * FROM categories ORDER BY name ASC")->fetchA
 $subcategories = $conn->query("SELECT * FROM subcategories ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
 $sizes = $conn->query("SELECT * FROM sizes ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
 $materials = $conn->query("SELECT * FROM materials ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
+$names = $conn->query("SELECT DISTINCT name FROM products ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
 
 // Фильтры
 $category_filter = $_GET['category'] ?? '';
@@ -19,9 +20,11 @@ $subcategory_filter = $_GET['subcategory'] ?? '';
 $size_filter = $_GET['size'] ?? '';
 $material_filter = $_GET['material'] ?? '';
 $sku_filter = $_GET['sku'] ?? '';
+$name_filter = $_GET['name_filter'] ?? '';
 $name_sort = $_GET['name_sort'] ?? '';
 $stock_sort = $_GET['stock_sort'] ?? '';
 $sku_sort = $_GET['sku_sort'] ?? '';
+$date_sort = $_GET['date_sort'] ?? '';
 
 // Формируем SQL-запрос
 $query = "SELECT p.*, c.name AS category_name, s.name AS subcategory_name, sz.name AS size_name, m.name AS material_name 
@@ -53,6 +56,10 @@ if ($sku_filter) {
     $query .= " AND p.sku LIKE ?";
     $params[] = "%$sku_filter%";
 }
+if ($name_filter) {
+    $query .= " AND p.name = ?";
+    $params[] = $name_filter;
+}
 
 // Обработка сортировки
 $sort_options = [];
@@ -64,6 +71,9 @@ if ($sku_sort) {
 }
 if ($stock_sort) {
     $sort_options[] = "p.stock $stock_sort";
+}
+if ($date_sort) {
+    $sort_options[] = "p.created_at $date_sort";
 }
 if (!empty($sort_options)) {
     $query .= " ORDER BY " . implode(", ", $sort_options);
@@ -82,6 +92,25 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <meta charset="UTF-8">
     <title>Управление товарами</title>
     <link rel="stylesheet" href="styles.css">
+    <script>
+    function updateStock(productId, newStock) {
+        fetch('update_stock.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'id=' + productId + '&stock=' + newStock
+        }).then(response => response.text())
+          .then(data => console.log(data))
+          .catch(error => console.error('Ошибка:', error));
+    }
+
+    function filterProducts() {
+        let params = new URLSearchParams(window.location.search);
+        document.querySelectorAll("select, input").forEach(input => {
+            params.set(input.name, input.value);
+        });
+        window.location.search = params.toString();
+    }
+    </script>
 </head>
 <body>
 
@@ -159,11 +188,19 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <option value="DESC" <?= ($stock_sort == 'DESC') ? 'selected' : ''; ?>>По убыванию</option>
             </select>
         </th>
+        <th>
+            Дата добавления<br>
+            <select name="date_sort" onchange="filterProducts()">
+                <option value="">Без сортировки</option>
+                <option value="ASC" <?= ($date_sort == 'ASC') ? 'selected' : ''; ?>>Старые сначала</option>
+                <option value="DESC" <?= ($date_sort == 'DESC') ? 'selected' : ''; ?>>Новые сначала</option>
+            </select>
+        </th>
         <th>Действия</th>
     </tr>
 
     <?php foreach ($products as $product): ?>
-    <tr>
+    <tr <?= ($product['stock'] < 5) ? 'style="background-color: #ffcccc;"' : ''; ?>>
         <td><?= $product['id']; ?></td>
         <td><?= htmlspecialchars($product['name']); ?></td>
         <td><?= htmlspecialchars($product['category_name']); ?></td>
@@ -171,7 +208,12 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <td><?= htmlspecialchars($product['size_name']); ?></td>
         <td><?= htmlspecialchars($product['material_name']); ?></td>
         <td><?= htmlspecialchars($product['sku']); ?></td>
-        <td><?= $product['stock']; ?></td>
+        <td>
+            <input type="number" value="<?= $product['stock']; ?>" 
+       style="width: 60px;" 
+                   onchange="updateStock(<?= $product['id']; ?>, this.value)">
+        </td>
+        <td><?= $product['created_at']; ?></td>
         <td>
             <a href="edit_product.php?id=<?= $product['id']; ?>">✏ Редактировать</a>
             <a href="delete_product.php?id=<?= $product['id']; ?>" onclick="return confirm('Удалить товар?');">🗑 Удалить</a>
@@ -194,6 +236,3 @@ function filterProducts() {
 
 </body>
 </html>
-
-
-        
