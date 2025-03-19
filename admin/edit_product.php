@@ -23,31 +23,54 @@ $materials = $conn->query("SELECT * FROM materials ORDER BY name ASC")->fetchAll
 
 $current_images = json_decode($product['images'], true) ?? [];
 
+// --- Обрабатываем сохранение товара (добавление/удаление изображений) ---
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $name = trim($_POST['name']);
-    $description = trim($_POST['description']);
-    $price = floatval($_POST['price']);
-    $category_id = intval($_POST['category']);
-    $subcategory_id = intval($_POST['subcategory']);
-    $size_id = intval($_POST['size']);
-    $material_id = intval($_POST['material']);
-    $sku = trim($_POST['sku']);
-    $stock = intval($_POST['stock']);
 
-    // --- Обновляем основную информацию о товаре ---
-    $stmt = $conn->prepare("UPDATE products SET 
-        name=?, description=?, price=?, category=?, subcategory=?, size=?, material=?, sku=?, stock=? 
-        WHERE id=?");
-    $stmt->execute([$name, $description, $price, $category_id, $subcategory_id, $size_id, $material_id, $sku, $stock, $id]);
+    // Обновление данных товара
+    if (isset($_POST['name'])) {
+        $name = trim($_POST['name']);
+        $description = trim($_POST['description']);
+        $price = floatval($_POST['price']);
+        $category_id = intval($_POST['category']);
+        $subcategory_id = intval($_POST['subcategory']);
+        $size_id = intval($_POST['size']);
+        $material_id = intval($_POST['material']);
+        $sku = trim($_POST['sku']);
+        $stock = intval($_POST['stock']);
 
-    // --- Обрабатываем загрузку новых изображений ---
-    $upload_dir = __DIR__ . '/../assets/products/';
-    if (!is_dir($upload_dir)) {
-        mkdir($upload_dir, 0777, true);
+        $stmt = $conn->prepare("UPDATE products SET 
+            name=?, description=?, price=?, category=?, subcategory=?, size=?, material=?, sku=?, stock=? 
+            WHERE id=?");
+        $stmt->execute([$name, $description, $price, $category_id, $subcategory_id, $size_id, $material_id, $sku, $stock, $id]);
     }
 
+    // Удаление выбранных изображений
+    if (isset($_POST['delete_images'])) {
+        $images_to_delete = $_POST['delete_images'];
+
+        foreach ($images_to_delete as $img) {
+            if (file_exists("../" . $img)) {
+                unlink("../" . $img);
+            }
+        }
+
+        // Обновляем изображения в базе
+        $new_images = array_values(array_diff($current_images, $images_to_delete));
+        $stmt = $conn->prepare("UPDATE products SET images = ? WHERE id = ?");
+        $stmt->execute([json_encode($new_images), $id]);
+
+        // Обновляем переменную для отображения оставшихся фото
+        $current_images = $new_images;
+    }
+
+    // Добавление новых изображений
     if (!empty($_FILES['images']['name'][0])) {
-        $image_paths = $current_images; // Сохраняем текущие фото
+        $upload_dir = __DIR__ . '/../assets/products/';
+        if (!is_dir($upload_dir)) {
+            mkdir($upload_dir, 0777, true);
+        }
+
+        $image_paths = $current_images;
         foreach ($_FILES['images']['tmp_name'] as $key => $tmp_name) {
             if ($_FILES['images']['size'][$key] > 0) {
                 $file_ext = strtolower(pathinfo($_FILES['images']['name'][$key], PATHINFO_EXTENSION));
@@ -72,9 +95,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         // Обновляем изображения в базе
         $stmt = $conn->prepare("UPDATE products SET images = ? WHERE id = ?");
         $stmt->execute([json_encode($image_paths), $id]);
+
+        // Обновляем переменную для отображения загруженных фото
+        $current_images = $image_paths;
     }
 
-    header("Location: products.php");
+    // Перенаправление после успешного сохранения
+    header("Location: edit_product.php?id=$id&success=1");
     exit();
 }
 ?>
@@ -89,6 +116,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <body>
 
 <h2>Редактировать товар</h2>
+
+<?php if (isset($_GET['success'])): ?>
+    <p style="color: green;">✔ Изменения сохранены успешно!</p>
+<?php endif; ?>
 
 <form method="POST" enctype="multipart/form-data">
     <label>Название:</label>
@@ -143,18 +174,20 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <input type="number" name="stock" value="<?= $product['stock']; ?>" required><br><br>
 
     <h3>Изображения товара</h3>
-    <?php foreach ($current_images as $img): ?>
-        <div style="display: inline-block; margin-right: 10px; text-align: center;">
-            <img src="/mysterymakers/<?= $img; ?>" width="100"><br>
-            <a href="delete_image.php?product_id=<?= $id; ?>&image=<?= urlencode($img); ?>" 
-               onclick="return confirm('Удалить изображение?');">🗑 Удалить</a>
-        </div>
-    <?php endforeach; ?>
+    <div>
+        <?php foreach ($current_images as $img): ?>
+            <div style="display: inline-block; margin-right: 10px; text-align: center;">
+                <img src="/mysterymakers/<?= $img; ?>" width="100"><br>
+                <input type="checkbox" name="delete_images[]" value="<?= $img; ?>">
+            </div>
+        <?php endforeach; ?>
+    </div>
+    <button type="submit">🗑 Удалить выбранные изображения</button>
 
     <h3>Добавить новые изображения (до 5 файлов)</h3>
     <input type="file" name="images[]" multiple accept="image/*"><br><br>
 
-    <button type="submit">Сохранить изменения</button>
+    <button type="submit">💾 Сохранить изменения</button>
 </form>
 
 </body>
