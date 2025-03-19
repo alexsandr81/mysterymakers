@@ -121,6 +121,14 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <table border="1">
     <tr>
         <th>ID</th>
+        <th>
+            Артикул<br>
+            <select name="sku_sort" onchange="filterProducts()">
+                <option value="">Без сортировки</option>
+                <option value="ASC" <?= ($sku_sort == 'ASC') ? 'selected' : ''; ?>>По возрастанию</option>
+                <option value="DESC" <?= ($sku_sort == 'DESC') ? 'selected' : ''; ?>>По убыванию</option>
+            </select>
+        </th>
         <th>Изображение</th>
         <th>
             Название файла<br>
@@ -174,14 +182,7 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <?php endforeach; ?>
             </select>
         </th>
-        <th>
-            Артикул<br>
-            <select name="sku_sort" onchange="filterProducts()">
-                <option value="">Без сортировки</option>
-                <option value="ASC" <?= ($sku_sort == 'ASC') ? 'selected' : ''; ?>>По возрастанию</option>
-                <option value="DESC" <?= ($sku_sort == 'DESC') ? 'selected' : ''; ?>>По убыванию</option>
-            </select>
-        </th>
+        
         <th>
             Количество<br>
             <select name="stock_sort" onchange="filterProducts()">
@@ -204,6 +205,7 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <?php foreach ($products as $product): ?>
     <tr <?= ($product['stock'] < 5) ? 'style="background-color: #ffcccc;"' : ''; ?>>
         <td><?= $product['id']; ?></td>
+        <td><?= htmlspecialchars($product['sku']); ?></td>
         <td>
             <?php 
             $images = json_decode($product['images'], true);
@@ -217,7 +219,7 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <td><?= htmlspecialchars($product['subcategory_name']); ?></td>
         <td><?= htmlspecialchars($product['size_name']); ?></td>
         <td><?= htmlspecialchars($product['material_name']); ?></td>
-        <td><?= htmlspecialchars($product['sku']); ?></td>
+        
         <td>
             <input type="number" value="<?= $product['stock']; ?>" 
        style="width: 60px;" 
