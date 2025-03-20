@@ -40,6 +40,7 @@ if (!isset($_SESSION['admin_id'])) {
 <div class="container admin-container">
     <h2>Админ-панель</h2>
     <ul class="list-group">
+        <li class="list-group-item"><a href="dashboard.php">📊 Дэшборд</a></li>
         <li class="list-group-item"><a href="products.php">📦 Товары</a></li>
         <li class="list-group-item"><a href="orders.php">🛒 Заказы</a></li>
         <li class="list-group-item"><a href="users.php">👥 Пользователи</a></li>
