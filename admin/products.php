@@ -196,6 +196,14 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
             </select>
         </th>
         <th>
+            Цена<br>
+            <select name="stock_sort" onchange="filterProducts()">
+                <option value="">Без сортировки</option>
+                <option value="ASC" <?= ($stock_sort == 'ASC') ? 'selected' : ''; ?>>По возрастанию</option>
+                <option value="DESC" <?= ($stock_sort == 'DESC') ? 'selected' : ''; ?>>По убыванию</option>
+            </select>
+        </th>
+        <th>
             Дата добавления<br>
             <select name="date_sort" onchange="filterProducts()">
                 <option value="">Без сортировки</option>
@@ -239,6 +247,7 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
        style="width: 60px;" 
                    onchange="updateStock(<?= $product['id']; ?>, this.value)">
         </td>
+        <td><?= number_format($product['price'], 2, '.', ''); ?> ₽</td>
         <td><?= $product['created_at']; ?></td>
         <td>
     <?= ($product['status'] == 1) ? '✅ Активен' : '❌ Скрыт'; ?>
