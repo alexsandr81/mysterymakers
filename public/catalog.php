@@ -30,7 +30,7 @@ $seo_description = $category ? htmlspecialchars($category['seo_description']) : 
 $seo_keywords = $category ? htmlspecialchars($category['seo_keywords']) : 'каталог, товары, купить';
 
 // Фильтрация товаров
-$query = "SELECT * FROM products WHERE 1";
+$query = "SELECT * FROM products WHERE status = 1"; // Только активные товары
 $params = [];
 
 if ($category) {
@@ -42,6 +42,7 @@ if ($subcategory_id) {
     $query .= " AND subcategory = ?";
     $params[] = $subcategory_id;
 }
+
 
 // Фильтрация по цене
 $min_price = $_GET['min_price'] ?? '';
