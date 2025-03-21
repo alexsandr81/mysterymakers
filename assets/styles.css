@@ -169,3 +169,68 @@ button {
     object-fit: cover;
     border-radius: 5px;
 }
+
+
+.sidebar {
+    width: 250px;
+    background-color: #f4f4f4;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.category-menu {
+    list-style: none;
+    padding: 0;
+}
+
+.category-item {
+    position: relative;
+}
+
+.category-item > a {
+    display: block;
+    padding: 8px;
+    background-color: #ddd;
+    color: #000;
+    text-decoration: none;
+    border-radius: 4px;
+    margin-bottom: 5px;
+}
+
+.category-item:hover > a {
+    background-color: #bbb;
+}
+
+.subcategory-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: none;
+    position: absolute;
+    left: 100%;
+    top: 0;
+    background-color: #fff;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+    min-width: 200px;
+    border-radius: 4px;
+}
+
+.subcategory-menu li {
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+}
+
+.subcategory-menu li a {
+    text-decoration: none;
+    color: #000;
+    display: block;
+}
+
+.subcategory-menu li:hover {
+    background-color: #eee;
+}
+
+/* Показываем подкатегории при наведении */
+.category-item:hover .subcategory-menu {
+    display: block;
+}
