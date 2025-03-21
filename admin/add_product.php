@@ -176,7 +176,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     <label></label>
     <select name="category" id="category" required>
-        <option value="">Категория:</option>
+        <option value="">Выберите категорию:</option>
         <?php foreach ($categories as $cat): ?>
             <option value="<?= $cat['id']; ?>"><?= htmlspecialchars($cat['name']); ?></option>
         <?php endforeach; ?>

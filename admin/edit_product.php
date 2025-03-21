@@ -37,12 +37,25 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $material_id = intval($_POST['material']);
         $sku = trim($_POST['sku']);
         $stock = intval($_POST['stock']);
+        $seo_title = trim($_POST['seo_title']);
+        $seo_description = trim($_POST['seo_description']);
+        $seo_keywords = trim($_POST['seo_keywords']);
+        
+        // Генерация slug (ЧПУ-ссылки)
+        $slug = trim($_POST['name']);
+$slug = mb_strtolower($slug, 'UTF-8'); // Приводим к нижнему регистру
+$slug = preg_replace('/[^\p{L}\p{N}]+/u', '-', $slug); // Убираем лишние символы
+$slug = trim($slug, '-'); // Удаляем лишние дефисы в начале и конце
 
-        $stmt = $conn->prepare("UPDATE products SET 
-            name=?, description=?, price=?, category=?, subcategory=?, size=?, material=?, sku=?, stock=? 
-            WHERE id=?");
-        $stmt->execute([$name, $description, $price, $category_id, $subcategory_id, $size_id, $material_id, $sku, $stock, $id]);
-    }
+        
+        $stmt = $conn->prepare("UPDATE products 
+SET name=?, description=?, price=?, category=?, stock=?, 
+    seo_title=?, seo_description=?, seo_keywords=?, slug=? 
+WHERE id=?");
+
+$stmt->execute([$name, $description, $price, $category, $stock, 
+                $seo_title, $seo_description, $seo_keywords, $slug, $id]);
+}
 
     // Удаление выбранных изображений
     if (isset($_POST['delete_images'])) {
@@ -131,47 +144,62 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <label>Цена:</label>
     <input type="number" name="price" step="0.01" value="<?= $product['price']; ?>" required><br><br>
 
-    <label>Категория:</label>
-    <select name="category" required>
-        <?php foreach ($categories as $cat): ?>
-            <option value="<?= $cat['id']; ?>" <?= ($product['category'] == $cat['id']) ? 'selected' : ''; ?>>
-                <?= htmlspecialchars($cat['name']); ?>
-            </option>
-        <?php endforeach; ?>
-    </select><a href="categories.php">➕</a><br><br>
+    <label></label>
+<select name="category" id="category" onchange="loadSubcategories(this.value)">
+    <option value="">Выберите категорию</option>
+    <?php foreach ($categories as $cat): ?>
+        <option value="<?= $cat['id']; ?>" <?= ($product['category'] == $cat['id']) ? 'selected' : ''; ?>>
+            <?= htmlspecialchars($cat['name']); ?>
+        </option>
+    <?php endforeach; ?>
+</select>
+<a href="categories.php">➕</a><br><br>
 
-    <label>Подкатегория:</label>
-    <select name="subcategory" required>
+    <label></label>
+    <select name="subcategory" id="subcategory" required>
+    <option value="">Подкатегория:</option>
         <?php foreach ($subcategories as $sub): ?>
-            <option value="<?= $sub['id']; ?>" <?= ($product['subcategory'] == $sub['id']) ? 'selected' : ''; ?>>
-                <?= htmlspecialchars($sub['name']); ?>
-            </option>
+            <option value="<?= $sub['id']; ?>"><?= htmlspecialchars($sub['name']); ?></option>
         <?php endforeach; ?>
-    </select><a href="subcategories.php">➕</a><br><br>
+    </select>
+    <a href="subcategories.php">➕</a>
+    <br><br>
 
-    <label>Размер:</label>
+    <label></label>
     <select name="size" required>
+        <option value="">Размер:</option>
         <?php foreach ($sizes as $size): ?>
-            <option value="<?= $size['id']; ?>" <?= ($product['size'] == $size['id']) ? 'selected' : ''; ?>>
-                <?= htmlspecialchars($size['name']); ?>
-            </option>
+            <option value="<?= $size['id']; ?>"><?= htmlspecialchars($size['name']); ?></option>
         <?php endforeach; ?>
-    </select><a href="sizes.php">➕</a><br><br>
+    </select>
+    <a href="sizes.php">➕</a>
+    <br><br>
 
-    <label>Материал:</label>
+    <label></label>
     <select name="material" required>
+        <option value="">материал:</option>
         <?php foreach ($materials as $material): ?>
-            <option value="<?= $material['id']; ?>" <?= ($product['material'] == $material['id']) ? 'selected' : ''; ?>>
-                <?= htmlspecialchars($material['name']); ?>
-            </option>
+            <option value="<?= $material['id']; ?>"><?= htmlspecialchars($material['name']); ?></option>
         <?php endforeach; ?>
-    </select><a href="materials.php">➕</a><br><br>
+    </select>
+    <a href="materials.php">➕</a>
+    <br><br>
 
     <label>Артикул (SKU):</label>
     <input type="text" name="sku" value="<?= htmlspecialchars($product['sku']); ?>" required><br><br>
 
     <label>Количество:</label>
     <input type="number" name="stock" value="<?= $product['stock']; ?>" required><br><br>
+
+    <label>SEO Title:</label>
+<input type="text" name="seo_title" value="<?= htmlspecialchars($product['seo_title']); ?>"><br><br>
+
+<label>SEO Description:</label>
+<textarea name="seo_description"><?= htmlspecialchars($product['seo_description']); ?></textarea><br><br>
+
+<label>SEO Keywords:</label>
+<input type="text" name="seo_keywords" value="<?= htmlspecialchars($product['seo_keywords']); ?>"><br><br>
+
 
     <h3>Изображения товара</h3>
     <div>
@@ -189,6 +217,44 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     <button type="submit">💾 Сохранить изменения</button>
 </form>
+<script>
+function loadSubcategories(categoryId) {
+    let subcategorySelect = document.getElementById("subcategory");
+
+    // Очищаем старые значения
+    subcategorySelect.innerHTML = '<option value="">Загрузка...</option>';
+
+    if (!categoryId) {
+        subcategorySelect.innerHTML = '<option value="">Сначала выберите категорию</option>';
+        return;
+    }
+
+    // Запрос к серверу
+    fetch("get_subcategories.php?category_id=" + categoryId)
+        .then(response => response.json())
+        .then(data => {
+            subcategorySelect.innerHTML = '<option value="">Выберите подкатегорию</option>';
+            data.forEach(subcat => {
+                let option = document.createElement("option");
+                option.value = subcat.id;
+                option.textContent = subcat.name;
+                if (subcat.id == "<?= $product['subcategory']; ?>") {
+                    option.selected = true;
+                }
+                subcategorySelect.appendChild(option);
+            });
+        })
+        .catch(error => console.error("Ошибка загрузки подкатегорий:", error));
+}
+
+// Загружаем подкатегории при загрузке страницы
+document.addEventListener("DOMContentLoaded", function () {
+    let selectedCategory = document.getElementById("category").value;
+    if (selectedCategory) {
+        loadSubcategories(selectedCategory);
+    }
+});
+</script>
 
 </body>
 </html>
