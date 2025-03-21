@@ -21,6 +21,13 @@ if (!$category) {
 // Обновляем категорию
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['name'])) {
     $name = trim($_POST['name']);
+    $seo_title = trim($_POST['seo_title']);
+    $seo_description = trim($_POST['seo_description']);
+    $seo_keywords = trim($_POST['seo_keywords']);
+
+    // Генерация slug (ЧПУ-ссылки)
+    $slug = preg_replace('/[^a-z0-9-]+/', '-', strtolower(trim($name)));
+    $slug = rtrim($slug, '-');
 
     // Проверяем дублирование
     $check_stmt = $conn->prepare("SELECT id FROM categories WHERE name = ? AND id != ?");
@@ -29,8 +36,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['name'])) {
         die("Ошибка: Такая категория уже существует!");
     }
 
-    $stmt = $conn->prepare("UPDATE categories SET name = ? WHERE id = ?");
-    $stmt->execute([$name, $id]);
+    // Обновляем категорию
+    $stmt = $conn->prepare("UPDATE categories 
+        SET name = ?, seo_title = ?, seo_description = ?, seo_keywords = ?, slug = ? 
+        WHERE id = ?");
+    $stmt->execute([$name, $seo_title, $seo_description, $seo_keywords, $slug, $id]);
 
     header("Location: categories.php");
     exit();
@@ -50,7 +60,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['name'])) {
 
 <form method="POST">
     <label>Название категории:</label>
-    <input type="text" name="name" value="<?= htmlspecialchars($category['name']); ?>" required>
+    <input type="text" name="name" value="<?= htmlspecialchars($category['name']); ?>" required><br><br>
+
+    <label>SEO Title:</label>
+    <input type="text" name="seo_title" value="<?= htmlspecialchars($category['seo_title']); ?>"><br><br>
+
+    <label>SEO Description:</label>
+    <textarea name="seo_description"><?= htmlspecialchars($category['seo_description']); ?></textarea><br><br>
+
+    <label>SEO Keywords:</label>
+    <input type="text" name="seo_keywords" value="<?= htmlspecialchars($category['seo_keywords']); ?>"><br><br>
+
     <button type="submit">Сохранить</button>
 </form>
 
