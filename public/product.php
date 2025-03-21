@@ -11,10 +11,20 @@ if ($id <= 0) {
     exit;
 }
 
-// Загружаем информацию о товаре
-$stmt = $conn->prepare("SELECT * FROM products WHERE id = :id");
-$stmt->execute(['id' => $id]);
+$stmt = $conn->prepare("SELECT * FROM products WHERE id = ?");
+$stmt->execute([$id]);
 $product = $stmt->fetch(PDO::FETCH_ASSOC);
+
+
+if (!$product) {
+    die("Товар не найден!");
+}
+
+// SEO-данные
+$seo_title = !empty($product['seo_title']) ? $product['seo_title'] : $product['name'];
+$seo_description = !empty($product['seo_description']) ? $product['seo_description'] : substr($product['description'], 0, 150);
+$seo_keywords = !empty($product['seo_keywords']) ? $product['seo_keywords'] : str_replace(' ', ',', $product['name']);
+
 
 if (!$product) {
     echo "<h1>Товар не найден</h1>";
@@ -39,6 +49,17 @@ $stmt = $conn->prepare("SELECT r.*, u.name FROM reviews r
 $stmt->execute([$product['id']]);
 $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?= htmlspecialchars($seo_title); ?></title>
+<meta name="description" content="<?= htmlspecialchars($seo_description); ?>">
+<meta name="keywords" content="<?= htmlspecialchars($seo_keywords); ?>">
+</head>
+<body>
+    
 
 <main>
     <div class="product-page">
