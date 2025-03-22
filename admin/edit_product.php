@@ -32,6 +32,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $description = trim($_POST['description']);
         $price = floatval($_POST['price']);
         $category_id = intval($_POST['category']);
+        $category = trim($_POST['category']);
+
         $subcategory_id = intval($_POST['subcategory']);
         $size_id = intval($_POST['size']);
         $material_id = intval($_POST['material']);

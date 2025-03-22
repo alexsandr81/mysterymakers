@@ -1,53 +1,59 @@
 <?php 
-include 'header.php'; 
-require_once '../database/db.php'; 
+include 'header.php'; // Подключение файла header.php
+require_once '../database/db.php'; // Подключение файла с подключением к базе данных
 
-// Получаем ID товара из URL
+// Получение ID товара из URL
 $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
 if ($id <= 0) {
-    echo "<h1>Ошибка: ID товара не указан</h1>";
-    include 'footer.php';
+    echo "<h1>Ошибка: ID товара не указан</h1>"; // Вывод сообщения об ошибке, если ID товара не указан
+    include 'footer.php'; // Подключение файла footer.php
     exit;
 }
 
-$stmt = $conn->prepare("SELECT * FROM products WHERE id = ?");
-$stmt->execute([$id]);
-$product = $stmt->fetch(PDO::FETCH_ASSOC);
+$id = $_GET['id'] ?? 0; // Получение ID товара из URL
+$stmt = $conn->prepare("SELECT * FROM products WHERE id = ?"); // Подготовка SQL-запроса для выборки товара по указанному ID
+$stmt->execute([$id]); // Выполнение SQL-запроса с параметром ID товара
+$product = $stmt->fetch(PDO::FETCH_ASSOC); // Получение деталей товара в виде ассоциативного массива
+$related_products = []; // Инициализация пустого массива для связанных товаров
 
-
-if (!$product) {
-    die("Товар не найден!");
+if ($product) {
+    $stmt = $conn->prepare("SELECT * FROM products WHERE category = ? AND id != ? ORDER BY RAND() LIMIT 4"); // Подготовка SQL-запроса для выборки связанных товаров на основе категории текущего товара
+    $stmt->execute([$product['category'], $product['id']]); // Выполнение SQL-запроса с параметрами категории и ID текущего товара
+    $related_products = $stmt->fetchAll(PDO::FETCH_ASSOC); // Получение связанных товаров в виде ассоциативного массива
 }
 
-// SEO-данные
-$seo_title = !empty($product['seo_title']) ? $product['seo_title'] : $product['name'];
-$seo_description = !empty($product['seo_description']) ? $product['seo_description'] : substr($product['description'], 0, 150);
-$seo_keywords = !empty($product['seo_keywords']) ? $product['seo_keywords'] : str_replace(' ', ',', $product['name']);
+if (!$product) {
+    die("Товар не найден!"); // Вывод сообщения об ошибке, если товар не найден
+}
 
+// Данные для SEO
+$seo_title = !empty($product['seo_title']) ? $product['seo_title'] : $product['name']; // Установка SEO-заголовка товара на основе указанного SEO-заголовка или названия товара
+$seo_description = !empty($product['seo_description']) ? $product['seo_description'] : substr($product['description'], 0, 150); // Установка SEO-описания товара на основе указанного SEO-описания или подстроки описания товара
+$seo_keywords = !empty($product['seo_keywords']) ? $product['seo_keywords'] : str_replace(' ', ',', $product['name']); // Установка SEO-ключевых слов товара на основе указанных SEO-ключевых слов или запятой-разделенного списка названия товара
 
 if (!$product) {
-    echo "<h1>Товар не найден</h1>";
-    include 'footer.php';
+    echo "<h1>Товар не найден</h1>"; // Вывод сообщения об ошибке, если товар не найден
+    include 'footer.php'; // Подключение файла footer.php
     exit;
 }
 
-// Получаем изображения товара
-$images = json_decode($product['images'], true);
+// Получение изображений товара
+$images = json_decode($product['images'], true); // Декодирование JSON-строки изображений в ассоциативный массив
 if (!is_array($images)) {
-    $images = [];
+    $images = []; // Если изображения не являются массивом, установка пустого массива
 }
 
-// Получаем средний рейтинг и отзывы
-$stmt = $conn->prepare("SELECT AVG(rating) as avg_rating FROM reviews WHERE product_id = ?");
-$stmt->execute([$product['id']]);
-$rating = round($stmt->fetch(PDO::FETCH_ASSOC)['avg_rating'], 1);
+// Получение среднего рейтинга и отзывов
+$stmt = $conn->prepare("SELECT AVG(rating) as avg_rating FROM reviews WHERE product_id = ?"); // Подготовка SQL-запроса для вычисления среднего рейтинга товара
+$stmt->execute([$product['id']]); // Выполнение SQL-запроса с параметром ID товара
+$rating = round($stmt->fetch(PDO::FETCH_ASSOC)['avg_rating'], 1); // Получение среднего рейтинга и округление до одного десятичного знака
 
 $stmt = $conn->prepare("SELECT r.*, u.name FROM reviews r 
                         JOIN users u ON r.user_id = u.id 
-                        WHERE r.product_id = ? ORDER BY r.created_at DESC");
-$stmt->execute([$product['id']]);
-$reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                        WHERE r.product_id = ? ORDER BY r.created_at DESC"); // Подготовка SQL-запроса для выборки отзывов о товаре
+$stmt->execute([$product['id']]); // Выполнение SQL-запроса с параметром ID товара
+$reviews = $stmt->fetchAll(PDO::FETCH_ASSOC); // Получение отзывов в виде ассоциативного массива
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -55,12 +61,10 @@ $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($seo_title); ?></title>
-<meta name="description" content="<?= htmlspecialchars($seo_description); ?>">
-<meta name="keywords" content="<?= htmlspecialchars($seo_keywords); ?>">
+    <meta name="description" content="<?= htmlspecialchars($seo_description); ?>">
+    <meta name="keywords" content="<?= htmlspecialchars($seo_keywords); ?>">
 </head>
 <body>
-    
-
 <main>
     <div class="product-page">
         <!-- Галерея изображений -->
@@ -85,7 +89,7 @@ $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <?php endif; ?>
         </div>
 
-        <!-- Описание товара -->
+        <!-- Детали товара -->
         <div class="details">
             <h1><?= htmlspecialchars($product['name']); ?></h1>
             <p class="price"><?= number_format($product['price'], 2, '.', ''); ?> ₽</p>
@@ -102,7 +106,7 @@ $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <h3>Описание</h3>
             <p><?= nl2br(htmlspecialchars($product['description'])); ?></p>
 
-            <!-- Раздел отзывов -->
+            <!-- Секция отзывов -->
             <h3>Отзывы</h3>
             <?php if (!empty($reviews)): ?>
                 <div class="reviews">
@@ -148,6 +152,22 @@ $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <?php endif; ?>
         </div>
     </div>
+    <?php if (!empty($related_products)): ?>
+    <h2>Похожие товары</h2>
+    <div class="products-grid">
+        <?php foreach ($related_products as $related): ?>
+            <div class="product-card">
+                <a href="product.php?slug=<?= htmlspecialchars($related['slug']); ?>">
+                    <img src="../<?= json_decode($related['images'], true)[0]; ?>" alt="<?= htmlspecialchars($related['name']); ?>">
+                </a>
+                <h3><?= htmlspecialchars($related['name']); ?></h3>
+                <p>Цена: <?= number_format($related['price'], 2, '.', ''); ?> ₽</p>
+                <a href="product.php?slug=<?= htmlspecialchars($related['slug']); ?>" class="btn">Подробнее</a>
+            </div>
+        <?php endforeach; ?>
+    </div>
+<?php endif; ?>
+
 </main>
 
 <!-- Скрипты -->
@@ -156,7 +176,7 @@ function changeImage(img) {
     document.getElementById('mainImage').src = img.src;
 }
 
-// Зум-эффект
+// Эффект увеличения
 document.addEventListener("DOMContentLoaded", function () {
     const mainImage = document.getElementById("mainImage");
     mainImage.addEventListener("mousemove", function (e) {
@@ -187,4 +207,4 @@ function addToCart(productId) {
 }
 </script>
 
-<?php include 'footer.php'; ?>
+<?php include 'footer.php'; ?> 
