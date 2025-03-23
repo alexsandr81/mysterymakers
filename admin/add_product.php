@@ -9,21 +9,49 @@ if (!isset($_SESSION['admin_id'])) {
 }
 
 // Функция генерации `slug`
-function rusToTranslit($string) {
+function rusToTranslit($string)
+{
     $converter = array(
-        'а' => 'a', 'б' => 'b', 'в' => 'v', 'г' => 'g', 'д' => 'd', 
-        'е' => 'e', 'ё' => 'yo', 'ж' => 'zh', 'з' => 'z', 'и' => 'i', 
-        'й' => 'y', 'к' => 'k', 'л' => 'l', 'м' => 'm', 'н' => 'n', 
-        'о' => 'o', 'п' => 'p', 'р' => 'r', 'с' => 's', 'т' => 't', 
-        'у' => 'u', 'ф' => 'f', 'х' => 'h', 'ц' => 'ts', 'ч' => 'ch', 
-        'ш' => 'sh', 'щ' => 'sch', 'ъ' => '', 'ы' => 'y', 'ь' => '', 
-        'э' => 'e', 'ю' => 'yu', 'я' => 'ya'
+        'а' => 'a',
+        'б' => 'b',
+        'в' => 'v',
+        'г' => 'g',
+        'д' => 'd',
+        'е' => 'e',
+        'ё' => 'yo',
+        'ж' => 'zh',
+        'з' => 'z',
+        'и' => 'i',
+        'й' => 'y',
+        'к' => 'k',
+        'л' => 'l',
+        'м' => 'm',
+        'н' => 'n',
+        'о' => 'o',
+        'п' => 'p',
+        'р' => 'r',
+        'с' => 's',
+        'т' => 't',
+        'у' => 'u',
+        'ф' => 'f',
+        'х' => 'h',
+        'ц' => 'ts',
+        'ч' => 'ch',
+        'ш' => 'sh',
+        'щ' => 'sch',
+        'ъ' => '',
+        'ы' => 'y',
+        'ь' => '',
+        'э' => 'e',
+        'ю' => 'yu',
+        'я' => 'ya'
     );
 
     return strtr(mb_strtolower($string), $converter);
 }
 
-function generateSlug($name, $conn) {
+function generateSlug($name, $conn)
+{
     // Транслитерация русского текста
     $slug = rusToTranslit($name);
 
@@ -88,7 +116,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $seo_title = trim($_POST['seo_title']);
     $seo_description = trim($_POST['seo_description']);
     $seo_keywords = trim($_POST['seo_keywords']);
-    
+
     // Генерация `slug`
     $slug = generateSlug($name, $conn);
 
@@ -134,19 +162,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
     $stmt->execute([
-        $name, 
-        $description, 
-        $price, 
-        $category_id, 
-        $subcategory_id, 
-        $size_id, 
-        $material_id, 
-        $sku, 
-        $stock, 
-        $images_json, 
-        $seo_title, 
-        $seo_description, 
-        $seo_keywords, 
+        $name,
+        $description,
+        $price,
+        $category_id,
+        $subcategory_id,
+        $size_id,
+        $material_id,
+        $sku,
+        $stock,
+        $images_json,
+        $seo_title,
+        $seo_description,
+        $seo_keywords,
         $slug
     ]);
 
@@ -157,115 +185,118 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <title>Добавить товар</title>
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
 
-<h2>Добавить товар</h2>
+    <h2>Добавить товар</h2>
 
-<form method="POST" enctype="multipart/form-data">
-    <label>Название:</label>
-    <input type="text" name="name" required><br><br>
+    <form method="POST" enctype="multipart/form-data">
+        <label>Название:</label>
+        <input type="text" name="name" required><br><br>
 
-    <label>Описание:</label>
-    <textarea name="description" required></textarea><br><br>
+        <label>Описание:</label>
+        <textarea name="description" required></textarea><br><br>
 
-    <label>Цена:</label>
-    <input type="number" name="price" step="0.01" required><br><br>
+        <label>Цена:</label>
+        <input type="number" name="price" step="0.01" required><br><br>
 
-    <label></label>
-    <select name="category" id="category" required>
-        <option value="">Выберите категорию:</option>
-        <?php foreach ($categories as $cat): ?>
-            <option value="<?= $cat['id']; ?>"><?= htmlspecialchars($cat['name']); ?></option>
-        <?php endforeach; ?>
-    </select>
-    <a href="categories.php">➕</a>
-    <br><br>
+        <label></label>
+        <select name="category" id="category" required>
+            <option value="">Выберите категорию:</option>
+            <?php foreach ($categories as $cat): ?>
+                <option value="<?= $cat['id']; ?>"><?= htmlspecialchars($cat['name']); ?></option>
+            <?php endforeach; ?>
+        </select>
+        <a href="categories.php">➕</a>
+        <br><br>
 
-    <label></label>
-    <select name="subcategory" id="subcategory" required>
-        <option value="">Подкатегория:</option>
-        <?php foreach ($subcategories as $sub): ?>
-            <option value="<?= $sub['id']; ?>"><?= htmlspecialchars($sub['name']); ?></option>
-        <?php endforeach; ?>
-    </select>
-    <a href="subcategories.php">➕</a>
-    <br><br>
+        <label></label>
+        <select name="subcategory" id="subcategory" required>
+            <option value="">Подкатегория:</option>
+            <?php foreach ($subcategories as $sub): ?>
+                <option value="<?= $sub['id']; ?>"><?= htmlspecialchars($sub['name']); ?></option>
+            <?php endforeach; ?>
+        </select>
+        <a href="subcategories.php">➕</a>
+        <br><br>
 
-    <label></label>
-    <select name="size" required>
-        <option value="">Размер:</option>
-        <?php foreach ($sizes as $size): ?>
-            <option value="<?= $size['id']; ?>"><?= htmlspecialchars($size['name']); ?></option>
-        <?php endforeach; ?>
-    </select>
-    <a href="sizes.php">➕</a>
-    <br><br>
+        <label></label>
+        <select name="size" required>
+            <option value="">Размер:</option>
+            <?php foreach ($sizes as $size): ?>
+                <option value="<?= $size['id']; ?>"><?= htmlspecialchars($size['name']); ?></option>
+            <?php endforeach; ?>
+        </select>
+        <a href="sizes.php">➕</a>
+        <br><br>
 
-    <label></label>
-    <select name="material" required>
-        <option value="">материал:</option>
-        <?php foreach ($materials as $material): ?>
-            <option value="<?= $material['id']; ?>"><?= htmlspecialchars($material['name']); ?></option>
-        <?php endforeach; ?>
-    </select>
-    <a href="materials.php">➕</a>
-    <br><br>
+        <label></label>
+        <select name="material" required>
+            <option value="">материал:</option>
+            <?php foreach ($materials as $material): ?>
+                <option value="<?= $material['id']; ?>"><?= htmlspecialchars($material['name']); ?></option>
+            <?php endforeach; ?>
+        </select>
+        <a href="materials.php">➕</a>
+        <br><br>
 
-    <label>Артикул:</label>
-    <input type="text" name="sku" required><br><br>
+        <label>Артикул:</label>
+        <input type="text" name="sku" required><br><br>
 
-    <label>Количество:</label>
-    <input type="number" name="stock" required><br><br>
+        <label>Количество:</label>
+        <input type="number" name="stock" required><br><br>
 
-    <label>SEO Title:</label>
-    <input type="text" name="seo_title"><br><br>
+        <label>SEO Title:</label>
+        <input type="text" name="seo_title"><br><br>
 
-    <label>SEO Description:</label>
-    <textarea name="seo_description"></textarea><br><br>
+        <label>SEO Description:</label>
+        <textarea name="seo_description"></textarea><br><br>
 
-    <label>SEO Keywords:</label>
-    <input type="text" name="seo_keywords"><br><br>
+        <label>SEO Keywords:</label>
+        <input type="text" name="seo_keywords"><br><br>
 
-    <label>Изображения (до 5 файлов):</label>
-    <input type="file" name="images[]" multiple accept="image/*" required><br><br>
+        <label>Изображения (до 5 файлов):</label>
+        <input type="file" name="images[]" multiple accept="image/*" required><br><br>
 
-    <button type="submit">Добавить</button>
-</form>
+        <button type="submit">Добавить</button>
+    </form>
 
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    let categorySelect = document.getElementById("category");
-    let subcategorySelect = document.getElementById("subcategory");
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            let categorySelect = document.getElementById("category");
+            let subcategorySelect = document.getElementById("subcategory");
 
-    function loadSubcategories(categoryId) {
-        fetch("get_subcategories.php?category_id=" + categoryId)
-            .then(response => response.json())
-            .then(data => {
-                subcategorySelect.innerHTML = "<option value=''>Выберите подкатегорию</option>";
-                data.forEach(sub => {
-                    subcategorySelect.innerHTML += `<option value="${sub.id}">${sub.name}</option>`;
-                });
+            function loadSubcategories(categoryId) {
+                fetch("get_subcategories.php?category_id=" + categoryId)
+                    .then(response => response.json())
+                    .then(data => {
+                        subcategorySelect.innerHTML = "<option value=''>Выберите подкатегорию</option>";
+                        data.forEach(sub => {
+                            subcategorySelect.innerHTML += `<option value="${sub.id}">${sub.name}</option>`;
+                        });
+                    });
+            }
+
+            categorySelect.addEventListener("change", function() {
+                let categoryId = this.value;
+                if (categoryId) {
+                    loadSubcategories(categoryId);
+                }
             });
-    }
 
-    categorySelect.addEventListener("change", function() {
-        let categoryId = this.value;
-        if (categoryId) {
-            loadSubcategories(categoryId);
-        }
-    });
-
-    // Загружаем подкатегории для первой категории
-    if (categorySelect.value) {
-        loadSubcategories(categorySelect.value);
-    }
-});
-</script>
+            // Загружаем подкатегории для первой категории
+            if (categorySelect.value) {
+                loadSubcategories(categorySelect.value);
+            }
+        });
+    </script>
 
 </body>
+
 </html>

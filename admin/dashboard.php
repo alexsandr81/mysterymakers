@@ -41,76 +41,79 @@ $sales_chart = $conn->query("
 
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <title>Дэшборд</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
 
-<h2>📊 Дэшборд</h2>
+    <h2>📊 Дэшборд</h2>
 
-<div class="dashboard">
-    <div class="stat">
-        <h3>💰 Оборот</h3>
-        <p>Сегодня: <b><?= number_format($sales_today, 2, '.', ''); ?> ₽</b></p>
-        <p>Неделя: <b><?= number_format($sales_week, 2, '.', ''); ?> ₽</b></p>
-        <p>Месяц: <b><?= number_format($sales_month, 2, '.', ''); ?> ₽</b></p>
+    <div class="dashboard">
+        <div class="stat">
+            <h3>💰 Оборот</h3>
+            <p>Сегодня: <b><?= number_format($sales_today, 2, '.', ''); ?> ₽</b></p>
+            <p>Неделя: <b><?= number_format($sales_week, 2, '.', ''); ?> ₽</b></p>
+            <p>Месяц: <b><?= number_format($sales_month, 2, '.', ''); ?> ₽</b></p>
+        </div>
+
+        <div class="stat">
+            <h3>📦 Заказы</h3>
+            <p>Новые: <b><?= $new_orders; ?></b></p>
+            <p>В обработке: <b><?= $processing_orders; ?></b></p>
+            <p>Выполненные: <b><?= $completed_orders; ?></b></p>
+        </div>
+
+        <div class="stat">
+            <h3>⚠️ Остатки товаров</h3>
+            <p>Товаров с низким остатком: <b><?= $low_stock; ?></b></p>
+        </div>
     </div>
 
-    <div class="stat">
-        <h3>📦 Заказы</h3>
-        <p>Новые: <b><?= $new_orders; ?></b></p>
-        <p>В обработке: <b><?= $processing_orders; ?></b></p>
-        <p>Выполненные: <b><?= $completed_orders; ?></b></p>
-    </div>
+    <h3>🔥 Популярные товары</h3>
+    <table border="1">
+        <tr>
+            <th>Товар</th>
+            <th>Продано</th>
+        </tr>
+        <?php foreach ($popular_products as $product): ?>
+            <tr>
+                <td><?= htmlspecialchars($product['name']); ?></td>
+                <td><?= $product['total_sold']; ?></td>
+            </tr>
+        <?php endforeach; ?>
+    </table>
 
-    <div class="stat">
-        <h3>⚠️ Остатки товаров</h3>
-        <p>Товаров с низким остатком: <b><?= $low_stock; ?></b></p>
-    </div>
-</div>
+    <h3>📈 График продаж за последние 7 дней</h3>
+    <canvas id="salesChart" width="400" height="200"></canvas>
 
-<h3>🔥 Популярные товары</h3>
-<table border="1">
-    <tr>
-        <th>Товар</th>
-        <th>Продано</th>
-    </tr>
-    <?php foreach ($popular_products as $product): ?>
-    <tr>
-        <td><?= htmlspecialchars($product['name']); ?></td>
-        <td><?= $product['total_sold']; ?></td>
-    </tr>
-    <?php endforeach; ?>
-</table>
+    <script>
+        const salesData = <?= json_encode(array_column($sales_chart, 'total')); ?>;
+        const salesLabels = <?= json_encode(array_column($sales_chart, 'date')); ?>;
 
-<h3>📈 График продаж за последние 7 дней</h3>
-<canvas id="salesChart" width="400" height="200"></canvas>
-
-<script>
-    const salesData = <?= json_encode(array_column($sales_chart, 'total')); ?>;
-    const salesLabels = <?= json_encode(array_column($sales_chart, 'date')); ?>;
-
-    new Chart(document.getElementById('salesChart'), {
-        type: 'line',
-        data: {
-            labels: salesLabels,
-            datasets: [{
-                label: 'Оборот (₽)',
-                data: salesData,
-                borderColor: 'blue',
-                borderWidth: 2,
-                fill: false
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false
-        }
-    });
-</script>
+        new Chart(document.getElementById('salesChart'), {
+            type: 'line',
+            data: {
+                labels: salesLabels,
+                datasets: [{
+                    label: 'Оборот (₽)',
+                    data: salesData,
+                    borderColor: 'blue',
+                    borderWidth: 2,
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+    </script>
 
 </body>
+
 </html>
