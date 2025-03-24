@@ -44,6 +44,7 @@ if (!isset($_SESSION['admin_id'])) {
         <li class="list-group-item"><a href="products.php">📦 Товары</a></li>
         <li class="list-group-item"><a href="orders.php">🛒 Заказы</a></li>
         <li class="list-group-item"><a href="users.php">👥 Пользователи</a></li>
+        <li class="list-group-item"><a href="reviews.php">📝 Отзывы</a></li>
         <li class="list-group-item"><a href="admins.php">🛠️ Администраторы</a></li>
         <li class="list-group-item"><a href="logs.php">📜 Логи действий</a></li>
         <li class="list-group-item"><a href="categories.php">📂 Категории</a></li>

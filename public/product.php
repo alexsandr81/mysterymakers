@@ -23,6 +23,13 @@ if ($product) {
     $related_products = $stmt->fetchAll(PDO::FETCH_ASSOC); // Получение связанных товаров в виде ассоциативного массива
 }
 
+if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
+    die("Ошибка: Не указан ID товара!");
+}
+
+$product_id = intval($_GET['id']);
+
+
 if (!$product) {
     die("Товар не найден!"); // Вывод сообщения об ошибке, если товар не найден
 }
@@ -49,11 +56,13 @@ $stmt = $conn->prepare("SELECT AVG(rating) as avg_rating FROM reviews WHERE prod
 $stmt->execute([$product['id']]); // Выполнение SQL-запроса с параметром ID товара
 $rating = round($stmt->fetch(PDO::FETCH_ASSOC)['avg_rating'], 1); // Получение среднего рейтинга и округление до одного десятичного знака
 
-$stmt = $conn->prepare("SELECT r.*, u.name FROM reviews r 
-                        JOIN users u ON r.user_id = u.id 
-                        WHERE r.product_id = ? ORDER BY r.created_at DESC"); // Подготовка SQL-запроса для выборки отзывов о товаре
-$stmt->execute([$product['id']]); // Выполнение SQL-запроса с параметром ID товара
-$reviews = $stmt->fetchAll(PDO::FETCH_ASSOC); // Получение отзывов в виде ассоциативного массива
+$stmt = $conn->prepare("SELECT r.*, u.name AS user_name FROM reviews r
+                        JOIN users u ON r.user_id = u.id
+                        WHERE r.product_id = ? AND r.status = 'approved'
+                        ORDER BY r.created_at DESC");
+$stmt->execute([$product_id]);
+$reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
 ?>
 <!DOCTYPE html>
 <html lang="en">

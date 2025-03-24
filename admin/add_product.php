@@ -120,6 +120,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     // Генерация `slug`
     $slug = generateSlug($name, $conn);
 
+    // Если SEO-поля не заполнены, заполняем их автоматически
+    $seo_title = trim($_POST['seo_title']) ?: $name;
+    $seo_description = trim($_POST['seo_description']) ?: "Купить $name по лучшей цене. Описание, характеристики, отзывы.";
+    $seo_keywords = trim($_POST['seo_keywords']) ?: str_replace(' ', ',', $name);
+
+
     // Проверка выбора подкатегории
     if (!$subcategory_id) {
         die("Ошибка: Выберите подкатегорию!");
