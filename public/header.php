@@ -24,7 +24,7 @@ if (session_status() === PHP_SESSION_NONE) {
     
     <nav>
         <ul>
-            <li><a href="/mysterymakers/public/categories.php">Категории</a></li>
+            <li><a href="/mysterymakers/public/catalog.php">Категории</a></li>
             <li><a href="/mysterymakers/public/about.php">О нас</a></li>
             <li><a href="/mysterymakers/public/delivery.php">Доставка</a></li>
             <li><a href="/mysterymakers/public/contact.php">Контакты</a></li>

@@ -234,3 +234,31 @@ button {
 .category-item:hover .subcategory-menu {
     display: block;
 }
+
+.old-price {
+    color: #888;
+    text-decoration: line-through;
+}
+
+.discount-price {
+    color: #d9534f;
+    font-weight: bold;
+}
+
+.discount-info {
+    color: #f0ad4e;
+    font-size: 14px;
+}
+
+.catalog {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.product-card {
+    border: 1px solid #ddd;
+    padding: 15px;
+    width: 200px;
+    text-align: center;
+}

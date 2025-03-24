@@ -28,6 +28,30 @@ if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
 }
 
 $product_id = intval($_GET['id']);
+$stmt = $conn->prepare("SELECT p.*, d.discount_type, d.discount_value, d.start_date, d.end_date 
+                        FROM products p 
+                        LEFT JOIN discounts d ON d.product_id = p.id 
+                        WHERE p.id = ? 
+                        AND (d.start_date IS NULL OR d.start_date <= NOW()) 
+                        AND (d.end_date IS NULL OR d.end_date >= NOW())");
+$stmt->execute([$product_id]);
+$product = $stmt->fetch(PDO::FETCH_ASSOC);
+
+if (!$product) {
+    die("Товар не найден!");
+}
+
+// Рассчитываем скидочную цену
+$original_price = $product['price'];
+$discount_price = $original_price;
+
+if ($product['discount_type']) {
+    if ($product['discount_type'] == 'fixed') {
+        $discount_price = max(0, $original_price - $product['discount_value']);
+    } else {
+        $discount_price = max(0, $original_price * (1 - $product['discount_value'] / 100));
+    }
+}
 
 
 if (!$product) {
@@ -103,7 +127,16 @@ $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <!-- Детали товара -->
             <div class="details">
                 <h1><?= htmlspecialchars($product['name']); ?></h1>
-                <p class="price"><?= number_format($product['price'], 2, '.', ''); ?> ₽</p>
+                <?php if ($product['discount_type']): ?>
+    <p class="old-price"><s><?= number_format($original_price, 2, '.', ''); ?> ₽</s></p>
+    <p class="discount-price"><?= number_format($discount_price, 2, '.', ''); ?> ₽</p>
+    <p class="discount-info">
+        Скидка <?= ($product['discount_type'] == 'fixed') ? $product['discount_value'] . '₽' : $product['discount_value'] . '%'; ?>
+        <?php if ($product['end_date']): ?> (до <?= date('d.m.Y H:i', strtotime($product['end_date'])); ?>) <?php endif; ?>
+    </p>
+<?php else: ?>
+    <p class="price"><?= number_format($original_price, 2, '.', ''); ?> ₽</p>
+<?php endif; ?>
                 <p class="stock"><?= ($product['stock'] > 0) ? '✅ В наличии' : '❌ Нет в наличии'; ?></p>
 
                 <!-- Рейтинг товара -->

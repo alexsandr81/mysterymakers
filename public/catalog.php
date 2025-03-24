@@ -31,39 +31,42 @@ $seo_keywords = $category ? htmlspecialchars($category['seo_keywords']) : 'ка�
 
 // Фильтрация товаров
 $query = "SELECT * FROM products WHERE status = 1"; // Только активные товары
+$query = "SELECT p.*, d.discount_type, d.discount_value, d.start_date, d.end_date
+          FROM products p
+          LEFT JOIN discounts d ON d.product_id = p.id
+          WHERE p.status = 1"; // Только активные товары
 $params = [];
 
 if ($category) {
-    $query .= " AND category = ?";
+    $query .= " AND p.category = ?";
     $params[] = $category['id'];
 }
 
 if ($subcategory_id) {
-    $query .= " AND subcategory = ?";
+    $query .= " AND p.subcategory = ?";
     $params[] = $subcategory_id;
 }
-
 
 // Фильтрация по цене
 $min_price = $_GET['min_price'] ?? '';
 $max_price = $_GET['max_price'] ?? '';
 if ($min_price) {
-    $query .= " AND price >= ?";
+    $query .= " AND p.price >= ?";
     $params[] = $min_price;
 }
 if ($max_price) {
-    $query .= " AND price <= ?";
+    $query .= " AND p.price <= ?";
     $params[] = $max_price;
 }
 
 // Сортировка
 $sort_by = $_GET['sort_by'] ?? 'created_at DESC';
 $sort_options = [
-    'price_asc' => 'price ASC',
-    'price_desc' => 'price DESC',
-    'popular' => 'views DESC'
+    'price_asc' => 'p.price ASC',
+    'price_desc' => 'p.price DESC',
+    'popular' => 'p.views DESC'
 ];
-$query .= " ORDER BY " . ($sort_options[$sort_by] ?? 'created_at DESC');
+$query .= " ORDER BY " . ($sort_options[$sort_by] ?? 'p.created_at DESC');
 
 // Постраничная навигация
 $limit = 12;
@@ -92,56 +95,75 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 <div class="container">
     <!-- Боковое меню категорий -->
-    <!-- Боковое меню категорий -->
-<aside class="sidebar">
-    <h2>Категории</h2>
-    <ul class="category-menu"><li><a href="catalog.php">Все товары</a></li>
-        <?php foreach ($categories as $cat): ?>
-            <li class="category-item">
-                <a href="catalog.php?category=<?= htmlspecialchars($cat['slug']); ?>">
-                    <?= htmlspecialchars($cat['name']); ?>
-                </a>
-                <?php
-                // Загружаем подкатегории
-                $stmt = $conn->prepare("SELECT * FROM subcategories WHERE category_id = ?");
-                $stmt->execute([$cat['id']]);
-                $subcategories = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                ?>
-                <?php if (!empty($subcategories)): ?>
-                    <ul class="subcategory-menu">
-                        <?php foreach ($subcategories as $sub): ?>
-                            <li>
-                                <a href="catalog.php?category=<?= htmlspecialchars($cat['slug']); ?>&subcategory=<?= htmlspecialchars($sub['id']); ?>">
-                                    <?= htmlspecialchars($sub['name']); ?>
-                                </a>
-                            </li>
-                        <?php endforeach; ?>
-                    </ul>
-                <?php endif; ?>
-            </li>
-        <?php endforeach; ?>
-    </ul>
-</aside>
-
+    <aside class="sidebar">
+        <h2>Категории</h2>
+        <ul class="category-menu">
+            <li><a href="catalog.php">Все товары</a></li>
+            <?php foreach ($categories as $cat): ?>
+                <li class="category-item">
+                    <a href="catalog.php?category=<?= htmlspecialchars($cat['slug']); ?>">
+                        <?= htmlspecialchars($cat['name']); ?>
+                    </a>
+                    <?php
+                    // Загружаем подкатегории
+                    $stmt = $conn->prepare("SELECT * FROM subcategories WHERE category_id = ?");
+                    $stmt->execute([$cat['id']]);
+                    $subcategories = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                    ?>
+                    <?php if (!empty($subcategories)): ?>
+                        <ul class="subcategory-menu">
+                            <?php foreach ($subcategories as $sub): ?>
+                                <li>
+                                    <a href="catalog.php?category=<?= htmlspecialchars($cat['slug']); ?>&subcategory=<?= htmlspecialchars($sub['id']); ?>">
+                                        <?= htmlspecialchars($sub['name']); ?>
+                                    </a>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php endif; ?>
+                </li>
+            <?php endforeach; ?>
+        </ul>
+    </aside>
 
     <!-- Основной контент -->
     <main>
         <h1><?= $category ? htmlspecialchars($category['name']) : 'Каталог товаров'; ?></h1>
 
-        <!-- Фильтры -->
-        
-
         <!-- Сетка товаров -->
         <div class="products">
             <?php if (count($products) > 0): ?>
                 <?php foreach ($products as $product): ?>
+                    <?php
+                    $original_price = $product['price'];
+                    $discount_price = $original_price;
+
+                    if ($product['discount_type']) {
+                        if ($product['discount_type'] == 'fixed') {
+                            $discount_price = max(0, $original_price - $product['discount_value']);
+                        } else {
+                            $discount_price = max(0, $original_price * (1 - $product['discount_value'] / 100));
+                        }
+                    }
+                    ?>
                     <div class="product-card">
                         <a href="product.php?id=<?= $product['id']; ?>">
                             <img src="../<?= json_decode($product['images'], true)[0]; ?>" alt="<?= htmlspecialchars($product['name']); ?>">
                         </a>
                         <h3><?= htmlspecialchars($product['name']); ?></h3>
                         <a href="product.php?id=<?= $product['id']; ?>">Подробнее</a>
-                        <p>Цена: <?= number_format($product['price'], 2, '.', ''); ?> ₽</p>
+
+                        <?php if ($product['discount_type']): ?>
+                            <p class="old-price"><s><?= number_format($original_price, 2, '.', ''); ?> ₽</s></p>
+                            <p class="discount-price"><?= number_format($discount_price, 2, '.', ''); ?> ₽</p>
+                            <p class="discount-info">
+                                Скидка <?= ($product['discount_type'] == 'fixed') ? $product['discount_value'] . '₽' : $product['discount_value'] . '%'; ?>
+                                <?php if ($product['end_date']): ?> (до <?= date('d.m.Y H:i', strtotime($product['end_date'])); ?>) <?php endif; ?>
+                            </p>
+                        <?php else: ?>
+                            <p  class="price"><?= number_format($original_price, 2, '.', ''); ?> ₽</p>
+                        <?php endif; ?>
+
                         <button onclick="addToCart(<?= $product['id']; ?>)">🛒 В корзину</button>
                         <button onclick="addToFavorites(<?= $product['id']; ?>)">❤️ В избранное</button>
                     </div>
