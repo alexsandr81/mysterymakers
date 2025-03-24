@@ -18,8 +18,9 @@ $cart = $_SESSION['cart'] ?? [];
     <?php else: ?>
         <?php
         // Получаем товары из БД, если корзина не пуста
-        $ids = implode(',', array_keys($cart));
-        $stmt = $conn->query("SELECT * FROM products WHERE id IN ($ids)");
+        $placeholders = implode(',', array_fill(0, count($cart), '?'));
+        $stmt = $conn->prepare("SELECT * FROM products WHERE id IN ($placeholders)");
+        $stmt->execute(array_keys($cart));
         $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
         ?>
 
@@ -27,6 +28,7 @@ $cart = $_SESSION['cart'] ?? [];
             <tr>
                 <th>Товар</th>
                 <th>Цена</th>
+                <th>Скидка</th>
                 <th>Количество</th>
                 <th>Сумма</th>
                 <th>Действия</th>
@@ -34,16 +36,46 @@ $cart = $_SESSION['cart'] ?? [];
 
             <?php $total = 0; ?>
             <?php foreach ($products as $product): ?>
+                <?php
+                $product_id = $product['id'];
+                $quantity = (int)$cart[$product_id];
+
+                // Проверяем наличие скидки
+                $stmt = $conn->prepare("SELECT discount_value, discount_type 
+                                        FROM discounts 
+                                        WHERE product_id = ? 
+                                        AND (start_date IS NULL OR start_date <= NOW()) 
+                                        AND (end_date IS NULL OR end_date >= NOW()) 
+                                        LIMIT 1");
+                $stmt->execute([$product_id]);
+                $discount = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                $original_price = $product['price'];
+                $discount_value = 0;
+
+                if ($discount) {
+                    if ($discount['discount_type'] == 'fixed') {
+                        $discount_value = min($discount['discount_value'], $original_price);
+                    } elseif ($discount['discount_type'] == 'percentage') {
+                        $discount_value = $original_price * ($discount['discount_value'] / 100);
+                    }
+                }
+
+                $final_price = $original_price - $discount_value;
+                $subtotal = $final_price * $quantity;
+                $total += $subtotal;
+                ?>
+
                 <tr>
                     <td><?= htmlspecialchars($product['name']); ?></td>
-                    <td><?= number_format($product['price'], 2, '.', ''); ?> ₽</td>
-                    <td><?= (int)$cart[$product['id']]; ?></td>
-                    <td><?= number_format($product['price'] * $cart[$product['id']], 2, '.', ''); ?> ₽</td>
+                    <td><del><?= number_format($original_price, 2, '.', ''); ?> ₽</del></td>
+                    <td><?= $discount ? "-".number_format($discount_value, 2, '.', '')." ₽" : "—"; ?></td>
+                    <td><?= $quantity; ?></td>
+                    <td><strong><?= number_format($subtotal, 2, '.', ''); ?> ₽</strong></td>
                     <td>
-                        <button onclick="removeFromCart(<?= (int)$product['id']; ?>)">❌</button>
+                        <button onclick="removeFromCart(<?= $product_id; ?>)">❌</button>
                     </td>
                 </tr>
-                <?php $total += $product['price'] * $cart[$product['id']]; ?>
             <?php endforeach; ?>
         </table>
 
