@@ -56,6 +56,7 @@ $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <th>Товар</th>
         <th>Рейтинг</th>
         <th>Комментарий</th>
+        <th>Ответ администратора</th>
         <th>Дата</th>
         <th>Статус</th>
         <th>Действия</th>
@@ -68,6 +69,20 @@ $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <td><?= htmlspecialchars($review['product_name']); ?></td>
         <td><?= $review['rating']; ?> ⭐</td>
         <td><?= htmlspecialchars($review['comment']); ?></td>
+        <td>
+            <?php if ($review['admin_response']): ?>
+                <?= htmlspecialchars($review['admin_response']); ?>
+                <br><small>Ответ от: <?= $review['response_date']; ?></small>
+                <br><a href="edit_response.php?id=<?= $review['id']; ?>">✏ Редактировать</a> |
+                <a href="delete_response.php?id=<?= $review['id']; ?>" onclick="return confirm('Удалить ответ?');">🗑 Удалить</a>
+            <?php else: ?>
+                <form method="POST" action="add_response.php">
+                    <input type="hidden" name="review_id" value="<?= $review['id']; ?>">
+                    <textarea name="response" required placeholder="Введите ответ администратора"></textarea>
+                    <button type="submit">💬 Ответить</button>
+                </form>
+            <?php endif; ?>
+        </td>
         <td><?= $review['created_at']; ?></td>
         <td>
             <?= ($review['status'] == 'pending') ? '⏳ На модерации' : (($review['status'] == 'approved') ? '✅ Одобрен' : '❌ Отклонён'); ?>
