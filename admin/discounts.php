@@ -89,8 +89,8 @@ $discounts = $conn->query("SELECT d.*, p.name AS product_name, c.name AS categor
 
         <td><?= $d['start_date'] ? $d['start_date'] . ' - ' . $d['end_date'] : 'Бессрочная'; ?></td>
         <td>
-            <a href="delete_discount.php?id=<?= $d['id']; ?>" onclick="return confirm('Удалить скидку?');">🗑 Удалить</a>
-        </td>
+        <a href="edit_discount.php?id=<?= $d['id']; ?>">✏ Редактировать</a> | 
+    <a href="delete_discount.php?id=<?= $d['id']; ?>" onclick="return confirm('Удалить скидку?');">🗑 Удалить</a>   </td>
     </tr>
     <?php endforeach; ?>
 </table>

@@ -52,13 +52,18 @@ $cart = $_SESSION['cart'] ?? [];
 
                 $original_price = $product['price'];
                 $discount_value = 0;
+                $discount_text = "—";
+                $has_discount = false;
 
                 if ($discount) {
                     if ($discount['discount_type'] == 'fixed') {
                         $discount_value = min($discount['discount_value'], $original_price);
+                        $discount_text = "- " . number_format($discount_value, 2, '.', '') . " ₽";
                     } elseif ($discount['discount_type'] == 'percentage') {
                         $discount_value = $original_price * ($discount['discount_value'] / 100);
+                        $discount_text = "- " . number_format($discount['discount_value'], 0) . "%";
                     }
+                    $has_discount = true;
                 }
 
                 $final_price = $original_price - $discount_value;
@@ -68,8 +73,15 @@ $cart = $_SESSION['cart'] ?? [];
 
                 <tr>
                     <td><?= htmlspecialchars($product['name']); ?></td>
-                    <td><del><?= number_format($original_price, 2, '.', ''); ?> ₽</del></td>
-                    <td><?= $discount ? "-".number_format($discount_value, 2, '.', '')." ₽" : "—"; ?></td>
+                    <td>
+                        <?php if ($has_discount): ?>
+                            <del style="color: red;"><?= number_format($original_price, 2, '.', ''); ?> ₽</del>
+                            <span style="color: green;"><?= number_format($final_price, 2, '.', ''); ?> ₽</span>
+                        <?php else: ?>
+                            <span><?= number_format($original_price, 2, '.', ''); ?> ₽</span>
+                        <?php endif; ?>
+                    </td>
+                    <td><?= $discount_text; ?></td>
                     <td><?= $quantity; ?></td>
                     <td><strong><?= number_format($subtotal, 2, '.', ''); ?> ₽</strong></td>
                     <td>
