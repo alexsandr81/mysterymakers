@@ -148,7 +148,7 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     ?>
                     <div class="product-card">
                         <a href="product.php?id=<?= $product['id']; ?>">
-                            <img src="../<?= json_decode($product['images'], true)[0]; ?>" alt="<?= htmlspecialchars($product['name']); ?>">
+                            <img src="../<?= json_decode($product['images'], true)[0]; ?>" alt="<?= htmlspecialchars($product['name']); ?>" width="200">
                         </a>
                         <h3><?= htmlspecialchars($product['name']); ?></h3>
                         <a href="product.php?id=<?= $product['id']; ?>">Подробнее</a>
