@@ -31,7 +31,7 @@ $discounts = $conn->query("SELECT d.*, p.name AS product_name, c.name AS categor
 <form method="POST" action="add_discount.php">
     <label>Товар:</label>
     <select name="product_id">
-        <option value="">Выберите товар</option>
+        <option value="">Выберите товар (необязательно)</option>
         <?php foreach ($products as $p): ?>
             <option value="<?= $p['id']; ?>"><?= htmlspecialchars($p['name']); ?></option>
         <?php endforeach; ?>
@@ -39,7 +39,7 @@ $discounts = $conn->query("SELECT d.*, p.name AS product_name, c.name AS categor
 
     <label>Категория:</label>
     <select name="category_id">
-        <option value="">Выберите категорию</option>
+        <option value="">Выберите категорию (необязательно)</option>
         <?php foreach ($categories as $c): ?>
             <option value="<?= $c['id']; ?>"><?= htmlspecialchars($c['name']); ?></option>
         <?php endforeach; ?>
@@ -62,6 +62,7 @@ $discounts = $conn->query("SELECT d.*, p.name AS product_name, c.name AS categor
 
     <button type="submit">Добавить скидку</button>
 </form>
+
 
 <table border="1">
     <tr>

@@ -30,11 +30,24 @@ $seo_description = $category ? htmlspecialchars($category['seo_description']) : 
 $seo_keywords = $category ? htmlspecialchars($category['seo_keywords']) : 'каталог, товары, купить';
 
 // Фильтрация товаров
-$query = "SELECT * FROM products WHERE status = 1"; // Только активные товары
-$query = "SELECT p.*, d.discount_type, d.discount_value, d.start_date, d.end_date
+$query = "SELECT p.*, 
+                 COALESCE(
+                     (SELECT MAX(d.discount_value) FROM discounts d 
+                      WHERE d.product_id = p.id 
+                        AND (d.start_date IS NULL OR d.start_date <= NOW()) 
+                        AND (d.end_date IS NULL OR d.end_date >= NOW())), 
+                     (SELECT MAX(d.discount_value) FROM discounts d 
+                      WHERE d.category_id = p.category 
+                        AND (d.start_date IS NULL OR d.start_date <= NOW()) 
+                        AND (d.end_date IS NULL OR d.end_date >= NOW()))
+                 ) AS discount_value,
+                 (SELECT d.discount_type FROM discounts d 
+                  WHERE (d.product_id = p.id OR d.category_id = p.category) 
+                    AND (d.start_date IS NULL OR d.start_date <= NOW()) 
+                    AND (d.end_date IS NULL OR d.end_date >= NOW())
+                  ORDER BY d.discount_value DESC LIMIT 1) AS discount_type
           FROM products p
-          LEFT JOIN discounts d ON d.product_id = p.id
-          WHERE p.status = 1"; // Только активные товары
+          WHERE p.status = 1";
 $params = [];
 
 if ($category) {
@@ -60,17 +73,18 @@ if ($max_price) {
 }
 
 // Сортировка
-$sort_by = $_GET['sort_by'] ?? 'created_at DESC';
+$sort_by = $_GET['sort_by'] ?? 'created_at_desc';
 $sort_options = [
     'price_asc' => 'p.price ASC',
     'price_desc' => 'p.price DESC',
-    'popular' => 'p.views DESC'
+    'popular' => 'p.views DESC',
+    'created_at_desc' => 'p.created_at DESC'
 ];
-$query .= " ORDER BY " . ($sort_options[$sort_by] ?? 'p.created_at DESC');
+$query .= " ORDER BY " . ($sort_options[$sort_by] ?? $sort_options['created_at_desc']);
 
 // Постраничная навигация
 $limit = 12;
-$page = $_GET['page'] ?? 1;
+$page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
 $offset = ($page - 1) * $limit;
 
 $query .= " LIMIT $limit OFFSET $offset";
@@ -108,11 +122,11 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     // Загружаем подкатегории
                     $stmt = $conn->prepare("SELECT * FROM subcategories WHERE category_id = ?");
                     $stmt->execute([$cat['id']]);
-                    $subcategories = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                    $cat_subcategories = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     ?>
-                    <?php if (!empty($subcategories)): ?>
+                    <?php if (!empty($cat_subcategories)): ?>
                         <ul class="subcategory-menu">
-                            <?php foreach ($subcategories as $sub): ?>
+                            <?php foreach ($cat_subcategories as $sub): ?>
                                 <li>
                                     <a href="catalog.php?category=<?= htmlspecialchars($cat['slug']); ?>&subcategory=<?= htmlspecialchars($sub['id']); ?>">
                                         <?= htmlspecialchars($sub['name']); ?>
@@ -145,10 +159,13 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             $discount_price = max(0, $original_price * (1 - $product['discount_value'] / 100));
                         }
                     }
+
+                    $images = json_decode($product['images'], true);
+                    $image_src = (!empty($images) && isset($images[0])) ? "../" . $images[0] : '../assets/no-image.jpg';
                     ?>
                     <div class="product-card">
                         <a href="product.php?id=<?= $product['id']; ?>">
-                            <img src="../<?= json_decode($product['images'], true)[0]; ?>" alt="<?= htmlspecialchars($product['name']); ?>" width="200">
+                            <img src="<?= $image_src; ?>" alt="<?= htmlspecialchars($product['name']); ?>" width="200">
                         </a>
                         <h3><?= htmlspecialchars($product['name']); ?></h3>
                         <a href="product.php?id=<?= $product['id']; ?>">Подробнее</a>
@@ -156,12 +173,8 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <?php if ($product['discount_type']): ?>
                             <p class="old-price"><s><?= number_format($original_price, 2, '.', ''); ?> ₽</s></p>
                             <p class="discount-price"><?= number_format($discount_price, 2, '.', ''); ?> ₽</p>
-                            <p class="discount-info">
-                                Скидка <?= ($product['discount_type'] == 'fixed') ? $product['discount_value'] . '₽' : $product['discount_value'] . '%'; ?>
-                                <?php if ($product['end_date']): ?> (до <?= date('d.m.Y H:i', strtotime($product['end_date'])); ?>) <?php endif; ?>
-                            </p>
                         <?php else: ?>
-                            <p  class="price"><?= number_format($original_price, 2, '.', ''); ?> ₽</p>
+                            <p class="price"><?= number_format($original_price, 2, '.', ''); ?> ₽</p>
                         <?php endif; ?>
 
                         <button onclick="addToCart(<?= $product['id']; ?>)">🛒 В корзину</button>
