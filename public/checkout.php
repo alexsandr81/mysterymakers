@@ -2,6 +2,10 @@
 session_start();
 require_once '../database/db.php';
 
+// Включаем отображение ошибок для отладки
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
 // Проверяем авторизацию пользователя
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
@@ -9,8 +13,9 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 // Проверяем, пришли ли данные из формы
-if (!isset($_POST['name'], $_POST['phone'], $_POST['email'], $_POST['delivery'], $_POST['payment'])) {
-    header("Location: order_form.php");
+if (!isset($_POST['name'], $_POST['phone'], $_POST['email'], $_POST['delivery'], $_POST['payment'], $_POST['total_price'], $_POST['total_discount'])) {
+    echo "Ошибка: не все данные формы переданы.";
+    print_r($_POST); // Отладка: что пришло в $_POST
     exit();
 }
 
@@ -20,6 +25,8 @@ $phone = trim($_POST['phone']);
 $email = trim($_POST['email']);
 $delivery = trim($_POST['delivery']);
 $payment = trim($_POST['payment']);
+$total_price = (float)$_POST['total_price'];
+$total_discount = (float)$_POST['total_discount'];
 
 // Проверяем, есть ли товары в корзине
 if (!isset($_SESSION['cart']) || empty($_SESSION['cart'])) {
@@ -27,56 +34,75 @@ if (!isset($_SESSION['cart']) || empty($_SESSION['cart'])) {
     exit();
 }
 
-$total_price = 0;
-
 // Генерируем уникальный номер заказа
 $order_number = 'MM' . time() . rand(100, 999);
 
 // Создаём заказ в таблице `orders`
-$stmt = $conn->prepare("INSERT INTO orders (user_id, order_number, total_price, status, name, phone, email, delivery, payment) 
-VALUES (:user_id, :order_number, :total_price, 'Новый', :name, :phone, :email, :delivery, :payment)");
-$stmt->execute([
-    ':user_id' => $user_id,
-    ':order_number' => $order_number,
-    ':total_price' => $total_price,
-    ':name' => $name,
-    ':phone' => $phone,
-    ':email' => $email,
-    ':delivery' => $delivery,
-    ':payment' => $payment
-]);
+try {
+    $stmt = $conn->prepare("INSERT INTO orders (user_id, order_number, total_price, total_discount, status, name, phone, email, delivery, payment) 
+    VALUES (:user_id, :order_number, :total_price, :total_discount, 'Новый', :name, :phone, :email, :delivery, :payment)");
+    $stmt->execute([
+        ':user_id' => $user_id,
+        ':order_number' => $order_number,
+        ':total_price' => $total_price,
+        ':total_discount' => $total_discount,
+        ':name' => $name,
+        ':phone' => $phone,
+        ':email' => $email,
+        ':delivery' => $delivery,
+        ':payment' => $payment
+    ]);
+} catch (PDOException $e) {
+    echo "Ошибка при создании заказа: " . $e->getMessage();
+    exit();
+}
 
-$order_id = $conn->lastInsertId(); // Получаем ID заказа
+$order_id = $conn->lastInsertId();
 
 // Добавляем товары в `order_items`
 foreach ($_SESSION['cart'] as $product_id => $quantity) {
-    // Получаем цену товара
     $stmt = $conn->prepare("SELECT price FROM products WHERE id = :product_id");
     $stmt->execute([':product_id' => $product_id]);
     $product = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($product) {
-        $price = $product['price'];
-        $total_price += $quantity * $price;
+        $stmt_discount = $conn->prepare("SELECT discount_value, discount_type 
+                                        FROM discounts 
+                                        WHERE product_id = :product_id 
+                                        AND (start_date IS NULL OR start_date <= NOW()) 
+                                        AND (end_date IS NULL OR end_date >= NOW()) 
+                                        LIMIT 1");
+        $stmt_discount->execute([':product_id' => $product_id]);
+        $discount = $stmt_discount->fetch(PDO::FETCH_ASSOC);
 
-        // Записываем товар в заказ
-        $stmt = $conn->prepare("INSERT INTO order_items (order_id, product_id, quantity, price) 
-        VALUES (:order_id, :product_id, :quantity, :price)");
-        $stmt->execute([
-            ':order_id' => $order_id,
-            ':product_id' => $product_id,
-            ':quantity' => $quantity,
-            ':price' => $price
-        ]);
+        $original_price = $product['price'];
+        $discount_value = 0;
+
+        if ($discount) {
+            if ($discount['discount_type'] == 'fixed') {
+                $discount_value = min($discount['discount_value'], $original_price);
+            } elseif ($discount['discount_type'] == 'percentage') {
+                $discount_value = $original_price * ($discount['discount_value'] / 100);
+            }
+        }
+
+        $final_price = $original_price - $discount_value;
+
+        try {
+            $stmt = $conn->prepare("INSERT INTO order_items (order_id, product_id, quantity, price) 
+            VALUES (:order_id, :product_id, :quantity, :price)");
+            $stmt->execute([
+                ':order_id' => $order_id,
+                ':product_id' => $product_id,
+                ':quantity' => $quantity,
+                ':price' => $final_price
+            ]);
+        } catch (PDOException $e) {
+            echo "Ошибка при добавлении товара в заказ: " . $e->getMessage();
+            exit();
+        }
     }
 }
-
-// Обновляем общую сумму заказа
-$stmt = $conn->prepare("UPDATE orders SET total_price = :total_price WHERE id = :order_id");
-$stmt->execute([
-    ':total_price' => $total_price,
-    ':order_id' => $order_id
-]);
 
 // Очищаем корзину
 unset($_SESSION['cart']);

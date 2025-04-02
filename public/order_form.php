@@ -10,7 +10,7 @@ if (!isset($_SESSION['cart']) || empty($_SESSION['cart'])) {
     exit();
 }
 
-include 'header.php'; // ✅ Подключаем хедер
+include 'header.php';
 ?>
 
 <main>
@@ -40,8 +40,12 @@ include 'header.php'; // ✅ Подключаем хедер
             <option value="Картой">Картой</option>
         </select><br>
 
+        <!-- Скрытые поля из cart.php -->
+        <input type="hidden" name="total_price" value="<?= $_POST['total_price'] ?? 0; ?>">
+        <input type="hidden" name="total_discount" value="<?= $_POST['total_discount'] ?? 0; ?>">
+
         <button type="submit">Подтвердить заказ</button>
     </form>
 </main>
 
-<?php include 'footer.php'; // ✅ Подключаем футер ?>
+<?php include 'footer.php'; ?>
