@@ -43,6 +43,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $seo_description = trim($_POST['seo_description']);
         $seo_keywords = trim($_POST['seo_keywords']);
         
+     header("Location: products.php");
+     require_once 'log_helper.php';
+ log_admin_action($_SESSION['admin_id'], "Изменил товар ID: $id");
+     exit();
+    
         // Генерация slug (ЧПУ-ссылки)
         $slug = trim($_POST['name']);
 $slug = mb_strtolower($slug, 'UTF-8'); // Приводим к нижнему регистру
