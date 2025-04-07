@@ -307,10 +307,22 @@ function addEntity(type) {
     const value = input.value.trim();
     if (!value) return alert("Введите значение!");
 
+    let body = 'name=' + encodeURIComponent(value);
+
+    if (type === 'subcategory') {
+        const categorySelect = document.getElementById('category');
+        const categoryId = categorySelect.value;
+        if (!categoryId) {
+            alert("Сначала выберите категорию!");
+            return;
+        }
+        body += '&category_id=' + encodeURIComponent(categoryId);
+    }
+
     fetch('add_' + type + '.php', {
         method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: 'name=' + encodeURIComponent(value)
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body
     })
     .then(res => res.json())
     .then(data => {
@@ -324,14 +336,12 @@ function addEntity(type) {
             closeModal('modal-' + type);
             input.value = '';
         } else {
-            alert("Ошибка при добавлении");
+            alert("Ошибка при добавлении: " + (data.message || "неизвестная ошибка"));
         }
     })
-
-
-    
     .catch(() => alert("Ошибка сети"));
 }
+
 </script>
 </body>
 </html>

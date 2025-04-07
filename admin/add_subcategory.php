@@ -13,15 +13,24 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['name'], $_POST['categ
     $name = trim($_POST['name']);
     $category_id = intval($_POST['category_id']);
 
-    if (empty($name) || $category_id <= 0) {
-        echo json_encode(['success' => false, 'message' => 'Неверные данные']);
+    if ($name === '' || $category_id === 0) {
+        echo json_encode(['success' => false, 'message' => 'Заполните все поля']);
         exit();
     }
 
+    // Проверим, существует ли такая категория
+    $checkCategory = $conn->prepare("SELECT id FROM categories WHERE id = ?");
+    $checkCategory->execute([$category_id]);
+    if (!$checkCategory->fetch()) {
+        echo json_encode(['success' => false, 'message' => 'Категория не найдена']);
+        exit();
+    }
+
+    // Добавляем подкатегорию
     $stmt = $conn->prepare("INSERT INTO subcategories (name, category_id) VALUES (?, ?)");
     $stmt->execute([$name, $category_id]);
-
     $newId = $conn->lastInsertId();
+
     echo json_encode([
         'success' => true,
         'id' => $newId,
