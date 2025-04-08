@@ -10,17 +10,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $total_price = $_POST['total_price'];
 
     // Создаем заказ
-    $stmt = $pdo->prepare("INSERT INTO orders (user_name, phone, email, address, total_price) VALUES (?, ?, ?, ?, ?)");
+    $stmt = $conn->prepare("INSERT INTO orders (user_name, phone, email, address, total_price) VALUES (?, ?, ?, ?, ?)");
     $stmt->execute([$name, $phone, $email, $address, $total_price]);
-    $order_id = $pdo->lastInsertId();
+    $order_id = $conn->lastInsertId();
 
     // Добавляем товары в заказ
     foreach ($_SESSION['cart'] as $product_id => $quantity) {
-        $stmt = $pdo->prepare("SELECT price FROM products WHERE id = ?");
+        $stmt = $conn->prepare("SELECT price FROM products WHERE id = ?");
         $stmt->execute([$product_id]);
         $product = $stmt->fetch(PDO::FETCH_ASSOC);
         
-        $stmt = $pdo->prepare("INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)");
+        $stmt = $conn->prepare("INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)");
         $stmt->execute([$order_id, $product_id, $quantity, $product['price']]);
     }
 

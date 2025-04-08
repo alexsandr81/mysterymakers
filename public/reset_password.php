@@ -5,7 +5,7 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET["token"])) {
     $token = $_GET["token"];
 
     // Проверяем, существует ли токен в базе
-    $stmt = $pdo->prepare("SELECT email FROM users WHERE reset_token = ?");
+    $stmt = $conn->prepare("SELECT email FROM users WHERE reset_token = ?");
     $stmt->execute([$token]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -17,7 +17,7 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET["token"])) {
     $new_password = password_hash($_POST["password"], PASSWORD_DEFAULT);
 
     // Обновляем пароль в базе
-    $stmt = $pdo->prepare("UPDATE users SET password = ?, reset_token = NULL WHERE reset_token = ?");
+    $stmt = $conn->prepare("UPDATE users SET password = ?, reset_token = NULL WHERE reset_token = ?");
     $stmt->execute([$new_password, $token]);
 
     if ($stmt->rowCount() > 0) {

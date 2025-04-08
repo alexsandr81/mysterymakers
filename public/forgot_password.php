@@ -6,13 +6,13 @@ require_once '../database/db.php'; // Подключаем базу данных
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $email = trim($_POST['email']);
 
-    $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
+    $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
     $stmt->execute([$email]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($user) {
         $reset_token = bin2hex(random_bytes(32)); // Генерируем токен
-        $stmt = $pdo->prepare("UPDATE users SET reset_token = ? WHERE email = ?");
+        $stmt = $conn->prepare("UPDATE users SET reset_token = ? WHERE email = ?");
         $stmt->execute([$reset_token, $email]);
 
         $reset_link = "http://localhost/mysterymakers/public/reset_password.php?token=$reset_token";
