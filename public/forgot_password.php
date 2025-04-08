@@ -1,7 +1,12 @@
-
 <?php
 session_start();
 require_once '../database/db.php'; // Подключаем базу данных
+require_once 'C:/xampp/htdocs/mysterymakers/PHPMailer/src/PHPMailer.php';
+require_once 'C:/xampp/htdocs/mysterymakers/PHPMailer/src/SMTP.php';
+require_once 'C:/xampp/htdocs/mysterymakers/PHPMailer/src/Exception.php';
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $email = trim($_POST['email']);
@@ -16,7 +21,35 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $stmt->execute([$reset_token, $email]);
 
         $reset_link = "http://localhost/mysterymakers/public/reset_password.php?token=$reset_token";
-        echo "<p>Перейдите по ссылке, чтобы сбросить пароль: <a href='$reset_link'>$reset_link</a></p>";
+
+        // Настройка PHPMailer
+        $mail = new PHPMailer(true);
+        try {
+            // Настройки SMTP (пример для Gmail, настрой под свой сервер)
+            $mail->isSMTP();
+            $mail->Host = 'smtp.gmail.com'; // Укажи свой SMTP-сервер
+            $mail->SMTPAuth = true;
+            $mail->Username = 'alexsandr81aa@gmail.com'; // Твой email
+            $mail->Password = 'kgjf ayxi xwcg yqaq'; // Пароль приложения или SMTP-пароль
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port = 587;
+
+            // Отправитель и получатель
+            $mail->setFrom('your_email@gmail.com', 'MysteryMakers');
+            $mail->addAddress($email);
+
+            // Кодировка и тема
+            $mail->CharSet = 'UTF-8';
+            $mail->Subject = 'Сброс пароля для MysteryMakers';
+            $mail->isHTML(true);
+            $mail->Body = "<p>Здравствуйте!</p><p>Вы запросили сброс пароля. Перейдите по ссылке, чтобы установить новый пароль:</p><p><a href='$reset_link'>$reset_link</a></p><p>Если вы не запрашивали сброс, проигнорируйте это письмо.</p>";
+            $mail->AltBody = "Здравствуйте! Вы запросили сброс пароля. Перейдите по ссылке: $reset_link. Если вы не запрашивали сброс, проигнорируйте это письмо.";
+
+            $mail->send();
+            echo "<p>Ссылка для сброса пароля отправлена на ваш email!</p>";
+        } catch (Exception $e) {
+            echo "<p style='color:red;'>Ошибка отправки письма: {$mail->ErrorInfo}</p>";
+        }
     } else {
         echo "<p style='color:red;'>Email не найден!</p>";
     }
