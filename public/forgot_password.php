@@ -1,9 +1,9 @@
 <?php
 session_start();
 require_once '../database/db.php'; // Подключаем базу данных
-require_once 'C:/xampp/htdocs/mysterymakers/PHPMailer/src/PHPMailer.php';
-require_once 'C:/xampp/htdocs/mysterymakers/PHPMailer/src/SMTP.php';
-require_once 'C:/xampp/htdocs/mysterymakers/PHPMailer/src/Exception.php';
+require_once '../PHPMailer/src/PHPMailer.php';
+require_once '../PHPMailer/src/SMTP.php';
+require_once '../PHPMailer/src/Exception.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
