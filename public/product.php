@@ -244,20 +244,26 @@ $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         // Добавление в корзину
         function addToCart(productId) {
-            fetch('/mysterymakers/public/add_to_cart.php', {
-                    method: 'POST',
-                    body: new URLSearchParams({
-                        id: productId
-                    }),
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    alert('Товар добавлен в корзину! Количество товаров: ' + data.cart_count);
-                });
+    fetch('add_to_cart.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: 'id=' + productId
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            const countEl = document.getElementById('cart-count');
+            if (countEl) countEl.textContent = data.cart_count;
+            alert("Товар добавлен в корзину!");
+        } else {
+            alert("Ошибка добавления");
         }
+    })
+    .catch(error => console.error('Ошибка:', error));
+}
+
     </script>
 
     <?php include 'footer.php'; ?>

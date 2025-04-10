@@ -44,12 +44,29 @@ if (session_status() === PHP_SESSION_NONE) {
             <?php if (isset($_SESSION['user_id'])): ?>
                 <a href="favorites.php">❤️</a>
             <?php endif; ?>
-            <a href="/mysterymakers/public/cart.php">🛒</a>
-            <?php if (!empty($_SESSION['user_id'])): ?>
+            <a href="/mysterymakers/public/cart.php" class="cart-icon">
+                🛒 <span id="cart-count"><?= array_sum($_SESSION['cart'] ?? []); ?></span>
+            </a
+                <?php if (!empty($_SESSION['user_id'])): ?>
                 <a href="/mysterymakers/public/account.php">👤 <?= htmlspecialchars($_SESSION['user_name'] ?? 'Профиль'); ?></a>
-                <a href="/mysterymakers/public/logout.php">🚪 Выйти</a>
-            <?php else: ?>
-                <a href="/mysterymakers/public/login.php">🔑 Войти</a>
-            <?php endif; ?>
+            <a href="/mysterymakers/public/logout.php">🚪 Выйти</a>
+        <?php else: ?>
+            <a href="/mysterymakers/public/login.php">🔑 Войти</a>
+        <?php endif; ?>
         </div>
     </header>
+    <script>
+function updateCartCount() {
+    fetch('/mysterymakers/public/get_cart_count.php')
+        .then(res => res.json())
+        .then(data => {
+            const countEl = document.getElementById('cart-count');
+            if (countEl) countEl.textContent = data.count;
+        });
+}
+
+// Вызываем при загрузке
+document.addEventListener('DOMContentLoaded', updateCartCount);
+</script>
+
+    </body>

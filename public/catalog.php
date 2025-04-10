@@ -228,16 +228,26 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     <script>
         function addToCart(productId) {
-            fetch('add_to_cart.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    body: 'id=' + productId
-                }).then(response => response.text())
-                .then(data => alert("Товар добавлен в корзину!"))
-                .catch(error => console.error('Ошибка:', error));
+    fetch('add_to_cart.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: 'id=' + productId
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            const countEl = document.getElementById('cart-count');
+            if (countEl) countEl.textContent = data.cart_count;
+            alert("Товар добавлен в корзину!");
+        } else {
+            alert("Ошибка добавления");
         }
+    })
+    .catch(error => console.error('Ошибка:', error));
+}
+
 
         function addToFavorites(productId) {
             fetch('add_to_favorites.php', {
