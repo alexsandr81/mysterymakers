@@ -128,15 +128,15 @@ $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <div class="details">
                 <h1><?= htmlspecialchars($product['name']); ?></h1>
                 <?php if ($product['discount_type']): ?>
-    <p class="old-price"><s><?= number_format($original_price, 2, '.', ''); ?> ₽</s></p>
-    <p class="discount-price"><?= number_format($discount_price, 2, '.', ''); ?> ₽</p>
-    <p class="discount-info">
-        Скидка <?= ($product['discount_type'] == 'fixed') ? $product['discount_value'] . '₽' : $product['discount_value'] . '%'; ?>
-        <?php if ($product['end_date']): ?> (до <?= date('d.m.Y H:i', strtotime($product['end_date'])); ?>) <?php endif; ?>
-    </p>
-<?php else: ?>
-    <p class="price"><?= number_format($original_price, 2, '.', ''); ?> ₽</p>
-<?php endif; ?>
+                    <p class="old-price"><s><?= number_format($original_price, 2, '.', ''); ?> ₽</s></p>
+                    <p class="discount-price"><?= number_format($discount_price, 2, '.', ''); ?> ₽</p>
+                    <p class="discount-info">
+                        Скидка <?= ($product['discount_type'] == 'fixed') ? $product['discount_value'] . '₽' : $product['discount_value'] . '%'; ?>
+                        <?php if ($product['end_date']): ?> (до <?= date('d.m.Y H:i', strtotime($product['end_date'])); ?>) <?php endif; ?>
+                    </p>
+                <?php else: ?>
+                    <p class="price"><?= number_format($original_price, 2, '.', ''); ?> ₽</p>
+                <?php endif; ?>
                 <p class="stock"><?= ($product['stock'] > 0) ? '✅ В наличии' : '❌ Нет в наличии'; ?></p>
 
                 <!-- Рейтинг товара -->
@@ -145,7 +145,10 @@ $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <!-- Кнопки покупки -->
                 <button class="btn-cart" onclick="addToCart(<?= $product['id']; ?>)">🛒 Добавить в корзину</button>
                 <button class="btn-buy">⚡ Купить в 1 клик</button>
-                <button class="btn-fav">❤️ В избранное</button>
+                <form method="POST" action="add_to_favorites.php">
+                    <input type="hidden" name="product_id" value="<?= $product['id']; ?>">
+                    <button type="submit">❤️ В избранное</button>
+                </form>
 
                 <h3>Описание</h3>
                 <p><?= nl2br(htmlspecialchars($product['description'])); ?></p>
