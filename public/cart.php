@@ -1,9 +1,14 @@
-<?php 
-include 'header.php'; 
-include '../database/db.php'; 
+<?php
+include 'header.php';
+include '../database/db.php';
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
+}
+
+// Защита от CSRF
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
 $cart = $_SESSION['cart'] ?? [];
@@ -23,6 +28,7 @@ $cart = $_SESSION['cart'] ?? [];
         ?>
 
         <form action="order_form.php" method="POST">
+            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']); ?>">
             <table>
                 <tr>
                     <th>Товар</th>
@@ -33,13 +39,15 @@ $cart = $_SESSION['cart'] ?? [];
                     <th>Действия</th>
                 </tr>
 
-                <?php $total = 0; $total_discount = 0; ?>
+                <?php $total = 0;
+                $total_discount = 0; ?>
                 <?php foreach ($products as $product): ?>
                     <?php
-                    $product_id = $product['id'];
-                    $quantity = (int)$cart[$product_id];
+                    $product_id = (int)$product['id']; // Приведение к int для безопасности
+                    $quantity = (int)($cart[$product_id] ?? 0); // Валидация количества
 
-                    // Проверяем скидку по product_id и category_id
+                    if ($quantity <= 0) continue; // Пропускаем некорректные значения
+
                     $stmt = $conn->prepare("
                         SELECT discount_value, discount_type 
                         FROM discounts 
@@ -48,20 +56,20 @@ $cart = $_SESSION['cart'] ?? [];
                         AND (end_date IS NULL OR end_date >= NOW()) 
                         LIMIT 1
                     ");
-                    $stmt->execute([$product_id, $product['category_id']]);
+                    $stmt->execute([$product_id, (int)$product['category_id']]);
                     $discount = $stmt->fetch(PDO::FETCH_ASSOC);
 
-                    $original_price = $product['price'];
+                    $original_price = (float)$product['price'];
                     $discount_value = 0;
                     $discount_text = "—";
                     $has_discount = false;
 
                     if ($discount) {
                         if ($discount['discount_type'] == 'fixed') {
-                            $discount_value = min($discount['discount_value'], $original_price);
+                            $discount_value = min((float)$discount['discount_value'], $original_price);
                             $discount_text = "- " . number_format($discount_value, 2, '.', '') . " ₽";
                         } elseif ($discount['discount_type'] == 'percentage') {
-                            $discount_value = $original_price * ($discount['discount_value'] / 100);
+                            $discount_value = $original_price * ((float)$discount['discount_value'] / 100);
                             $discount_text = "- " . number_format($discount['discount_value'], 0) . "%";
                         }
                         $has_discount = true;
@@ -72,7 +80,6 @@ $cart = $_SESSION['cart'] ?? [];
                     $total += $subtotal;
                     $total_discount += ($original_price - $final_price) * $quantity;
                     ?>
-
                     <tr>
                         <td><?= htmlspecialchars($product['name']); ?></td>
                         <td>
@@ -84,10 +91,22 @@ $cart = $_SESSION['cart'] ?? [];
                             <?php endif; ?>
                         </td>
                         <td><?= $discount_text; ?></td>
-                        <td><?= $quantity; ?></td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 5px;">
+                                <button type="button" onclick="changeQuantity(<?= $product_id; ?>, -1)" style="width: 20px;">−</button>
+                                <input type="number"
+                                    name="quantity[<?= $product_id; ?>]"
+                                    value="<?= $quantity; ?>"
+                                    min="1"
+                                    max="99"
+                                    onchange="updateQuantity(<?= $product_id; ?>, this.value)"
+                                    style="width: 30px; text-align: center;">
+                                <button type="button" onclick="changeQuantity(<?= $product_id; ?>, 1)" style="width: 20px;">+</button>
+                            </div>
+                        </td>
                         <td><strong><?= number_format($subtotal, 2, '.', ''); ?> ₽</strong></td>
                         <td>
-                            <button type="button" onclick="removeFromCart(<?= $product_id; ?>)">❌</button>
+                            <button type="button" onclick="confirmRemoveFromCart(<?= $product_id; ?>)">❌</button>
                         </td>
                     </tr>
                 <?php endforeach; ?>
@@ -110,20 +129,58 @@ $cart = $_SESSION['cart'] ?? [];
         </form>
 
         <script>
-            function removeFromCart(productId) {
-                fetch('remove_from_cart.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: 'id=' + productId
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        location.reload();
-                    }
-                });
+    function updateQuantity(productId, quantity) {
+        if (quantity < 1 || quantity > 99) {
+            alert('Количество должно быть от 1 до 99');
+            return;
+        }
+        fetch('update_cart.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'id=' + encodeURIComponent(productId) + 
+                  '&quantity=' + encodeURIComponent(quantity) + 
+                  '&csrf_token=' + encodeURIComponent('<?= $_SESSION['csrf_token']; ?>')
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                location.reload();
+            } else {
+                alert('Ошибка: ' + (data.message || 'Не удалось обновить количество'));
             }
-        </script>
+        })
+        .catch(error => alert('Ошибка соединения: ' + error));
+    }
+
+    function changeQuantity(productId, delta) {
+        const input = document.querySelector(`input[name="quantity[${productId}]"]`);
+        let newQuantity = parseInt(input.value) + delta;
+        if (newQuantity >= 1 && newQuantity <= 99) {
+            input.value = newQuantity;
+            updateQuantity(productId, newQuantity);
+        }
+    }
+
+    function confirmRemoveFromCart(productId) {
+        if (confirm('Вы уверены, что хотите удалить этот товар из корзины?')) {
+            fetch('remove_from_cart.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'id=' + encodeURIComponent(productId) + 
+                      '&csrf_token=' + encodeURIComponent('<?= $_SESSION['csrf_token']; ?>')
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    location.reload();
+                } else {
+                    alert('Ошибка: ' + (data.message || 'Не удалось удалить товар'));
+                }
+            })
+            .catch(error => alert('Ошибка соединения: ' + error));
+        }
+    }
+</script>
     <?php endif; ?>
 </main>
 
