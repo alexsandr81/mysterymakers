@@ -18,7 +18,6 @@ $stmt = $conn->prepare("
     JOIN users ON orders.user_id = users.id 
     WHERE orders.id = ?
 ");
-
 $stmt->execute([$order_id]);
 $order = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -26,14 +25,29 @@ if (!$order) {
     die("❌ Заказ не найден!");
 }
 
-// Загружаем товары в заказе
+// Загружаем товары в заказе с исходной ценой из products
 $stmt = $conn->prepare("
-    SELECT oi.quantity, oi.price, p.name 
+    SELECT oi.quantity, oi.price AS final_price, p.name, p.price AS original_price, p.category_id,
+           COALESCE(
+               (SELECT MAX(d.discount_value) FROM discounts d 
+                WHERE d.product_id = p.id 
+                  AND (d.start_date IS NULL OR d.start_date <= ?) 
+                  AND (d.end_date IS NULL OR d.end_date >= ?)),
+               (SELECT MAX(d.discount_value) FROM discounts d 
+                WHERE d.category_id = p.category_id 
+                  AND (d.start_date IS NULL OR d.start_date <= ?) 
+                  AND (d.end_date IS NULL OR d.end_date >= ?))
+           ) AS discount_value,
+           (SELECT d.discount_type FROM discounts d 
+            WHERE (d.product_id = p.id OR d.category_id = p.category_id) 
+              AND (d.start_date IS NULL OR d.start_date <= ?) 
+              AND (d.end_date IS NULL OR d.end_date >= ?)
+            ORDER BY d.discount_value DESC LIMIT 1) AS discount_type
     FROM order_items oi 
     JOIN products p ON oi.product_id = p.id 
     WHERE oi.order_id = ?
 ");
-$stmt->execute([$order_id]);
+$stmt->execute([$order['created_at'], $order['created_at'], $order['created_at'], $order['created_at'], $order['created_at'], $order['created_at'], $order_id]);
 $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
@@ -61,15 +75,31 @@ $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <tr>
             <th>Название</th>
             <th>Количество</th>
-            <th>Цена</th>
+            <th>Цена (без скидки)</th>
+            <th>Скидка</th>
+            <th>Итоговая цена</th>
             <th>Сумма</th>
         </tr>
         <?php foreach ($items as $item): ?>
+            <?php
+            $original_price = $item['original_price'];
+            $final_price = $item['final_price'];
+            $discount_value = $item['discount_value'] ?? 0;
+            $subtotal = $final_price * $item['quantity'];
+            ?>
             <tr>
-                <td><?= htmlspecialchars($item['name']); ?></td> <!-- Исправлено: name вместо product_name -->
+                <td><?= htmlspecialchars($item['name']); ?></td>
                 <td><?= htmlspecialchars($item['quantity']); ?></td>
-                <td><?= number_format($item['price'], 2, '.', ''); ?> ₽</td>
-                <td><?= number_format($item['price'] * $item['quantity'], 2, '.', ''); ?> ₽</td>
+                <td><?= number_format($original_price, 2, '.', ''); ?> ₽</td>
+                <td>
+                    <?php if ($discount_value): ?>
+                        <?= $item['discount_type'] == 'fixed' ? number_format($discount_value, 2, '.', '') . ' ₽' : $discount_value . '%'; ?>
+                    <?php else: ?>
+                        —
+                    <?php endif; ?>
+                </td>
+                <td><?= number_format($final_price, 2, '.', ''); ?> ₽</td>
+                <td><?= number_format($subtotal, 2, '.', ''); ?> ₽</td>
             </tr>
         <?php endforeach; ?>
     </table>

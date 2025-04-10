@@ -128,7 +128,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $images_json = json_encode($image_paths, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
 
     $stmt = $conn->prepare("INSERT INTO products 
-        (name, description, price, category, subcategory, size, material, sku, stock, images, seo_title, seo_description, seo_keywords, slug) 
+        (name, description, price, category_id, subcategory, size, material, sku, stock, images, seo_title, seo_description, seo_keywords, slug) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
     $stmt->execute([
@@ -179,13 +179,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <label>Цена:</label>
     <input type="number" name="price" step="0.01" required><br><br>
 
-    <label>Категория:</label>
-    <select name="category" id="category" required>
-        <option value="">Выберите категорию:</option>
-        <?php foreach ($categories as $cat): ?>
-            <option value="<?= $cat['id']; ?>"><?= htmlspecialchars($cat['name']); ?></option>
-        <?php endforeach; ?>
-    </select>
+    <label>Категория:</label><br>
+<select name="category" id="category" required>
+    <option value="">Выберите категорию</option>
+    <?php foreach ($categories as $category): ?>
+        <option value="<?= $category['id']; ?>"><?= htmlspecialchars($category['name']); ?></option>
+    <?php endforeach; ?>
+</select>
     <button type="button" onclick="openModal('modal-category')">➕</button><br><br>
 
     <label>Подкатегория:</label>

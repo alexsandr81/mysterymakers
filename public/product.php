@@ -18,8 +18,8 @@ $product = $stmt->fetch(PDO::FETCH_ASSOC); // Получение деталей 
 $related_products = []; // Инициализация пустого массива для связанных товаров
 
 if ($product) {
-    $stmt = $conn->prepare("SELECT * FROM products WHERE category = ? AND id != ? ORDER BY RAND() LIMIT 4"); // Подготовка SQL-запроса для выборки связанных товаров на основе категории текущего товара
-    $stmt->execute([$product['category'], $product['id']]); // Выполнение SQL-запроса с параметрами категории и ID текущего товара
+    $stmt = $conn->prepare("SELECT * FROM products WHERE category_id = ? AND id != ? ORDER BY RAND() LIMIT 4"); // Подготовка SQL-запроса для выборки связанных товаров на основе категории текущего товара
+    $stmt->execute([$product['category_id'], $product['id']]); // Выполнение SQL-запроса с параметрами категории и ID текущего товара
     $related_products = $stmt->fetchAll(PDO::FETCH_ASSOC); // Получение связанных товаров в виде ассоциативного массива
 }
 

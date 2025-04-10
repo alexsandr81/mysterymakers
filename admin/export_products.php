@@ -11,7 +11,7 @@ $query = "SELECT p.id, p.name, p.sku, p.stock, p.price, p.created_at,
                  c.name AS category_name, s.name AS subcategory_name, 
                  sz.name AS size_name, m.name AS material_name
           FROM products p
-          LEFT JOIN categories c ON p.category = c.id
+          LEFT JOIN categories c ON p.category_id = c.id
           LEFT JOIN subcategories s ON p.subcategory = s.id
           LEFT JOIN sizes sz ON p.size = sz.id
           LEFT JOIN materials m ON p.material = m.id";

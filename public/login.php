@@ -1,44 +1,15 @@
 <?php 
-// Проверяем, активна ли сессия, перед запуском
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-require_once '../database/db.php'; // Подключаем базу данных
+require_once '../database/db.php'; 
 include 'header.php'; 
 
 // Проверяем, вошел ли пользователь
 if (isset($_SESSION['user_id'])) {
     header("Location: account.php");
     exit();
-}
-
-// Обрабатываем вход
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $email = trim($_POST['email']);
-    $password = trim($_POST['password']);
-    $remember = isset($_POST['remember']); // Запомнить меня
-
-    // Используем $pdo вместо $conn
-    $stmt = $conn->prepare("SELECT id, password FROM users WHERE email = ?");
-    $stmt->execute([$email]);
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    if ($user && password_verify($password, $user['password'])) {
-        $_SESSION['user_id'] = $user['id'];
-$_SESSION['user_name'] = $user['name'];  // Добавляем имя пользователя в сессию
-
-
-        // Запоминаем пользователя, если он выбрал "Запомнить меня"
-        if ($remember) {
-            setcookie("user_id", $user['id'], time() + (86400 * 30), "/"); // 30 дней
-        }
-
-        header("Location: account.php");
-        exit();
-    } else {
-        $error = "Неправильный email или пароль!";
-    }
 }
 ?>
 
@@ -53,9 +24,15 @@ $_SESSION['user_name'] = $user['name'];  // Добавляем имя польз
 
 <h2>Вход</h2>
 
-<?php if (isset($error)) echo "<p style='color:red;'>$error</p>"; ?>
+<?php if (isset($_GET['error']) && $_GET['error'] === 'invalid_credentials'): ?>
+    <p style='color:red;'>Неверный email или пароль.</p>
+<?php endif; ?>
 
-<form method="POST" action="">
+<?php if (isset($_SESSION['message'])): ?>
+    <p style="color:green;"><?php echo $_SESSION['message']; unset($_SESSION['message']); ?></p>
+<?php endif; ?>
+
+<form method="POST" action="login_process.php">
     <label>Email:</label>
     <input type="email" name="email" required><br><br>
 

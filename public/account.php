@@ -57,7 +57,7 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <?php endif; ?>
     </table>
 
-    <a href="logout.php" class="logout-btn">Выйти</a>
+    
 </main>
 
 <?php include 'footer.php'; ?>

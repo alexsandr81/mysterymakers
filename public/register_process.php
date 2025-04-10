@@ -22,7 +22,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $_SESSION['user_id'] = $conn->lastInsertId();
     $_SESSION['user_name'] = $name;
 
-    header("Location: account.php");
+    header("Location: index.php");
     exit();
 }
 ?>

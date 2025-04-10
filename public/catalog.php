@@ -37,12 +37,12 @@ $query = "SELECT p.*,
                         AND (d.start_date IS NULL OR d.start_date <= NOW()) 
                         AND (d.end_date IS NULL OR d.end_date >= NOW())), 
                      (SELECT MAX(d.discount_value) FROM discounts d 
-                      WHERE d.category_id = p.category 
+                      WHERE d.category_id = p.category_id 
                         AND (d.start_date IS NULL OR d.start_date <= NOW()) 
                         AND (d.end_date IS NULL OR d.end_date >= NOW()))
                  ) AS discount_value,
                  (SELECT d.discount_type FROM discounts d 
-                  WHERE (d.product_id = p.id OR d.category_id = p.category) 
+                  WHERE (d.product_id = p.id OR d.category_id = p.category_id) 
                     AND (d.start_date IS NULL OR d.start_date <= NOW()) 
                     AND (d.end_date IS NULL OR d.end_date >= NOW())
                   ORDER BY d.discount_value DESC LIMIT 1) AS discount_type
@@ -51,7 +51,7 @@ $query = "SELECT p.*,
 $params = [];
 
 if ($category) {
-    $query .= " AND p.category = ?";
+    $query .= " AND p.category_id = ?";
     $params[] = $category['id'];
 }
 

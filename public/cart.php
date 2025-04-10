@@ -39,13 +39,16 @@ $cart = $_SESSION['cart'] ?? [];
                     $product_id = $product['id'];
                     $quantity = (int)$cart[$product_id];
 
-                    $stmt = $conn->prepare("SELECT discount_value, discount_type 
-                                            FROM discounts 
-                                            WHERE product_id = ? 
-                                            AND (start_date IS NULL OR start_date <= NOW()) 
-                                            AND (end_date IS NULL OR end_date >= NOW()) 
-                                            LIMIT 1");
-                    $stmt->execute([$product_id]);
+                    // Проверяем скидку по product_id и category_id
+                    $stmt = $conn->prepare("
+                        SELECT discount_value, discount_type 
+                        FROM discounts 
+                        WHERE (product_id = ? OR category_id = ?) 
+                        AND (start_date IS NULL OR start_date <= NOW()) 
+                        AND (end_date IS NULL OR end_date >= NOW()) 
+                        LIMIT 1
+                    ");
+                    $stmt->execute([$product_id, $product['category_id']]);
                     $discount = $stmt->fetch(PDO::FETCH_ASSOC);
 
                     $original_price = $product['price'];
@@ -88,29 +91,40 @@ $cart = $_SESSION['cart'] ?? [];
                         </td>
                     </tr>
                 <?php endforeach; ?>
+
+                <tr>
+                    <td colspan="4"><strong>Итого:</strong></td>
+                    <td><strong><?= number_format($total, 2, '.', ''); ?> ₽</strong></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td colspan="4"><strong>Скидка:</strong></td>
+                    <td><strong><?= number_format($total_discount, 2, '.', ''); ?> ₽</strong></td>
+                    <td></td>
+                </tr>
             </table>
 
-            <p>Итого: <strong><?= number_format($total, 2, '.', ''); ?> ₽</strong></p>
-            <p>Скидка: <strong><?= number_format($total_discount, 2, '.', ''); ?> ₽</strong></p>
-
-            <!-- Скрытые поля для передачи total и total_discount -->
             <input type="hidden" name="total_price" value="<?= $total; ?>">
             <input type="hidden" name="total_discount" value="<?= $total_discount; ?>">
-
-            <button type="submit" class="btn-checkout">Оформить заказ</button>
+            <button type="submit">Оформить заказ</button>
         </form>
+
+        <script>
+            function removeFromCart(productId) {
+                fetch('remove_from_cart.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'id=' + productId
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        location.reload();
+                    }
+                });
+            }
+        </script>
     <?php endif; ?>
 </main>
-
-<script>
-function removeFromCart(productId) {
-    fetch('/mysterymakers/public/remove_from_cart.php', {
-        method: 'POST',
-        body: new URLSearchParams({ id: productId }),
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-    })
-    .then(() => location.reload());
-}
-</script>
 
 <?php include 'footer.php'; ?>

@@ -29,7 +29,7 @@ $date_sort = $_GET['date_sort'] ?? '';
 // Формируем SQL-запрос
 $query = "SELECT p.*, c.name AS category_name, s.name AS subcategory_name, sz.name AS size_name, m.name AS material_name 
           FROM products p
-          LEFT JOIN categories c ON p.category = c.id
+          LEFT JOIN categories c ON p.category_id = c.id
           LEFT JOIN subcategories s ON p.subcategory = s.id
           LEFT JOIN sizes sz ON p.size = sz.id
           LEFT JOIN materials m ON p.material = m.id
@@ -37,7 +37,7 @@ $query = "SELECT p.*, c.name AS category_name, s.name AS subcategory_name, sz.na
 
 $params = [];
 if ($category_filter) {
-    $query .= " AND p.category = ?";
+    $query .= " AND p.category_id = ?";
     $params[] = $category_filter;
 }
 if ($subcategory_filter) {
