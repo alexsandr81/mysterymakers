@@ -3,102 +3,104 @@ include 'header.php'; // Подключение файла header.php
 require_once '../database/db.php'; // Подключение файла с подключением к базе данных
 
 // Получение ID товара из URL
-$id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+$product_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
-if ($id <= 0) {
-    echo "<h1>Ошибка: ID товара не указан</h1>"; // Вывод сообщения об ошибке, если ID товара не указан
-    include 'footer.php'; // Подключение файла footer.php
+if ($product_id <= 0) {
+    echo "<h1>Ошибка: ID товара не указан</h1>";
+    include 'footer.php';
     exit;
 }
 
-$id = $_GET['id'] ?? 0; // Получение ID товара из URL
-$stmt = $conn->prepare("SELECT * FROM products WHERE id = ?"); // Подготовка SQL-запроса для выборки товара по указанному ID
-$stmt->execute([$id]); // Выполнение SQL-запроса с параметром ID товара
-$product = $stmt->fetch(PDO::FETCH_ASSOC); // Получение деталей товара в виде ассоциативного массива
-$related_products = []; // Инициализация пустого массива для связанных товаров
-
-if ($product) {
-    $stmt = $conn->prepare("SELECT * FROM products WHERE category_id = ? AND id != ? ORDER BY RAND() LIMIT 4"); // Подготовка SQL-запроса для выборки связанных товаров на основе категории текущего товара
-    $stmt->execute([$product['category_id'], $product['id']]); // Выполнение SQL-запроса с параметрами категории и ID текущего товара
-    $related_products = $stmt->fetchAll(PDO::FETCH_ASSOC); // Получение связанных товаров в виде ассоциативного массива
-}
-
-if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
-    die("Ошибка: Не указан ID товара!");
-}
-
-$product_id = intval($_GET['id']);
-$stmt = $conn->prepare("SELECT p.*, d.discount_type, d.discount_value, d.start_date, d.end_date 
-                        FROM products p 
-                        LEFT JOIN discounts d ON d.product_id = p.id 
-                        WHERE p.id = ? 
-                        AND (d.start_date IS NULL OR d.start_date <= NOW()) 
-                        AND (d.end_date IS NULL OR d.end_date >= NOW())");
+// Получаем товар с учётом скидок по товару и категории
+$stmt = $conn->prepare("
+    SELECT p.*, 
+           COALESCE(
+               (SELECT MAX(d.discount_value) FROM discounts d 
+                WHERE d.product_id = p.id 
+                  AND (d.start_date IS NULL OR d.start_date <= NOW()) 
+                  AND (d.end_date IS NULL OR d.end_date >= NOW())), 
+               (SELECT MAX(d.discount_value) FROM discounts d 
+                WHERE d.category_id = p.category_id 
+                  AND (d.start_date IS NULL OR d.start_date <= NOW()) 
+                  AND (d.end_date IS NULL OR d.end_date >= NOW()))
+           ) AS discount_value,
+           (SELECT d.discount_type FROM discounts d 
+            WHERE (d.product_id = p.id OR d.category_id = p.category_id) 
+              AND (d.start_date IS NULL OR d.start_date <= NOW()) 
+              AND (d.end_date IS NULL OR d.end_date >= NOW())
+            ORDER BY d.discount_value DESC LIMIT 1) AS discount_type,
+           (SELECT d.end_date FROM discounts d 
+            WHERE (d.product_id = p.id OR d.category_id = p.category_id) 
+              AND (d.start_date IS NULL OR d.start_date <= NOW()) 
+              AND (d.end_date IS NULL OR d.end_date >= NOW())
+            ORDER BY d.discount_value DESC LIMIT 1) AS end_date
+    FROM products p
+    WHERE p.id = ? AND p.status = 1
+");
 $stmt->execute([$product_id]);
 $product = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$product) {
-    die("Товар не найден!");
+    echo "<h1>Товар не найден</h1>";
+    include 'footer.php';
+    exit;
 }
 
 // Рассчитываем скидочную цену
 $original_price = $product['price'];
+$discount_value = $product['discount_value'] ?? 0;
 $discount_price = $original_price;
 
-if ($product['discount_type']) {
+if ($discount_value) {
     if ($product['discount_type'] == 'fixed') {
-        $discount_price = max(0, $original_price - $product['discount_value']);
-    } else {
-        $discount_price = max(0, $original_price * (1 - $product['discount_value'] / 100));
+        $discount_price = max(0, $original_price - $discount_value);
+    } elseif ($product['discount_type'] == 'percentage') {
+        $discount_price = $original_price * (1 - $discount_value / 100);
     }
 }
 
-
-if (!$product) {
-    die("Товар не найден!"); // Вывод сообщения об ошибке, если товар не найден
-}
+// Получаем связанные товары
+$stmt = $conn->prepare("SELECT * FROM products WHERE category_id = ? AND id != ? AND status = 1 ORDER BY RAND() LIMIT 4");
+$stmt->execute([$product['category_id'], $product['id']]);
+$related_products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Данные для SEO
-$seo_title = !empty($product['seo_title']) ? $product['seo_title'] : $product['name']; // Установка SEO-заголовка товара на основе указанного SEO-заголовка или названия товара
-$seo_description = !empty($product['seo_description']) ? $product['seo_description'] : substr($product['description'], 0, 150); // Установка SEO-описания товара на основе указанного SEO-описания или подстроки описания товара
-$seo_keywords = !empty($product['seo_keywords']) ? $product['seo_keywords'] : str_replace(' ', ',', $product['name']); // Установка SEO-ключевых слов товара на основе указанных SEO-ключевых слов или запятой-разделенного списка названия товара
-
-if (!$product) {
-    echo "<h1>Товар не найден</h1>"; // Вывод сообщения об ошибке, если товар не найден
-    include 'footer.php'; // Подключение файла footer.php
-    exit;
-}
+$seo_title = !empty($product['seo_title']) ? $product['seo_title'] : $product['name'];
+$seo_description = !empty($product['seo_description']) ? $product['seo_description'] : substr($product['description'], 0, 150);
+$seo_keywords = !empty($product['seo_keywords']) ? $product['seo_keywords'] : str_replace(' ', ',', $product['name']);
 
 // Получение изображений товара
-$images = json_decode($product['images'], true); // Декодирование JSON-строки изображений в ассоциативный массив
+$images = json_decode($product['images'], true);
 if (!is_array($images)) {
-    $images = []; // Если изображения не являются массивом, установка пустого массива
+    $images = [];
 }
 
 // Получение среднего рейтинга и отзывов
-$stmt = $conn->prepare("SELECT AVG(rating) as avg_rating FROM reviews WHERE product_id = ?"); // Подготовка SQL-запроса для вычисления среднего рейтинга товара
-$stmt->execute([$product['id']]); // Выполнение SQL-запроса с параметром ID товара
-$rating = round($stmt->fetch(PDO::FETCH_ASSOC)['avg_rating'], 1); // Получение среднего рейтинга и округление до одного десятичного знака
+$stmt = $conn->prepare("SELECT AVG(rating) as avg_rating FROM reviews WHERE product_id = ?");
+$stmt->execute([$product['id']]);
+$rating = round($stmt->fetch(PDO::FETCH_ASSOC)['avg_rating'], 1);
 
-$stmt = $conn->prepare("SELECT r.*, u.name AS user_name FROM reviews r
-                        JOIN users u ON r.user_id = u.id
-                        WHERE r.product_id = ? AND r.status = 'approved'
-                        ORDER BY r.created_at DESC");
+$stmt = $conn->prepare("
+    SELECT r.*, u.name AS user_name 
+    FROM reviews r
+    JOIN users u ON r.user_id = u.id
+    WHERE r.product_id = ? AND r.status = 'approved'
+    ORDER BY r.created_at DESC
+");
 $stmt->execute([$product_id]);
 $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
 ?>
-<!DOCTYPE html>
-<html lang="en">
 
+<!DOCTYPE html>
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($seo_title); ?></title>
     <meta name="description" content="<?= htmlspecialchars($seo_description); ?>">
     <meta name="keywords" content="<?= htmlspecialchars($seo_keywords); ?>">
+    <link rel="stylesheet" href="assets/styles.css">
 </head>
-
 <body>
     <main>
         <div class="product-page">
@@ -127,11 +129,11 @@ $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <!-- Детали товара -->
             <div class="details">
                 <h1><?= htmlspecialchars($product['name']); ?></h1>
-                <?php if ($product['discount_type']): ?>
+                <?php if ($discount_value): ?>
                     <p class="old-price"><s><?= number_format($original_price, 2, '.', ''); ?> ₽</s></p>
                     <p class="discount-price"><?= number_format($discount_price, 2, '.', ''); ?> ₽</p>
                     <p class="discount-info">
-                        Скидка <?= ($product['discount_type'] == 'fixed') ? $product['discount_value'] . '₽' : $product['discount_value'] . '%'; ?>
+                        Скидка <?= ($product['discount_type'] == 'fixed') ? $product['discount_value'] . ' ₽' : $product['discount_value'] . '%'; ?>
                         <?php if ($product['end_date']): ?> (до <?= date('d.m.Y H:i', strtotime($product['end_date'])); ?>) <?php endif; ?>
                     </p>
                 <?php else: ?>
@@ -166,7 +168,6 @@ $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <?php endif; ?>
                             </div>
                         <?php endforeach; ?>
-
                     </div>
                 <?php else: ?>
                     <p>Отзывов пока нет.</p>
@@ -199,6 +200,8 @@ $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <?php endif; ?>
             </div>
         </div>
+
+        <!-- Похожие товары -->
         <?php if (!empty($related_products)): ?>
             <h2>Похожие товары</h2>
             <div class="products-grid">
@@ -214,7 +217,6 @@ $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <?php endforeach; ?>
             </div>
         <?php endif; ?>
-
     </main>
 
     <!-- Скрипты -->
@@ -259,3 +261,5 @@ $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </script>
 
     <?php include 'footer.php'; ?>
+</body>
+</html>
