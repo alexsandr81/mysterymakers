@@ -5,7 +5,11 @@ require_once '../database/db.php';
 header('Content-Type: application/json');
 
 if (!isset($_SESSION['admin_id'])) {
-    echo json_encode(['success' => false, 'message' => 'Нет доступа']);
+    header("Location: login.php");
+    exit();
+}
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'superadmin') {
+    header("Location: index.php?error=access_denied");
     exit();
 }
 

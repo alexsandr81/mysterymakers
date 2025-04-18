@@ -6,6 +6,10 @@ if (!isset($_SESSION['admin_id'])) {
     header("Location: login.php");
     exit();
 }
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'superadmin') {
+    header("Location: index.php?error=access_denied");
+    exit();
+}
 
 // Фильтры
 $status_filter = $_GET['status'] ?? '';

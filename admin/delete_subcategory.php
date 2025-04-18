@@ -6,6 +6,10 @@ if (!isset($_SESSION['admin_id'])) {
     header("Location: login.php");
     exit();
 }
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'superadmin') {
+    header("Location: index.php?error=access_denied");
+    exit();
+}
 
 $id = $_GET['id'] ?? 0;
 $stmt = $conn->prepare("DELETE FROM subcategories WHERE id = ?");

@@ -2,13 +2,12 @@
 session_start();
 require_once '../database/db.php';
 
-// Проверяем, авторизован ли админ
 if (!isset($_SESSION['admin_id'])) {
     header("Location: login.php");
     exit();
 }
+$is_superadmin = isset($_SESSION['role']) && $_SESSION['role'] === 'superadmin';
 
-// Получаем список заказов
 $stmt = $conn->query("
     SELECT orders.*, users.name AS user_name 
     FROM orders 
@@ -63,7 +62,9 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <td><?= $order['created_at']; ?></td>
                 <td>
                     <a href="order_details.php?id=<?= $order['id']; ?>">📄 Подробнее</a>
-                    <a href="delete_order.php?id=<?= $order['id']; ?>" onclick="return confirm('Вы уверены, что хотите удалить этот заказ?');" class="text-danger">❌ Удалить</a>
+                    <?php if ($is_superadmin): ?>
+                        <a href="delete_order.php?id=<?= $order['id']; ?>" onclick="return confirm('Вы уверены, что хотите удалить этот заказ?');" class="text-danger">❌ Удалить</a>
+                    <?php endif; ?>
                 </td>
             </tr>
         <?php endforeach; ?>

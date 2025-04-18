@@ -4,9 +4,13 @@
  
  // Проверяем, авторизован ли админ
  if (!isset($_SESSION['admin_id'])) {
-     header("Location: login.php");
-     exit();
- }
+    header("Location: login.php");
+    exit();
+}
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'superadmin') {
+    header("Location: index.php?error=access_denied");
+    exit();
+}
  
  // Получаем логи
  $stmt = $conn->query("SELECT admin_logs.*, admins.name AS admin_name 

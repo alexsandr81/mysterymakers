@@ -7,6 +7,10 @@ if (!isset($_SESSION['admin_id'])) {
     header("Location: login.php");
     exit();
 }
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'superadmin') {
+    header("Location: index.php?error=access_denied");
+    exit();
+}
 
 // Получаем список администраторов
 $stmt = $conn->query("SELECT * FROM admins ORDER BY created_at DESC");
