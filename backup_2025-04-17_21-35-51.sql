@@ -1,4 +1,11 @@
--- MariaDB dump 10.19  Distrib 10.4.32-MariaDB, for Win64 (AMD64)
+DROP TABLE IF EXISTS `order_items`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `order_items` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `order_id` int(11) NOT NULL,
+  `product_id` int(11) NOT NULL,
+  `quantity`-- MariaDB dump 10.19  Distrib 10.4.32-MariaDB, for Win64 (AMD64)
 --
 -- Host: localhost    Database: mysterymakers_db
 -- ------------------------------------------------------
@@ -121,7 +128,7 @@ CREATE TABLE `discounts` (
   KEY `category_id` (`category_id`),
   CONSTRAINT `discounts_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE,
   CONSTRAINT `discounts_ibfk_2` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -130,7 +137,7 @@ CREATE TABLE `discounts` (
 
 LOCK TABLES `discounts` WRITE;
 /*!40000 ALTER TABLE `discounts` DISABLE KEYS */;
-INSERT INTO `discounts` VALUES (24,17,NULL,'percentage',90.00,NULL,NULL),(25,NULL,5,'percentage',99.00,NULL,NULL),(26,NULL,14,'percentage',65.00,'2025-04-09 19:21:00','2025-04-11 18:50:00');
+INSERT INTO `discounts` VALUES (24,17,NULL,'percentage',90.00,NULL,NULL),(25,NULL,5,'percentage',99.00,NULL,NULL),(27,NULL,14,'percentage',80.00,NULL,'2025-04-27 20:11:00');
 /*!40000 ALTER TABLE `discounts` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -193,21 +200,14 @@ UNLOCK TABLES;
 -- Table structure for table `order_items`
 --
 
-DROP TABLE IF EXISTS `order_items`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `order_items` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `order_id` int(11) NOT NULL,
-  `product_id` int(11) NOT NULL,
-  `quantity` int(11) NOT NULL,
+ int(11) NOT NULL,
   `price` decimal(10,2) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `order_id` (`order_id`),
   KEY `product_id` (`product_id`),
   CONSTRAINT `order_items_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`),
   CONSTRAINT `order_items_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=37 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=43 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -216,6 +216,7 @@ CREATE TABLE `order_items` (
 
 LOCK TABLES `order_items` WRITE;
 /*!40000 ALTER TABLE `order_items` DISABLE KEYS */;
+INSERT INTO `order_items` VALUES (37,38,32,1,10000000.00),(38,38,31,1,7777.00),(39,39,32,1,10000000.00),(40,39,26,20,90.00),(41,40,31,89,7777.00),(42,40,24,3,180.00);
 /*!40000 ALTER TABLE `order_items` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -245,7 +246,7 @@ CREATE TABLE `orders` (
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
   CONSTRAINT `orders_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=38 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=41 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -254,6 +255,7 @@ CREATE TABLE `orders` (
 
 LOCK TABLES `orders` WRITE;
 /*!40000 ALTER TABLE `orders` DISABLE KEYS */;
+INSERT INTO `orders` VALUES (38,'MM1744309413984','','066','alexsandr81aa@gmail.com','',2007777.00,'2025-04-10 18:23:33',10,'Отправлен','alexsandr','Курьер','Наличными',0.00,8000000.00),(39,'MM1744314039329','','066','alexsandr81aa@gmail.com','',2001800.00,'2025-04-10 19:40:39',10,'Новый','alexsandr81]]]]]]]]]]]]]','Курьер','Наличными',0.00,8000000.00),(40,'MM1744314655593','','33','alexsandr81aa@gmail.com','',692158.40,'2025-04-10 19:50:55',10,'Новый','22','Курьер','Наличными',0.00,534.60);
 /*!40000 ALTER TABLE `orders` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -385,7 +387,7 @@ CREATE TABLE `sizes` (
 
 LOCK TABLES `sizes` WRITE;
 /*!40000 ALTER TABLE `sizes` DISABLE KEYS */;
-INSERT INTO `sizes` VALUES (9,'100*110*140мм.'),(4,'120*120*60мм.'),(7,'200*130*85мм.'),(8,'200*150*80мм.'),(5,'200*200*80мм.'),(1,'200*200мм'),(10,'20000000000'),(6,'300*240*185мм.'),(2,'350*130*200мм'),(3,'535*180*230мм.'),(11,'ж100');
+INSERT INTO `sizes` VALUES (9,'100*110*140мм.'),(4,'120*120*60мм.'),(7,'200*130*85мм.'),(8,'200*150*80мм.'),(5,'200*200*80мм.'),(1,'200*200мм'),(10,'20000000000'),(6,'300*240*185мм.'),(2,'350*130*200мм'),(3,'535*180*230мм.');
 /*!40000 ALTER TABLE `sizes` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -430,6 +432,7 @@ CREATE TABLE `users` (
   `password` varchar(255) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `reset_token` varchar(64) DEFAULT NULL,
+  `reset_token_created_at` timestamp NULL DEFAULT NULL,
   `status` enum('active','blocked') DEFAULT 'active',
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`)
@@ -442,7 +445,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (10,'margo','alexsandr81aa@gmail.com','$2y$10$U/fn7P6SdA6so2qxPZ86xeOr4fwUBxmmFLrHMY6QsI9UgWwV9POlm','2025-04-09 19:45:16','791aa3d491067bd68d144110cfc20af804f2b07c557d4cf5176f484d799f33ae','active');
+INSERT INTO `users` VALUES (10,'margo','alexsandr81aa@gmail.com','$2y$10$DR8eVHsmwS9cMsc9tDa2EuuCq6KGcOyTqsxExlWZi6QP84AyeqbFG','2025-04-09 19:45:16',NULL,NULL,'active');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -455,4 +458,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-04-10 20:10:12
+-- Dump completed on 2025-04-17 22:35:52

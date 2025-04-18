@@ -1,10 +1,9 @@
 <?php
 session_start();
-require_once '../database/db.php'; // Подключаем базу данных
+require_once '../database/db.php';
 require_once '../PHPMailer/src/PHPMailer.php';
 require_once '../PHPMailer/src/SMTP.php';
 require_once '../PHPMailer/src/Exception.php';
-include 'header.php';
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
@@ -17,7 +16,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     if ($user) {
         $reset_token = bin2hex(random_bytes(32)); // Генерируем токен
-        $stmt = $conn->prepare("UPDATE users SET reset_token = ? WHERE email = ?");
+        $stmt = $conn->prepare("UPDATE users SET reset_token = ?, reset_token_created_at = NOW() WHERE email = ?");
         $stmt->execute([$reset_token, $email]);
 
         $reset_link = "http://localhost/mysterymakers/public/reset_password.php?token=$reset_token";
@@ -25,12 +24,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         // Настройка PHPMailer
         $mail = new PHPMailer(true);
         try {
-            // Настройки SMTP (пример для Gmail, настрой под свой сервер)
+            // Настройки SMTP
             $mail->isSMTP();
-            $mail->Host = 'smtp.gmail.com'; // Укажи свой SMTP-сервер
+            $mail->Host = 'smtp.gmail.com';
             $mail->SMTPAuth = true;
-            $mail->Username = 'alexsandr81aa@gmail.com'; // Твой email
-            $mail->Password = 'kgjf ayxi xwcg yqaq'; // Пароль приложения или SMTP-пароль
+            $mail->Username = 'alexsandr81aa@gmail.com';
+            $mail->Password = 'kgjf ayxi xwcg yqaq'; // Убедись, что пароль приложения актуален
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port = 587;
 
@@ -46,12 +45,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $mail->AltBody = "Здравствуйте! Вы запросили сброс пароля. Перейдите по ссылке: $reset_link. Если вы не запрашивали сброс, проигнорируйте это письмо.";
 
             $mail->send();
-            echo "<p>Ссылка для сброса пароля отправлена на ваш email!</p>";
+            $_SESSION['message'] = "Ссылка для сброса пароля отправлена на ваш email!";
+            header("Location: forgot_password.php");
+            exit();
         } catch (Exception $e) {
-            echo "<p style='color:red;'>Ошибка отправки письма: {$mail->ErrorInfo}</p>";
+            $error = "Ошибка отправки письма: {$mail->ErrorInfo}";
         }
     } else {
-        echo "<p style='color:red;'>Email не найден!</p>";
+        $error = "Email не найден!";
     }
 }
 ?>
@@ -62,17 +63,30 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Восстановление пароля</title>
+    <link rel="stylesheet" href="assets/styles.css">
 </head>
 <body>
 
-<h2>Восстановление пароля</h2>
+<?php include 'header.php'; ?>
 
-<form method="POST" action="">
-    <label>Email:</label>
-    <input type="email" name="email" required><br><br>
-    <button type="submit">Отправить ссылку</button>
-</form>
+<main>
+    <h2>Восстановление пароля</h2>
+
+    <?php if (isset($_SESSION['message'])): ?>
+        <p style="color: green;"><?php echo htmlspecialchars($_SESSION['message']); unset($_SESSION['message']); ?></p>
+    <?php endif; ?>
+    <?php if (isset($error)): ?>
+        <p style="color: red;"><?php echo htmlspecialchars($error); ?></p>
+    <?php endif; ?>
+
+    <form method="POST" action="">
+        <label>Email:</label>
+        <input type="email" name="email" required><br><br>
+        <button type="submit">Отправить ссылку</button>
+    </form>
+</main>
+
+<?php include 'footer.php'; ?>
 
 </body>
 </html>
-<?php include 'footer.php'; ?>
