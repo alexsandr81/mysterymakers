@@ -1,11 +1,4 @@
-DROP TABLE IF EXISTS `order_items`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `order_items` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `order_id` int(11) NOT NULL,
-  `product_id` int(11) NOT NULL,
-  `quantity`-- MariaDB dump 10.19  Distrib 10.4.32-MariaDB, for Win64 (AMD64)
+-- MariaDB dump 10.19  Distrib 10.4.32-MariaDB, for Win64 (AMD64)
 --
 -- Host: localhost    Database: mysterymakers_db
 -- ------------------------------------------------------
@@ -200,14 +193,21 @@ UNLOCK TABLES;
 -- Table structure for table `order_items`
 --
 
- int(11) NOT NULL,
+DROP TABLE IF EXISTS `order_items`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `order_items` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `order_id` int(11) NOT NULL,
+  `product_id` int(11) NOT NULL,
+  `quantity` int(11) NOT NULL,
   `price` decimal(10,2) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `order_id` (`order_id`),
   KEY `product_id` (`product_id`),
   CONSTRAINT `order_items_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`),
   CONSTRAINT `order_items_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=43 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=45 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -216,7 +216,7 @@ UNLOCK TABLES;
 
 LOCK TABLES `order_items` WRITE;
 /*!40000 ALTER TABLE `order_items` DISABLE KEYS */;
-INSERT INTO `order_items` VALUES (37,38,32,1,10000000.00),(38,38,31,1,7777.00),(39,39,32,1,10000000.00),(40,39,26,20,90.00),(41,40,31,89,7777.00),(42,40,24,3,180.00);
+INSERT INTO `order_items` VALUES (43,41,26,3,90.00),(44,42,32,1,2000000.00);
 /*!40000 ALTER TABLE `order_items` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -230,7 +230,6 @@ DROP TABLE IF EXISTS `orders`;
 CREATE TABLE `orders` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `order_number` varchar(50) NOT NULL,
-  `user_name` varchar(255) NOT NULL,
   `phone` varchar(20) NOT NULL,
   `email` varchar(100) NOT NULL,
   `address` text NOT NULL,
@@ -238,7 +237,7 @@ CREATE TABLE `orders` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `user_id` int(11) DEFAULT NULL,
   `status` varchar(50) NOT NULL DEFAULT 'Новый',
-  `name` varchar(255) NOT NULL,
+  `delivery_name` varchar(255) NOT NULL,
   `delivery` varchar(100) NOT NULL,
   `payment` varchar(100) NOT NULL,
   `discount` decimal(10,2) NOT NULL DEFAULT 0.00,
@@ -246,7 +245,7 @@ CREATE TABLE `orders` (
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
   CONSTRAINT `orders_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=41 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=43 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -255,7 +254,7 @@ CREATE TABLE `orders` (
 
 LOCK TABLES `orders` WRITE;
 /*!40000 ALTER TABLE `orders` DISABLE KEYS */;
-INSERT INTO `orders` VALUES (38,'MM1744309413984','','066','alexsandr81aa@gmail.com','',2007777.00,'2025-04-10 18:23:33',10,'Отправлен','alexsandr','Курьер','Наличными',0.00,8000000.00),(39,'MM1744314039329','','066','alexsandr81aa@gmail.com','',2001800.00,'2025-04-10 19:40:39',10,'Новый','alexsandr81]]]]]]]]]]]]]','Курьер','Наличными',0.00,8000000.00),(40,'MM1744314655593','','33','alexsandr81aa@gmail.com','',692158.40,'2025-04-10 19:50:55',10,'Новый','22','Курьер','Наличными',0.00,534.60);
+INSERT INTO `orders` VALUES (41,'MM1744991788382','066','alexsandr81aa@gmail.com','',270.00,'2025-04-18 15:56:28',10,'Новый','margoИван','Курьер','Наличными',0.00,0.00),(42,'MM1744991872429','066421','alexsandr81@ukr.net','',2000000.00,'2025-04-18 15:57:52',NULL,'Новый','alexsandr81','Курьер','Наличными',0.00,8000000.00);
 /*!40000 ALTER TABLE `orders` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -445,7 +444,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (10,'margo','alexsandr81aa@gmail.com','$2y$10$DR8eVHsmwS9cMsc9tDa2EuuCq6KGcOyTqsxExlWZi6QP84AyeqbFG','2025-04-09 19:45:16',NULL,NULL,'active');
+INSERT INTO `users` VALUES (10,'margo','alexsandr81aa@gmail.com','$2y$10$HiM8hR9/DqS4gp19V4jD0e4iKR4sbBYWyPuhYNe1U.5siCF/1q.FC','2025-04-09 19:45:16',NULL,NULL,'active');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -458,4 +457,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-04-17 22:35:52
+-- Dump completed on 2025-04-18 19:40:10

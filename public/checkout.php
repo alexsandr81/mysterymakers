@@ -6,10 +6,11 @@ require_once '../database/db.php';
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-// Проверяем, пришли ли данные из формы
-if (!isset($_POST['delivery_name'], $_POST['phone'], $_POST['email'], $_POST['delivery'], $_POST['payment'], $_POST['total_price'], $_POST['total_discount'])) {
-    echo "Ошибка: не все данные формы переданы.";
-    print_r($_POST);
+// Проверяем, есть ли данные формы и корзина
+if (!isset($_POST['delivery_name'], $_POST['phone'], $_POST['email'], $_POST['delivery'], $_POST['payment']) ||
+    !isset($_SESSION['cart']) || empty($_SESSION['cart']) ||
+    !isset($_SESSION['cart_totals'])) {
+    echo "Ошибка: не все данные доступны.";
     exit();
 }
 
@@ -19,12 +20,54 @@ $phone = trim($_POST['phone']);
 $email = trim($_POST['email']);
 $delivery = trim($_POST['delivery']);
 $payment = trim($_POST['payment']);
-$total_price = (float)$_POST['total_price'];
-$total_discount = (float)$_POST['total_discount'];
+$total_price = (float)$_SESSION['cart_totals']['total_price'];
+$total_discount = (float)$_SESSION['cart_totals']['total_discount'];
 
-// Проверяем, есть ли товары в корзине
-if (!isset($_SESSION['cart']) || empty($_SESSION['cart'])) {
-    header("Location: cart.php");
+// Пересчитываем корзину для валидации
+$cart = $_SESSION['cart'];
+$placeholders = implode(',', array_fill(0, count($cart), '?'));
+$stmt = $conn->prepare("SELECT id, price, category_id FROM products WHERE id IN ($placeholders)");
+$stmt->execute(array_keys($cart));
+$products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+$calculated_total = 0;
+$calculated_discount = 0;
+
+foreach ($products as $product) {
+    $product_id = (int)$product['id'];
+    $quantity = (int)($cart[$product_id] ?? 0);
+    if ($quantity <= 0) continue;
+
+    $stmt = $conn->prepare("
+        SELECT discount_value, discount_type 
+        FROM discounts 
+        WHERE (product_id = ? OR category_id = ?) 
+        AND (start_date IS NULL OR start_date <= NOW()) 
+        AND (end_date IS NULL OR end_date >= NOW()) 
+        LIMIT 1
+    ");
+    $stmt->execute([$product_id, (int)$product['category_id']]);
+    $discount = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    $original_price = (float)$product['price'];
+    $discount_value = 0;
+
+    if ($discount) {
+        if ($discount['discount_type'] == 'fixed') {
+            $discount_value = min((float)$discount['discount_value'], $original_price);
+        } elseif ($discount['discount_type'] == 'percentage') {
+            $discount_value = $original_price * ((float)$discount['discount_value'] / 100);
+        }
+    }
+
+    $final_price = $original_price - $discount_value;
+    $calculated_total += $final_price * $quantity;
+    $calculated_discount += ($original_price - $final_price) * $quantity;
+}
+
+// Валидация: проверяем, что значения из сессии совпадают с пересчётом
+if (abs($calculated_total - $total_price) > 0.01 || abs($calculated_discount - $total_discount) > 0.01) {
+    echo "Ошибка: итоговая сумма или скидка не совпадают с корзиной.";
     exit();
 }
 
@@ -49,7 +92,7 @@ try {
         ':payment' => $payment
     ]);
 } catch (PDOException $e) {
-    echo "Ошибка при создании заказа: " . $e->getMessage();
+    echo "Ошибка при создания заказа: " . $e->getMessage();
     exit();
 }
 
@@ -57,7 +100,7 @@ $order_id = $conn->lastInsertId();
 
 // Добавляем товары в `order_items`
 foreach ($_SESSION['cart'] as $product_id => $quantity) {
-    $stmt = $conn->prepare("SELECT price FROM products WHERE id = :product_id");
+    $stmt = $conn->prepare("SELECT price, category_id FROM products WHERE id = :product_id");
     $stmt->execute([':product_id' => $product_id]);
     $product = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -65,12 +108,12 @@ foreach ($_SESSION['cart'] as $product_id => $quantity) {
         $stmt_discount = $conn->prepare("
             SELECT discount_value, discount_type 
             FROM discounts 
-            WHERE (product_id = :product_id OR category_id = (SELECT category_id FROM products WHERE id = :product_id)) 
+            WHERE (product_id = :product_id OR category_id = :category_id) 
             AND (start_date IS NULL OR start_date <= NOW()) 
             AND (end_date IS NULL OR end_date >= NOW()) 
             LIMIT 1
         ");
-        $stmt_discount->execute([':product_id' => $product_id]);
+        $stmt_discount->execute([':product_id' => $product_id, ':category_id' => $product['category_id']]);
         $discount = $stmt_discount->fetch(PDO::FETCH_ASSOC);
 
         $original_price = $product['price'];
@@ -104,8 +147,9 @@ foreach ($_SESSION['cart'] as $product_id => $quantity) {
     }
 }
 
-// Очищаем корзину
+// Очищаем корзину и totals
 unset($_SESSION['cart']);
+unset($_SESSION['cart_totals']);
 
 // Перенаправляем на страницу "Спасибо за заказ!"
 header("Location: thank_you.php?order_number=$order_number");

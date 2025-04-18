@@ -43,10 +43,10 @@ $cart = $_SESSION['cart'] ?? [];
                 $total_discount = 0; ?>
                 <?php foreach ($products as $product): ?>
                     <?php
-                    $product_id = (int)$product['id']; // Приведение к int для безопасности
-                    $quantity = (int)($cart[$product_id] ?? 0); // Валидация количества
+                    $product_id = (int)$product['id'];
+                    $quantity = (int)($cart[$product_id] ?? 0);
 
-                    if ($quantity <= 0) continue; // Пропускаем некорректные значения
+                    if ($quantity <= 0) continue;
 
                     $stmt = $conn->prepare("
                         SELECT discount_value, discount_type 
@@ -123,64 +123,70 @@ $cart = $_SESSION['cart'] ?? [];
                 </tr>
             </table>
 
-            <input type="hidden" name="total_price" value="<?= $total; ?>">
-            <input type="hidden" name="total_discount" value="<?= $total_discount; ?>">
+            <?php
+            // Сохраняем total_price и total_discount в сессию
+            $_SESSION['cart_totals'] = [
+                'total_price' => $total,
+                'total_discount' => $total_discount
+            ];
+            ?>
+
             <button type="submit">Оформить заказ</button>
         </form>
 
         <script>
-    function updateQuantity(productId, quantity) {
-        if (quantity < 1 || quantity > 99) {
-            alert('Количество должно быть от 1 до 99');
-            return;
-        }
-        fetch('update_cart.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: 'id=' + encodeURIComponent(productId) + 
-                  '&quantity=' + encodeURIComponent(quantity) + 
-                  '&csrf_token=' + encodeURIComponent('<?= $_SESSION['csrf_token']; ?>')
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                location.reload();
-            } else {
-                alert('Ошибка: ' + (data.message || 'Не удалось обновить количество'));
-            }
-        })
-        .catch(error => alert('Ошибка соединения: ' + error));
-    }
-
-    function changeQuantity(productId, delta) {
-        const input = document.querySelector(`input[name="quantity[${productId}]"]`);
-        let newQuantity = parseInt(input.value) + delta;
-        if (newQuantity >= 1 && newQuantity <= 99) {
-            input.value = newQuantity;
-            updateQuantity(productId, newQuantity);
-        }
-    }
-
-    function confirmRemoveFromCart(productId) {
-        if (confirm('Вы уверены, что хотите удалить этот товар из корзины?')) {
-            fetch('remove_from_cart.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: 'id=' + encodeURIComponent(productId) + 
-                      '&csrf_token=' + encodeURIComponent('<?= $_SESSION['csrf_token']; ?>')
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    location.reload();
-                } else {
-                    alert('Ошибка: ' + (data.message || 'Не удалось удалить товар'));
+            function updateQuantity(productId, quantity) {
+                if (quantity < 1 || quantity > 99) {
+                    alert('Количество должно быть от 1 до 99');
+                    return;
                 }
-            })
-            .catch(error => alert('Ошибка соединения: ' + error));
-        }
-    }
-</script>
+                fetch('update_cart.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'id=' + encodeURIComponent(productId) + 
+                          '&quantity=' + encodeURIComponent(quantity) + 
+                          '&csrf_token=' + encodeURIComponent('<?= $_SESSION['csrf_token']; ?>')
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        location.reload();
+                    } else {
+                        alert('Ошибка: ' + (data.message || 'Не удалось обновить количество'));
+                    }
+                })
+                .catch(error => alert('Ошибка соединения: ' + error));
+            }
+
+            function changeQuantity(productId, delta) {
+                const input = document.querySelector(`input[name="quantity[${productId}]"]`);
+                let newQuantity = parseInt(input.value) + delta;
+                if (newQuantity >= 1 && newQuantity <= 99) {
+                    input.value = newQuantity;
+                    updateQuantity(productId, newQuantity);
+                }
+            }
+
+            function confirmRemoveFromCart(productId) {
+                if (confirm('Вы уверены, что хотите удалить этот товар из корзины?')) {
+                    fetch('remove_from_cart.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: 'id=' + encodeURIComponent(productId) + 
+                              '&csrf_token=' + encodeURIComponent('<?= $_SESSION['csrf_token']; ?>')
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            location.reload();
+                        } else {
+                            alert('Ошибка: ' + (data.message || 'Не удалось удалить товар'));
+                        }
+                    })
+                    .catch(error => alert('Ошибка соединения: ' + error));
+                }
+            }
+        </script>
     <?php endif; ?>
 </main>
 

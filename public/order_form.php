@@ -2,8 +2,8 @@
 session_start();
 require_once '../database/db.php';
 
-// Проверяем, есть ли товары в корзине
-if (!isset($_SESSION['cart']) || empty($_SESSION['cart'])) {
+// Проверяем, есть ли товары в корзине и totals в сессии
+if (!isset($_SESSION['cart']) || empty($_SESSION['cart']) || !isset($_SESSION['cart_totals'])) {
     header("Location: cart.php");
     exit();
 }
@@ -46,12 +46,14 @@ if (isset($_SESSION['user_id'])) {
             <option value="Картой">Картой</option>
         </select><br>
 
-        <!-- Скрытые поля из cart.php -->
-        <input type="hidden" name="total_price" value="<?= $_POST['total_price'] ?? 0; ?>">
-        <input type="hidden" name="total_discount" value="<?= $_POST['total_discount'] ?? 0; ?>">
-
         <button type="submit">Подтвердить заказ</button>
     </form>
+
+    <!-- Отображаем итоговую сумму для пользователя -->
+    <p><strong>Итого:</strong> <?= number_format($_SESSION['cart_totals']['total_price'], 2, '.', ''); ?> ₽</p>
+    <?php if ($_SESSION['cart_totals']['total_discount'] > 0): ?>
+        <p><strong>Скидка:</strong> <?= number_format($_SESSION['cart_totals']['total_discount'], 2, '.', ''); ?> ₽</p>
+    <?php endif; ?>
 </main>
 
 <?php include 'footer.php'; ?>
