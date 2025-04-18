@@ -10,7 +10,8 @@ error_reporting(E_ALL);
 if (!isset($_POST['delivery_name'], $_POST['phone'], $_POST['email'], $_POST['delivery'], $_POST['payment']) ||
     !isset($_SESSION['cart']) || empty($_SESSION['cart']) ||
     !isset($_SESSION['cart_totals'])) {
-    echo "Ошибка: не все данные доступны.";
+    $_SESSION['form_errors'] = ['general' => 'Не все данные доступны.'];
+    header("Location: order_form.php");
     exit();
 }
 
@@ -22,6 +23,47 @@ $delivery = trim($_POST['delivery']);
 $payment = trim($_POST['payment']);
 $total_price = (float)$_SESSION['cart_totals']['total_price'];
 $total_discount = (float)$_SESSION['cart_totals']['total_discount'];
+
+// Валидация данных
+$errors = [];
+
+if (empty($delivery_name)) {
+    $errors['delivery_name'] = 'Имя обязательно для заполнения';
+} elseif (strlen($delivery_name) > 255) {
+    $errors['delivery_name'] = 'Имя слишком длинное';
+}
+
+if (!preg_match('/^\+?\d{10,12}$/', $phone)) {
+    $errors['phone'] = 'Телефон должен содержать 10–12 цифр, может начинаться с +';
+}
+
+if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    $errors['email'] = 'Введите корректный email';
+} elseif (strlen($email) > 255) {
+    $errors['email'] = 'Email слишком длинный';
+}
+
+if (!in_array($delivery, ['Курьер', 'Самовывоз', 'Почта'])) {
+    $errors['delivery'] = 'Неверный способ доставки';
+}
+
+if (!in_array($payment, ['Наличными', 'Картой'])) {
+    $errors['payment'] = 'Неверный способ оплаты';
+}
+
+// Если есть ошибки, сохраняем данные и возвращаемся к форме
+if (!empty($errors)) {
+    $_SESSION['form_errors'] = $errors;
+    $_SESSION['form_data'] = [
+        'delivery_name' => $delivery_name,
+        'phone' => $phone,
+        'email' => $email,
+        'delivery' => $delivery,
+        'payment' => $payment
+    ];
+    header("Location: order_form.php");
+    exit();
+}
 
 // Пересчитываем корзину для валидации
 $cart = $_SESSION['cart'];
@@ -67,7 +109,15 @@ foreach ($products as $product) {
 
 // Валидация: проверяем, что значения из сессии совпадают с пересчётом
 if (abs($calculated_total - $total_price) > 0.01 || abs($calculated_discount - $total_discount) > 0.01) {
-    echo "Ошибка: итоговая сумма или скидка не совпадают с корзиной.";
+    $_SESSION['form_errors'] = ['general' => 'Итоговая сумма или скидка не совпадают с корзиной.'];
+    $_SESSION['form_data'] = [
+        'delivery_name' => $delivery_name,
+        'phone' => $phone,
+        'email' => $email,
+        'delivery' => $delivery,
+        'payment' => $payment
+    ];
+    header("Location: order_form.php");
     exit();
 }
 
@@ -92,7 +142,15 @@ try {
         ':payment' => $payment
     ]);
 } catch (PDOException $e) {
-    echo "Ошибка при создания заказа: " . $e->getMessage();
+    $_SESSION['form_errors'] = ['general' => 'Ошибка при создании заказа: ' . $e->getMessage()];
+    $_SESSION['form_data'] = [
+        'delivery_name' => $delivery_name,
+        'phone' => $phone,
+        'email' => $email,
+        'delivery' => $delivery,
+        'payment' => $payment
+    ];
+    header("Location: order_form.php");
     exit();
 }
 
@@ -141,15 +199,25 @@ foreach ($_SESSION['cart'] as $product_id => $quantity) {
                 ':price' => $final_price
             ]);
         } catch (PDOException $e) {
-            echo "Ошибка при добавлении товара в заказ: " . $e->getMessage();
+            $_SESSION['form_errors'] = ['general' => 'Ошибка при добавлении товара в заказ: ' . $e->getMessage()];
+            $_SESSION['form_data'] = [
+                'delivery_name' => $delivery_name,
+                'phone' => $phone,
+                'email' => $email,
+                'delivery' => $delivery,
+                'payment' => $payment
+            ];
+            header("Location: order_form.php");
             exit();
         }
     }
 }
 
-// Очищаем корзину и totals
+// Очищаем корзину и временные данные
 unset($_SESSION['cart']);
 unset($_SESSION['cart_totals']);
+unset($_SESSION['form_errors']);
+unset($_SESSION['form_data']);
 
 // Перенаправляем на страницу "Спасибо за заказ!"
 header("Location: thank_you.php?order_number=$order_number");

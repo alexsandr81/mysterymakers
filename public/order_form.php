@@ -17,34 +17,70 @@ if (isset($_SESSION['user_id'])) {
     $stmt->execute([$_SESSION['user_id']]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 }
+
+// Получаем сохранённые данные и ошибки из сессии (если есть)
+$errors = $_SESSION['form_errors'] ?? [];
+$form_data = $_SESSION['form_data'] ?? [];
+
+// Очищаем временные данные из сессии
+unset($_SESSION['form_errors'], $_SESSION['form_data']);
 ?>
 
 <main>
     <h1>Оформление заказа</h1>
     
-    <form action="checkout.php" method="post">
+    <form action="checkout.php" method="post" id="orderForm" novalidate>
         <h2>Контактные данные</h2>
-        <label>Имя:</label>
-        <input type="text" name="delivery_name" value="<?= htmlspecialchars($user['name'] ?? ''); ?>" required><br>
+        <div class="form-group">
+            <label for="delivery_name">Имя:</label>
+            <input type="text" id="delivery_name" name="delivery_name" 
+                   value="<?= htmlspecialchars($form_data['delivery_name'] ?? $user['name'] ?? ''); ?>" required>
+            <?php if (isset($errors['delivery_name'])): ?>
+                <span class="error"><?= htmlspecialchars($errors['delivery_name']); ?></span>
+            <?php endif; ?>
+        </div>
         
-        <label>Телефон:</label>
-        <input type="text" name="phone" required><br>
+        <div class="form-group">
+            <label for="phone">Телефон:</label>
+            <input type="text" id="phone" name="phone" 
+                   value="<?= htmlspecialchars($form_data['phone'] ?? ''); ?>" required
+                   placeholder="+12345678901">
+            <?php if (isset($errors['phone'])): ?>
+                <span class="error"><?= htmlspecialchars($errors['phone']); ?></span>
+            <?php endif; ?>
+        </div>
         
-        <label>Email:</label>
-        <input type="email" name="email" value="<?= htmlspecialchars($user['email'] ?? ''); ?>" required><br>
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" 
+                   value="<?= htmlspecialchars($form_data['email'] ?? $user['email'] ?? ''); ?>" required>
+            <?php if (isset($errors['email'])): ?>
+                <span class="error"><?= htmlspecialchars($errors['email']); ?></span>
+            <?php endif; ?>
+        </div>
 
         <h2>Способ доставки</h2>
-        <select name="delivery">
-            <option value="Курьер">Курьер</option>
-            <option value="Самовывоз">Самовывоз</option>
-            <option value="Почта">Почта</option>
-        </select><br>
+        <div class="form-group">
+            <select name="delivery" required>
+                <option value="Курьер" <?= ($form_data['delivery'] ?? '') === 'Курьер' ? 'selected' : ''; ?>>Курьер</option>
+                <option value="Самовывоз" <?= ($form_data['delivery'] ?? '') === 'Самовывоз' ? 'selected' : ''; ?>>Самовывоз</option>
+                <option value="Почта" <?= ($form_data['delivery'] ?? '') === 'Почта' ? 'selected' : ''; ?>>Почта</option>
+            </select>
+            <?php if (isset($errors['delivery'])): ?>
+                <span class="error"><?= htmlspecialchars($errors['delivery']); ?></span>
+            <?php endif; ?>
+        </div>
 
         <h2>Способ оплаты</h2>
-        <select name="payment">
-            <option value="Наличными">Наличными</option>
-            <option value="Картой">Картой</option>
-        </select><br>
+        <div class="form-group">
+            <select name="payment" required>
+                <option value="Наличными" <?= ($form_data['payment'] ?? '') === 'Наличными' ? 'selected' : ''; ?>>Наличными</option>
+                <option value="Картой" <?= ($form_data['payment'] ?? '') === 'Картой' ? 'selected' : ''; ?>>Картой</option>
+            </select>
+            <?php if (isset($errors['payment'])): ?>
+                <span class="error"><?= htmlspecialchars($errors['payment']); ?></span>
+            <?php endif; ?>
+        </div>
 
         <button type="submit">Подтвердить заказ</button>
     </form>
@@ -55,5 +91,14 @@ if (isset($_SESSION['user_id'])) {
         <p><strong>Скидка:</strong> <?= number_format($_SESSION['cart_totals']['total_discount'], 2, '.', ''); ?> ₽</p>
     <?php endif; ?>
 </main>
+
+
+
+<style>
+.form-group { margin-bottom: 15px; }
+.form-group label { display: block; margin-bottom: 5px; }
+.form-group input, .form-group select { width: 100%; padding: 8px; box-sizing: border-box; }
+.error { color: red; font-size: 0.9em; display: block; margin-top: 5px; }
+</style>
 
 <?php include 'footer.php'; ?>
