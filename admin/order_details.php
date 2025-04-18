@@ -15,7 +15,7 @@ $order_id = intval($_GET['id'] ?? 0);
 $stmt = $conn->prepare("
     SELECT orders.*, users.name AS user_name, users.email 
     FROM orders 
-    JOIN users ON orders.user_id = users.id 
+    LEFT JOIN users ON orders.user_id = users.id 
     WHERE orders.id = ?
 ");
 $stmt->execute([$order_id]);
@@ -25,7 +25,7 @@ if (!$order) {
     die("❌ Заказ не найден!");
 }
 
-// Загружаем товары в заказе с исходной ценой из products
+// Загружаем товары в заказе
 $stmt = $conn->prepare("
     SELECT oi.quantity, oi.price AS final_price, p.name, p.price AS original_price, p.category_id,
            COALESCE(
@@ -59,55 +59,56 @@ $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <link rel="stylesheet" href="/mysterymakers/admin/admin.css">
 </head>
 <body>
-
-<h2>Детали заказа #<?= htmlspecialchars($order['order_number']); ?></h2>
-
-<p><strong>Покупатель:</strong> <?= htmlspecialchars($order['user_name']); ?> (<?= htmlspecialchars($order['email']); ?>)</p>
-
-<p><strong>Сумма:</strong> <?= number_format($order['total_price'], 2, '.', ''); ?> ₽</p>
-<p><strong>Статус:</strong> <?= htmlspecialchars($order['status']); ?></p>
-<p><strong>Дата:</strong> <?= $order['created_at']; ?></p>
-
-<h3>Товары в заказе</h3>
-
-<?php if (!empty($items)): ?>
-    <table class="table">
-        <tr>
-            <th>Название</th>
-            <th>Количество</th>
-            <th>Цена (без скидки)</th>
-            <th>Скидка</th>
-            <th>Итоговая цена</th>
-            <th>Сумма</th>
-        </tr>
-        <?php foreach ($items as $item): ?>
-            <?php
-            $original_price = $item['original_price'];
-            $final_price = $item['final_price'];
-            $discount_value = $item['discount_value'] ?? 0;
-            $subtotal = $final_price * $item['quantity'];
-            ?>
+    <h2>Детали заказа #<?= htmlspecialchars($order['order_number']); ?></h2>
+    <p><strong>Покупатель:</strong> 
+        <?= htmlspecialchars($order['delivery_name'] ?: ($order['user_name'] ?: 'Гость')); ?>
+        <?php if ($order['user_id']): ?>
+            (<?= htmlspecialchars($order['email']); ?>)
+            <?php if ($order['delivery_name'] !== $order['user_name']): ?>
+                , Пользователь: <?= htmlspecialchars($order['user_name']); ?>
+            <?php endif; ?>
+        <?php endif; ?>
+    </p>
+    <p><strong>Сумма:</strong> <?= number_format($order['total_price'], 2, '.', ''); ?> ₽</p>
+    <p><strong>Статус:</strong> <?= htmlspecialchars($order['status']); ?></p>
+    <p><strong>Дата:</strong> <?= $order['created_at']; ?></p>
+    <h3>Товары в заказе</h3>
+    <?php if (!empty($items)): ?>
+        <table class="table">
             <tr>
-                <td><?= htmlspecialchars($item['name']); ?></td>
-                <td><?= htmlspecialchars($item['quantity']); ?></td>
-                <td><?= number_format($original_price, 2, '.', ''); ?> ₽</td>
-                <td>
-                    <?php if ($discount_value): ?>
-                        <?= $item['discount_type'] == 'fixed' ? number_format($discount_value, 2, '.', '') . ' ₽' : $discount_value . '%'; ?>
-                    <?php else: ?>
-                        —
-                    <?php endif; ?>
-                </td>
-                <td><?= number_format($final_price, 2, '.', ''); ?> ₽</td>
-                <td><?= number_format($subtotal, 2, '.', ''); ?> ₽</td>
+                <th>Название</th>
+                <th>Количество</th>
+                <th>Цена (без скидки)</th>
+                <th>Скидка</th>
+                <th>Итоговая цена</th>
+                <th>Сумма</th>
             </tr>
-        <?php endforeach; ?>
-    </table>
-<?php else: ?>
-    <p>❌ В этом заказе нет товаров.</p>
-<?php endif; ?>
-
-<a href="orders.php" class="back-button">⬅ Назад</a>
-
+            <?php foreach ($items as $item): ?>
+                <?php
+                $original_price = $item['original_price'];
+                $final_price = $item['final_price'];
+                $discount_value = $item['discount_value'] ?? 0;
+                $subtotal = $final_price * $item['quantity'];
+                ?>
+                <tr>
+                    <td><?= htmlspecialchars($item['name']); ?></td>
+                    <td><?= htmlspecialchars($item['quantity']); ?></td>
+                    <td><?= number_format($original_price, 2, '.', ''); ?> ₽</td>
+                    <td>
+                        <?php if ($discount_value): ?>
+                            <?= $item['discount_type'] == 'fixed' ? number_format($discount_value, 2, '.', '') . ' ₽' : $discount_value . '%'; ?>
+                        <?php else: ?>
+                            —
+                        <?php endif; ?>
+                    </td>
+                    <td><?= number_format($final_price, 2, '.', ''); ?> ₽</td>
+                    <td><?= number_format($subtotal, 2, '.', ''); ?> ₽</td>
+                </tr>
+            <?php endforeach; ?>
+        </table>
+    <?php else: ?>
+        <p>❌ В этом заказе нет товаров.</p>
+    <?php endif; ?>
+    <a href="orders.php" class="back-button">⬅ Назад</a>
 </body>
 </html>

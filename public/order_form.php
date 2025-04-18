@@ -1,16 +1,22 @@
 <?php
 session_start();
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit();
-}
+require_once '../database/db.php';
 
+// Проверяем, есть ли товары в корзине
 if (!isset($_SESSION['cart']) || empty($_SESSION['cart'])) {
     header("Location: cart.php");
     exit();
 }
 
 include 'header.php';
+
+// Получаем данные пользователя, если авторизован
+$user = null;
+if (isset($_SESSION['user_id'])) {
+    $stmt = $conn->prepare("SELECT name, email FROM users WHERE id = ?");
+    $stmt->execute([$_SESSION['user_id']]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+}
 ?>
 
 <main>
@@ -19,13 +25,13 @@ include 'header.php';
     <form action="checkout.php" method="post">
         <h2>Контактные данные</h2>
         <label>Имя:</label>
-        <input type="text" name="name" required><br>
+        <input type="text" name="delivery_name" value="<?= htmlspecialchars($user['name'] ?? ''); ?>" required><br>
         
         <label>Телефон:</label>
         <input type="text" name="phone" required><br>
         
         <label>Email:</label>
-        <input type="email" name="email" required><br>
+        <input type="email" name="email" value="<?= htmlspecialchars($user['email'] ?? ''); ?>" required><br>
 
         <h2>Способ доставки</h2>
         <select name="delivery">

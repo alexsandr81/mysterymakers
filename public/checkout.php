@@ -6,21 +6,15 @@ require_once '../database/db.php';
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-// Проверяем авторизацию пользователя
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit();
-}
-
 // Проверяем, пришли ли данные из формы
-if (!isset($_POST['name'], $_POST['phone'], $_POST['email'], $_POST['delivery'], $_POST['payment'], $_POST['total_price'], $_POST['total_discount'])) {
+if (!isset($_POST['delivery_name'], $_POST['phone'], $_POST['email'], $_POST['delivery'], $_POST['payment'], $_POST['total_price'], $_POST['total_discount'])) {
     echo "Ошибка: не все данные формы переданы.";
-    print_r($_POST); // Отладка: что пришло в $_POST
+    print_r($_POST);
     exit();
 }
 
-$user_id = $_SESSION['user_id'];
-$name = trim($_POST['name']);
+$user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
+$delivery_name = trim($_POST['delivery_name']);
 $phone = trim($_POST['phone']);
 $email = trim($_POST['email']);
 $delivery = trim($_POST['delivery']);
@@ -39,14 +33,16 @@ $order_number = 'MM' . time() . rand(100, 999);
 
 // Создаём заказ в таблице `orders`
 try {
-    $stmt = $conn->prepare("INSERT INTO orders (user_id, order_number, total_price, total_discount, status, name, phone, email, delivery, payment) 
-    VALUES (:user_id, :order_number, :total_price, :total_discount, 'Новый', :name, :phone, :email, :delivery, :payment)");
+    $stmt = $conn->prepare("
+        INSERT INTO orders (user_id, order_number, total_price, total_discount, status, delivery_name, phone, email, delivery, payment) 
+        VALUES (:user_id, :order_number, :total_price, :total_discount, 'Новый', :delivery_name, :phone, :email, :delivery, :payment)
+    ");
     $stmt->execute([
         ':user_id' => $user_id,
         ':order_number' => $order_number,
         ':total_price' => $total_price,
         ':total_discount' => $total_discount,
-        ':name' => $name,
+        ':delivery_name' => $delivery_name,
         ':phone' => $phone,
         ':email' => $email,
         ':delivery' => $delivery,
@@ -66,12 +62,14 @@ foreach ($_SESSION['cart'] as $product_id => $quantity) {
     $product = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($product) {
-        $stmt_discount = $conn->prepare("SELECT discount_value, discount_type 
-                                        FROM discounts 
-                                        WHERE product_id = :product_id 
-                                        AND (start_date IS NULL OR start_date <= NOW()) 
-                                        AND (end_date IS NULL OR end_date >= NOW()) 
-                                        LIMIT 1");
+        $stmt_discount = $conn->prepare("
+            SELECT discount_value, discount_type 
+            FROM discounts 
+            WHERE (product_id = :product_id OR category_id = (SELECT category_id FROM products WHERE id = :product_id)) 
+            AND (start_date IS NULL OR start_date <= NOW()) 
+            AND (end_date IS NULL OR end_date >= NOW()) 
+            LIMIT 1
+        ");
         $stmt_discount->execute([':product_id' => $product_id]);
         $discount = $stmt_discount->fetch(PDO::FETCH_ASSOC);
 
@@ -89,8 +87,10 @@ foreach ($_SESSION['cart'] as $product_id => $quantity) {
         $final_price = $original_price - $discount_value;
 
         try {
-            $stmt = $conn->prepare("INSERT INTO order_items (order_id, product_id, quantity, price) 
-            VALUES (:order_id, :product_id, :quantity, :price)");
+            $stmt = $conn->prepare("
+                INSERT INTO order_items (order_id, product_id, quantity, price) 
+                VALUES (:order_id, :product_id, :quantity, :price)
+            ");
             $stmt->execute([
                 ':order_id' => $order_id,
                 ':product_id' => $product_id,
