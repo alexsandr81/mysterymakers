@@ -1,28 +1,89 @@
 <?php
 session_start();
-require_once '../database/db.php';  // Подключаем базу данных
+require_once '../database/db.php';
 
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $name = trim($_POST['name']);
-    $email = trim($_POST['email']);
-    $password = password_hash($_POST['password'], PASSWORD_BCRYPT);  // Хешируем пароль
+if ($_SERVER["REQUEST_METHOD"] !== "POST") {
+    header("Location: register.php");
+    exit();
+}
 
-    // Проверяем, есть ли уже такой email
+$name = trim($_POST['name'] ?? '');
+$email = trim($_POST['email'] ?? '');
+$password = $_POST['password'] ?? '';
+$password_confirm = $_POST['password_confirm'] ?? '';
+
+$errors = [];
+
+// Валидация имени
+if (empty($name)) {
+    $errors['name'] = 'Имя обязательно';
+} elseif (strlen($name) > 255) {
+    $errors['name'] = 'Имя слишком длинное';
+}
+
+// Валидация email
+if (empty($email)) {
+    $errors['email'] = 'Email обязателен';
+} elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    $errors['email'] = 'Введите корректный email';
+} elseif (strlen($email) > 255) {
+    $errors['email'] = 'Email слишком длинный';
+}
+
+// Валидация пароля
+if (empty($password)) {
+    $errors['password'] = 'Пароль обязателен';
+} elseif (strlen($password) < 6) {
+    $errors['password'] = 'Пароль должен быть не короче 6 символов';
+}
+
+// Валидация совпадения паролей
+if ($password !== $password_confirm) {
+    $errors['password_confirm'] = 'Пароли не совпадают';
+}
+
+// Проверка уникальности email
+if (empty($errors)) {
     $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
     $stmt->execute([$email]);
-
     if ($stmt->rowCount() > 0) {
-        die("Ошибка: пользователь с таким email уже существует!");
+        $errors['email'] = 'Пользователь с таким email уже существует';
     }
+}
 
-    // Добавляем пользователя
+// Если есть ошибки, сохраняем данные и возвращаемся
+if (!empty($errors)) {
+    $_SESSION['form_errors'] = $errors;
+    $_SESSION['form_data'] = [
+        'name' => $name,
+        'email' => $email
+    ];
+    header("Location: register.php");
+    exit();
+}
+
+// Добавляем пользователя
+try {
+    $password_hashed = password_hash($password, PASSWORD_BCRYPT);
     $stmt = $conn->prepare("INSERT INTO users (name, email, password) VALUES (?, ?, ?)");
-    $stmt->execute([$name, $email, $password]);
+    $stmt->execute([$name, $email, $password_hashed]);
 
     $_SESSION['user_id'] = $conn->lastInsertId();
     $_SESSION['user_name'] = $name;
 
+    // Очищаем временные данные
+    unset($_SESSION['form_errors'], $_SESSION['form_data']);
+
     header("Location: index.php");
+    exit();
+} catch (PDOException $e) {
+    $errors['general'] = 'Ошибка при регистрации: ' . $e->getMessage();
+    $_SESSION['form_errors'] = $errors;
+    $_SESSION['form_data'] = [
+        'name' => $name,
+        'email' => $email
+    ];
+    header("Location: register.php");
     exit();
 }
 ?>
