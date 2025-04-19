@@ -88,7 +88,7 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <?php if ($user['status'] == 'active'): ?>
                 <a href="block_user.php?id=<?= $user['id']; ?>">🚫 Заблокировать</a>
             <?php else: ?>
-                <a href="unblock_user.php?id=<?= $user['id']; ?>">🔓 Разблокировать</a>
+                <a href="block_user.php?id=<?= $user['id']; ?>&action=unblock">🔓 Разблокировать</a>
             <?php endif; ?>
             |
             <a href="delete_user.php?id=<?= $user['id']; ?>" onclick="return confirm('Удалить пользователя?');">🗑 Удалить</a>

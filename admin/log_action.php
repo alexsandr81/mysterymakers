@@ -1,5 +1,8 @@
 <?php
-session_start();
+// Запускаем сессию, только если она не активна
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once '../database/db.php';
 
 function logAdminAction($conn, $admin_id, $action, $details = null) {
