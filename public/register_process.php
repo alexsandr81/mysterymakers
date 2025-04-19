@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once '../database/db.php';
+require_once '../admin/log_action.php'; // Подключаем функцию логирования
 
 if ($_SERVER["REQUEST_METHOD"] !== "POST") {
     header("Location: register.php");
@@ -14,14 +15,12 @@ $password_confirm = $_POST['password_confirm'] ?? '';
 
 $errors = [];
 
-// Валидация имени
 if (empty($name)) {
     $errors['name'] = 'Имя обязательно';
 } elseif (strlen($name) > 255) {
     $errors['name'] = 'Имя слишком длинное';
 }
 
-// Валидация email
 if (empty($email)) {
     $errors['email'] = 'Email обязателен';
 } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -30,19 +29,16 @@ if (empty($email)) {
     $errors['email'] = 'Email слишком длинный';
 }
 
-// Валидация пароля
 if (empty($password)) {
     $errors['password'] = 'Пароль обязателен';
 } elseif (strlen($password) < 6) {
     $errors['password'] = 'Пароль должен быть не короче 6 символов';
 }
 
-// Валидация совпадения паролей
 if ($password !== $password_confirm) {
     $errors['password_confirm'] = 'Пароли не совпадают';
 }
 
-// Проверка уникальности email
 if (empty($errors)) {
     $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
     $stmt->execute([$email]);
@@ -51,7 +47,6 @@ if (empty($errors)) {
     }
 }
 
-// Если есть ошибки, сохраняем данные и возвращаемся
 if (!empty($errors)) {
     $_SESSION['form_errors'] = $errors;
     $_SESSION['form_data'] = [
@@ -62,7 +57,6 @@ if (!empty($errors)) {
     exit();
 }
 
-// Добавляем пользователя
 try {
     $password_hashed = password_hash($password, PASSWORD_BCRYPT);
     $stmt = $conn->prepare("INSERT INTO users (name, email, password) VALUES (?, ?, ?)");
@@ -71,7 +65,10 @@ try {
     $_SESSION['user_id'] = $conn->lastInsertId();
     $_SESSION['user_name'] = $name;
 
-    // Очищаем временные данные
+    // Логируем регистрацию (используем admin_id из сессии или системный ID)
+    $admin_id = $_SESSION['admin_id'] ?? 1; // Если админ авторизован, берём его ID, иначе системный (ID 1)
+    logAdminAction($conn, $admin_id, 'user_registered', "Пользователь $email зарегистрирован");
+
     unset($_SESSION['form_errors'], $_SESSION['form_data']);
 
     header("Location: index.php");
