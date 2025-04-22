@@ -25,12 +25,13 @@ DROP TABLE IF EXISTS `admin_logs`;
 CREATE TABLE `admin_logs` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `admin_id` int(11) NOT NULL,
-  `action` text NOT NULL,
+  `action` varchar(255) NOT NULL,
+  `details` text DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   KEY `admin_id` (`admin_id`),
   CONSTRAINT `admin_logs_ibfk_1` FOREIGN KEY (`admin_id`) REFERENCES `admins` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -39,6 +40,7 @@ CREATE TABLE `admin_logs` (
 
 LOCK TABLES `admin_logs` WRITE;
 /*!40000 ALTER TABLE `admin_logs` DISABLE KEYS */;
+INSERT INTO `admin_logs` VALUES (6,8,'user_registered','Пользователь alexsandr@ukr.net зарегистрирован','2025-04-19 18:16:08'),(7,9,'order_status_updated','Статус заказа #54 изменён на Отправлен','2025-04-19 18:19:08'),(8,8,'order_deleted','Заказ #54 удалён','2025-04-19 18:20:51'),(9,8,'user_blocked','Пользователь alexsandr81aa@gmail.com заблокирован','2025-04-19 18:44:46'),(10,8,'user_unblocked','Пользователь alexsandr81aa@gmail.com разблокирован','2025-04-19 18:44:51'),(11,8,'user_blocked','Пользователь alexsandr81aa@gmail.com заблокирован','2025-04-19 18:44:58'),(12,8,'user_unblocked','Пользователь alexsandr81aa@gmail.com разблокирован','2025-04-19 18:46:27'),(13,8,'user_blocked','Пользователь alexsandr81aa@gmail.com заблокирован','2025-04-19 18:46:58'),(14,8,'user_unblocked','Пользователь alexsandr81aa@gmail.com разблокирован','2025-04-19 18:47:53'),(15,8,'user_blocked','Пользователь alexsandr81aa@gmail.com заблокирован','2025-04-19 18:57:06'),(16,8,'user_unblocked','Пользователь alexsandr81aa@gmail.com разблокирован','2025-04-19 18:57:22'),(17,8,'user_blocked','Пользователь alexsandr81aa@gmail.com заблокирован','2025-04-19 19:09:00'),(18,8,'user_unblocked','Пользователь alexsandr81aa@gmail.com разблокирован','2025-04-19 19:09:01'),(19,8,'user_deleted','Пользователь alexsandr81aa@gmail.com удалён','2025-04-19 19:09:16'),(20,8,'user_registered','Пользователь alexsandr81aa@gmail.com зарегистрирован','2025-04-19 19:43:14'),(21,8,'user_blocked','Пользователь alexsandr81aa@gmail.com заблокирован','2025-04-19 19:43:28'),(22,8,'user_unblocked','Пользователь alexsandr81aa@gmail.com разблокирован','2025-04-19 19:44:08'),(23,8,'order_status_updated','Статус заказа #56 изменён на Доставлен','2025-04-19 20:19:47');
 /*!40000 ALTER TABLE `admin_logs` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -160,7 +162,6 @@ CREATE TABLE `favorites` (
 
 LOCK TABLES `favorites` WRITE;
 /*!40000 ALTER TABLE `favorites` DISABLE KEYS */;
-INSERT INTO `favorites` VALUES (7,10,32,'2025-04-10 14:39:50'),(8,10,17,'2025-04-10 15:30:55');
 /*!40000 ALTER TABLE `favorites` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -207,7 +208,7 @@ CREATE TABLE `order_items` (
   KEY `product_id` (`product_id`),
   CONSTRAINT `order_items_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`),
   CONSTRAINT `order_items_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=60 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=62 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -216,7 +217,7 @@ CREATE TABLE `order_items` (
 
 LOCK TABLES `order_items` WRITE;
 /*!40000 ALTER TABLE `order_items` DISABLE KEYS */;
-INSERT INTO `order_items` VALUES (59,54,26,1,90.00);
+INSERT INTO `order_items` VALUES (61,56,31,1,7777.00);
 /*!40000 ALTER TABLE `order_items` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -246,7 +247,7 @@ CREATE TABLE `orders` (
   UNIQUE KEY `order_number` (`order_number`),
   KEY `user_id` (`user_id`),
   CONSTRAINT `orders_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=55 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=57 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -255,7 +256,7 @@ CREATE TABLE `orders` (
 
 LOCK TABLES `orders` WRITE;
 /*!40000 ALTER TABLE `orders` DISABLE KEYS */;
-INSERT INTO `orders` VALUES (54,'MM1745000381815','0664219497','alexsandr81aa@gmail.com','',90.00,'2025-04-18 18:19:41',10,'Новый','alexsandr8','Курьер','Наличными',0.00,0.00);
+INSERT INTO `orders` VALUES (56,'MM1745093956593','380664219497','alexsandr81aa@gmail.com','',7777.00,'2025-04-19 20:19:16',15,'Доставлен','Margo','Курьер','Наличными',0.00,0.00);
 /*!40000 ALTER TABLE `orders` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -436,7 +437,7 @@ CREATE TABLE `users` (
   `status` enum('active','blocked') DEFAULT 'active',
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -445,7 +446,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (10,'margo','alexsandr81aa@gmail.com','$2y$10$HiM8hR9/DqS4gp19V4jD0e4iKR4sbBYWyPuhYNe1U.5siCF/1q.FC','2025-04-09 19:45:16',NULL,NULL,'active');
+INSERT INTO `users` VALUES (15,'Margo','alexsandr81aa@gmail.com','$2y$10$drmPWRZHL.V9CtMgxLmq/uxL8.S/.M2MNjSuVHkAleY/i1XKaj9FG','2025-04-19 19:43:14',NULL,NULL,'active');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -458,4 +459,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-04-19 21:02:57
+-- Dump completed on 2025-04-22 18:48:57

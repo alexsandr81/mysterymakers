@@ -83,31 +83,53 @@ $favorites = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 }
                 ?>
                 <div class="product">
-                    <a href="product.php?id=<?= htmlspecialchars($favorite['id']); ?>">
-                        <img src="<?= htmlspecialchars($main_image); ?>" alt="<?= htmlspecialchars($favorite['name']); ?>">
-                        <h3><?= htmlspecialchars($favorite['name']); ?></h3>
-                        <?php if ($discount_value): ?>
-                            <p class="old-price"><s><?= number_format($original_price, 2, '.', ''); ?> ₽</s></p>
-                            <p class="discount-price"><?= number_format($discount_price, 2, '.', ''); ?> ₽</p>
-                            <p class="discount-info">
-                                Скидка <?= ($favorite['discount_type'] == 'fixed') ? $favorite['discount_value'] . ' ₽' : $favorite['discount_value'] . '%'; ?>
-                                <?php if ($favorite['end_date']): ?> (до <?= date('d.m.Y H:i', strtotime($favorite['end_date'])); ?>) <?php endif; ?>
-                            </p>
-                        <?php else: ?>
-                            <p class="price"><?= number_format($original_price, 2, '.', ''); ?> ₽</p>
-                        <?php endif; ?>
-                    </a>
-                    <form method="POST" action="remove_from_favorites.php">
-                        <input type="hidden" name="product_id" value="<?= $favorite['id']; ?>">
-                        <button type="submit" class="remove-btn">Удалить</button>
-                    </form>
-                </div>
+    <a href="product.php?id=<?= htmlspecialchars($favorite['id']); ?>">
+        <img src="<?= htmlspecialchars($main_image); ?>" alt="<?= htmlspecialchars($favorite['name']); ?>">
+        <h3><?= htmlspecialchars($favorite['name']); ?></h3>
+        <?php if ($discount_value): ?>
+            <p class="old-price"><s><?= number_format($original_price, 2, '.', ''); ?> грн</s></p>
+            <p class="discount-price"><?= number_format($discount_price, 2, '.', ''); ?> грн</p>
+            <p class="discount-info">
+                Скидка <?= ($favorite['discount_type'] == 'fixed') ? $favorite['discount_value'] . ' грн' : $favorite['discount_value'] . '%'; ?>
+                <?php if ($favorite['end_date']): ?> (до <?= date('d.m.Y H:i', strtotime($favorite['end_date'])); ?>) <?php endif; ?>
+            </p>
+        <?php else: ?>
+            <p class="price"><?= number_format($original_price, 2, '.', ''); ?> грн</p>
+        <?php endif; ?>
+    </a>
+    <div>
+        <button class="add-to-cart-btn" data-product-id="<?= $favorite['id']; ?>">В корзину</button>
+        <form method="POST" action="remove_from_favorites.php">
+            <input type="hidden" name="product_id" value="<?= $favorite['id']; ?>">
+            <button type="submit" class="remove-btn">Удалить</button>
+        </form>
+    </div>
+</div>
             <?php endforeach; ?>
         </div>
     <?php endif; ?>
 </main>
 
 <?php include 'footer.php'; ?>
-
+<script>
+document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+    button.addEventListener('click', function() {
+        const productId = this.getAttribute('data-product-id');
+        fetch('add_to_cart.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `id=${productId}&quantity=1`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                alert('Товар добавлен в корзину!');
+                document.getElementById('cart-count').textContent = data.cart_count;
+            }
+        })
+        .catch(error => console.error('Ошибка:', error));
+    });
+});
+</script>
 </body>
 </html>

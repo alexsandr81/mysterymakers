@@ -13,7 +13,7 @@ include 'header.php';
 // Получаем данные пользователя, если авторизован
 $user = null;
 if (isset($_SESSION['user_id'])) {
-    $stmt = $conn->prepare("SELECT name, email FROM users WHERE id = ?");
+    $stmt = $conn->prepare("SELECT name, email, phone FROM users WHERE id = ?");
     $stmt->execute([$_SESSION['user_id']]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 }
@@ -43,7 +43,7 @@ unset($_SESSION['form_errors'], $_SESSION['form_data']);
         <div class="form-group">
             <label for="phone">Телефон:</label>
             <input type="text" id="phone" name="phone" 
-                   value="<?= htmlspecialchars($form_data['phone'] ?? ''); ?>" required
+                   value="<?= htmlspecialchars($form_data['phone'] ?? $user['phone'] ?? ''); ?>" required
                    placeholder="+12345678901">
             <?php if (isset($errors['phone'])): ?>
                 <span class="error"><?= htmlspecialchars($errors['phone']); ?></span>
@@ -91,8 +91,6 @@ unset($_SESSION['form_errors'], $_SESSION['form_data']);
         <p><strong>Скидка:</strong> <?= number_format($_SESSION['cart_totals']['total_discount'], 2, '.', ''); ?> ₽</p>
     <?php endif; ?>
 </main>
-
-
 
 <style>
 .form-group { margin-bottom: 15px; }
