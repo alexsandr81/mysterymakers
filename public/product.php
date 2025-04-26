@@ -93,17 +93,19 @@ $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($seo_title); ?></title>
     <meta name="description" content="<?= htmlspecialchars($seo_description); ?>">
     <meta name="keywords" content="<?= htmlspecialchars($seo_keywords); ?>">
-    <link rel="stylesheet" href="/mysterymakers/assets/styles.css">
+    <link rel="stylesheet" href="/mysterymakers/assets/css/styles.css">
 </head>
+
 <body>
     <main>
-    
+
 
         <div class="product-page">
             <!-- Галерея изображений -->
@@ -164,8 +166,18 @@ $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <div class="reviews">
                         <?php foreach ($reviews as $review): ?>
                             <div class="review">
-                                <p><b><?= htmlspecialchars($review['user_name']); ?></b>: <?= htmlspecialchars($review['comment']); ?></p>
-                                <p>Рейтинг: <?= $review['rating']; ?> ⭐</p>
+                                <p><strong><?= htmlspecialchars($review['name']); ?></strong> ⭐<?= $review['rating']; ?>/5</p>
+                                <p><?= nl2br(htmlspecialchars($review['comment'])); ?></p>
+                                <?php if (!empty($review['admin_response'])): ?>
+                                    <div class="admin-response">
+                                        <strong>Ответ администратора:</strong>
+                                        <p><?= nl2br(htmlspecialchars($review['admin_response'])); ?></p>
+                                    </div>
+                                <?php endif; ?>
+                                <?php if ($review['image']): ?>
+                                    <img src="/mysterymakers/<?= htmlspecialchars($review['image']); ?>" width="100">
+                                <?php endif; ?>
+                                <hr>
                             </div>
                         <?php endforeach; ?>
                     </div>
@@ -173,25 +185,33 @@ $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <p>Отзывов пока нет.</p>
                 <?php endif; ?>
 
-                <!-- Форма отзыва -->
+                <!-- Форма добавления отзыва -->
+                <h3>Оставить отзыв</h3>
                 <?php if (isset($_SESSION['user_id'])): ?>
-                    <div class="review-form">
-                        <h3>Оставить отзыв</h3>
-                        <form action="submit_review.php" method="POST" enctype="multipart/form-data">
-                            <input type="hidden" name="product_id" value="<?= $product['id']; ?>">
-                            <label>Рейтинг:</label>
-                            <input type="number" name="rating" min="1" max="5" required><br><br>
-                            <label>Отзыв:</label>
-                            <textarea name="comment" required></textarea><br><br>
-                            <label>Фото (необязательно):</label>
-                            <input type="file" name="image" accept="image/*"><br><br>
-                            <button type="submit">Отправить</button>
-                        </form>
-                    </div>
-                <?php else: ?>
-                    <p>Для добавления отзыва <a href="login.php">авторизуйтесь</a>.</p>
-                <?php endif; ?>
+                    <form action="add_review.php" method="POST" enctype="multipart/form-data">
+                        <input type="hidden" name="product_id" value="<?= $product['id']; ?>">
+                        <label>Оценка:</label>
+                        <select name="rating" required>
+                            <option value="5">⭐️⭐️⭐️⭐️⭐️</option>
+                            <option value="4">⭐️⭐️⭐️⭐️</option>
+                            <option value="3">⭐️⭐️⭐️</option>
+                            <option value="2">⭐️⭐️</option>
+                            <option value="1">⭐️</option>
+                        </select><br><br>
+
+                        <label>Отзыв:</label>
+                        <textarea name="comment" required></textarea><br><br>
+
+                        <label>Фото (необязательно):</label>
+                        <input type="file" name="image" accept="image/*"><br><br>
+
+                        <button type="submit">Отправить</button>
+                    </form>
             </div>
+        <?php else: ?>
+            <p>Для добавления отзыва <a href="login.php">авторизуйтесь</a>.</p>
+        <?php endif; ?>
+        </div>
         </div>
 
         <!-- Похожие товары -->
@@ -242,26 +262,27 @@ $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
         // Добавление в корзину
         function addToCart(productId) {
             fetch('add_to_cart.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: 'id=' + productId
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    const countEl = document.getElementById('cart-count');
-                    if (countEl) countEl.textContent = data.cart_count;
-                    alert("Товар добавлен в корзину!");
-                } else {
-                    alert("Ошибка добавления");
-                }
-            })
-            .catch(error => console.error('Ошибка:', error));
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: 'id=' + productId
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        const countEl = document.getElementById('cart-count');
+                        if (countEl) countEl.textContent = data.cart_count;
+                        alert("Товар добавлен в корзину!");
+                    } else {
+                        alert("Ошибка добавления");
+                    }
+                })
+                .catch(error => console.error('Ошибка:', error));
         }
     </script>
 
     <?php include 'footer.php'; ?>
 </body>
+
 </html>
