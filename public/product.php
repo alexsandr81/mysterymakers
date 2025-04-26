@@ -81,13 +81,17 @@ $stmt->execute([$product['id']]);
 $rating = round($stmt->fetch(PDO::FETCH_ASSOC)['avg_rating'], 1);
 
 $stmt = $conn->prepare("
-    SELECT r.*, u.name AS user_name 
-    FROM reviews r
-    JOIN users u ON r.user_id = u.id
-    WHERE r.product_id = ? AND r.status = 'approved'
-    ORDER BY r.created_at DESC
+    SELECT reviews.*, users.name 
+    FROM reviews 
+    JOIN users ON reviews.user_id = users.id 
+    WHERE reviews.product_id = :product_id 
+      AND reviews.status = 'approved' 
+    ORDER BY reviews.created_at DESC
 ");
-$stmt->execute([$product_id]);
+// Выполнение запроса
+$stmt->execute(['product_id' => $product['id']]);
+
+// Получение всех отзывов
 $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
@@ -160,6 +164,10 @@ $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <h3>Описание</h3>
                 <p><?= nl2br(htmlspecialchars($product['description'])); ?></p>
 
+
+
+
+                
                 <!-- Секция отзывов -->
                 <h3>Отзывы</h3>
                 <?php if (!empty($reviews)): ?>
@@ -170,7 +178,7 @@ $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <p><?= nl2br(htmlspecialchars($review['comment'])); ?></p>
                                 <?php if (!empty($review['admin_response'])): ?>
                                     <div class="admin-response">
-                                        <strong>Ответ администратора:</strong>
+                                        <strong>MysteryMakers:</strong>
                                         <p><?= nl2br(htmlspecialchars($review['admin_response'])); ?></p>
                                     </div>
                                 <?php endif; ?>
@@ -202,8 +210,8 @@ $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <label>Отзыв:</label>
                         <textarea name="comment" required></textarea><br><br>
 
-                        <label>Фото (необязательно):</label>
-                        <input type="file" name="image" accept="image/*"><br><br>
+                        <!-- <label>Фото (необязательно):</label>
+                        <input type="file" name="image" accept="image/*"><br><br> -->
 
                         <button type="submit">Отправить</button>
                     </form>

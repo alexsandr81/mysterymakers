@@ -1,2 +1,236 @@
+/* line 1, ../xampp/htdocs/mysterymakers/assets/sass/_product.sass */
+.product-page {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* line 9, ../xampp/htdocs/mysterymakers/assets/sass/_product.sass */
+.gallery {
+  flex: 1;
+  min-width: 300px;
+}
+
+/* line 13, ../xampp/htdocs/mysterymakers/assets/sass/_product.sass */
+.zoom-wrapper {
+  width: 100%;
+  overflow: hidden;
+}
+
+/* line 17, ../xampp/htdocs/mysterymakers/assets/sass/_product.sass */
+.zoom-wrapper img {
+  max-width: 400px;
+  max-height: 400px;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+}
+
+/* line 26, ../xampp/htdocs/mysterymakers/assets/sass/_product.sass */
+.thumbnails {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+/* line 32, ../xampp/htdocs/mysterymakers/assets/sass/_product.sass */
+.thumbnails img {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  cursor: pointer;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+}
+
+/* line 40, ../xampp/htdocs/mysterymakers/assets/sass/_product.sass */
+.thumbnails img:hover {
+  border-color: #007bff;
+}
+
+/* line 43, ../xampp/htdocs/mysterymakers/assets/sass/_product.sass */
+.details {
+  flex: 1;
+  min-width: 300px;
+}
+
+/* line 47, ../xampp/htdocs/mysterymakers/assets/sass/_product.sass */
+.details h1 {
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+/* line 51, ../xampp/htdocs/mysterymakers/assets/sass/_product.sass */
+.details .price, .details .discount-price {
+  font-size: 20px;
+  color: #28a745;
+  font-weight: bold;
+}
+
+/* line 56, ../xampp/htdocs/mysterymakers/assets/sass/_product.sass */
+.details .old-price {
+  color: #999;
+  text-decoration: line-through;
+  margin-right: 10px;
+}
+
+/* line 61, ../xampp/htdocs/mysterymakers/assets/sass/_product.sass */
+.details .discount-info {
+  color: #dc3545;
+  font-size: 14px;
+}
+
+/* line 65, ../xampp/htdocs/mysterymakers/assets/sass/_product.sass */
+.details .sku {
+  font-size: 16px;
+  color: #333;
+  margin: 10px 0;
+}
+
+/* line 70, ../xampp/htdocs/mysterymakers/assets/sass/_product.sass */
+.details .stock {
+  font-size: 16px;
+  margin: 10px 0;
+}
+
+/* line 74, ../xampp/htdocs/mysterymakers/assets/sass/_product.sass */
+.details button {
+  padding: 10px 20px;
+  margin: 5px;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+/* line 82, ../xampp/htdocs/mysterymakers/assets/sass/_product.sass */
+.details form button {
+  background-color: #dc3545;
+  color: white;
+}
+
+/* line 86, ../xampp/htdocs/mysterymakers/assets/sass/_product.sass */
+.details form button:hover {
+  background-color: #c82333;
+}
+
+/* line 89, ../xampp/htdocs/mysterymakers/assets/sass/_product.sass */
+.btn-cart {
+  background-color: #28a745;
+  color: white;
+}
+
+/* line 93, ../xampp/htdocs/mysterymakers/assets/sass/_product.sass */
+.btn-cart:hover {
+  background-color: #218838;
+}
+
+/* line 96, ../xampp/htdocs/mysterymakers/assets/sass/_product.sass */
+.btn-buy {
+  background-color: #007bff;
+  color: white;
+}
+
+/* line 100, ../xampp/htdocs/mysterymakers/assets/sass/_product.sass */
+.btn-buy:hover {
+  background-color: #0056b3;
+}
+
+/* line 103, ../xampp/htdocs/mysterymakers/assets/sass/_product.sass */
+.reviews {
+  margin-top: 20px;
+}
+
+/* line 106, ../xampp/htdocs/mysterymakers/assets/sass/_product.sass */
+.review {
+  border-bottom: 1px solid #ddd;
+  padding: 10px 0;
+}
+
+/* line 110, ../xampp/htdocs/mysterymakers/assets/sass/_product.sass */
+.review-form {
+  margin-top: 20px;
+}
+
+/* line 113, ../xampp/htdocs/mysterymakers/assets/sass/_product.sass */
+.review-form label {
+  display: block;
+  margin: 10px 0 5px;
+}
+
+/* line 117, ../xampp/htdocs/mysterymakers/assets/sass/_product.sass */
+.review-form input, .review-form textarea {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+}
+
+/* line 124, ../xampp/htdocs/mysterymakers/assets/sass/_product.sass */
+.review-form button {
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+/* line 132, ../xampp/htdocs/mysterymakers/assets/sass/_product.sass */
+.review-form button:hover {
+  background-color: #0056b3;
+}
+
+/* line 135, ../xampp/htdocs/mysterymakers/assets/sass/_product.sass */
+.products-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+/* line 141, ../xampp/htdocs/mysterymakers/assets/sass/_product.sass */
+.product-card {
+  border: 1px solid #ddd;
+  padding: 10px;
+  width: 200px;
+  text-align: center;
+}
+
+/* line 147, ../xampp/htdocs/mysterymakers/assets/sass/_product.sass */
+.product-card img {
+  max-width: 150px;
+  max-height: 150px;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+/* line 154, ../xampp/htdocs/mysterymakers/assets/sass/_product.sass */
+.product-card h3 {
+  font-size: 16px;
+  margin: 10px 0;
+}
+
+/* line 158, ../xampp/htdocs/mysterymakers/assets/sass/_product.sass */
+.product-card .btn {
+  display: inline-block;
+  padding: 8px 16px;
+  background-color: #007bff;
+  color: white;
+  text-decoration: none;
+  border-radius: 3px;
+}
+
+/* line 166, ../xampp/htdocs/mysterymakers/assets/sass/_product.sass */
+.product-card .btn:hover {
+  background-color: #0056b3;
+}
 
 /*# sourceMappingURL=styles.css.map */
