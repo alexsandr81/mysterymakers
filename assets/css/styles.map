@@ -1,0 +1,20 @@
+{
+	"version": 3,
+	"file": "styles.css",
+	"sources": [
+		"../sass/styles.sass",
+		"../sass/_product.sass",
+		"../sass/_header.sass",
+		"../sass/_footer.sass",
+		"../sass/_btn.sass"
+	],
+	"sourcesContent": [
+		"@import \"product\";\n@import \"header\";\n@import \"footer\";\n@import \"btn\";\n\n",
+		"",
+		"",
+		"\n\n",
+		""
+	],
+	"names": [],
+	"mappings": ""
+}

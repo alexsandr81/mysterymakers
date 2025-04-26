@@ -1,6 +1,6 @@
 <?php
-include 'header.php'; // Подключение файла header.php
-require_once '../database/db.php'; // Подключение файла с подключением к базе данных
+include 'header.php';
+require_once '../database/db.php';
 
 // Получение ID товара из URL
 $product_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
@@ -11,7 +11,7 @@ if ($product_id <= 0) {
     exit;
 }
 
-// Получаем товар с учётом скидок по товару и категории
+// Получаем товар с учётом скидок
 $stmt = $conn->prepare("
     SELECT p.*, 
            COALESCE(
@@ -99,10 +99,12 @@ $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <title><?= htmlspecialchars($seo_title); ?></title>
     <meta name="description" content="<?= htmlspecialchars($seo_description); ?>">
     <meta name="keywords" content="<?= htmlspecialchars($seo_keywords); ?>">
-    <link rel="stylesheet" href="assets/styles.css">
+    <link rel="stylesheet" href="/mysterymakers/assets/styles.css">
 </head>
 <body>
     <main>
+    
+
         <div class="product-page">
             <!-- Галерея изображений -->
             <div class="gallery">
@@ -129,15 +131,16 @@ $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <!-- Детали товара -->
             <div class="details">
                 <h1><?= htmlspecialchars($product['name']); ?></h1>
+                <p class="sku">Артикул: <?= htmlspecialchars($product['sku']); ?></p>
                 <?php if ($discount_value): ?>
-                    <p class="old-price"><s><?= number_format($original_price, 2, '.', ''); ?> ₽</s></p>
-                    <p class="discount-price"><?= number_format($discount_price, 2, '.', ''); ?> ₽</p>
+                    <p class="old-price"><s><?= number_format($original_price, 2, '.', ''); ?> грн</s></p>
+                    <p class="discount-price"><?= number_format($discount_price, 2, '.', ''); ?> грн</p>
                     <p class="discount-info">
-                        Скидка <?= ($product['discount_type'] == 'fixed') ? $product['discount_value'] . ' ₽' : $product['discount_value'] . '%'; ?>
+                        Скидка <?= ($product['discount_type'] == 'fixed') ? $product['discount_value'] . ' грн' : $product['discount_value'] . '%'; ?>
                         <?php if ($product['end_date']): ?> (до <?= date('d.m.Y H:i', strtotime($product['end_date'])); ?>) <?php endif; ?>
                     </p>
                 <?php else: ?>
-                    <p class="price"><?= number_format($original_price, 2, '.', ''); ?> ₽</p>
+                    <p class="price"><?= number_format($original_price, 2, '.', ''); ?> грн</p>
                 <?php endif; ?>
                 <p class="stock"><?= ($product['stock'] > 0) ? '✅ В наличии' : '❌ Нет в наличии'; ?></p>
 
@@ -163,9 +166,6 @@ $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <div class="review">
                                 <p><b><?= htmlspecialchars($review['user_name']); ?></b>: <?= htmlspecialchars($review['comment']); ?></p>
                                 <p>Рейтинг: <?= $review['rating']; ?> ⭐</p>
-                                <?php if ($review['admin_response']): ?>
-                                    <p class="admin-response"><b>Ответ администратора:</b> <?= htmlspecialchars($review['admin_response']); ?></p>
-                                <?php endif; ?>
                             </div>
                         <?php endforeach; ?>
                     </div>
@@ -173,28 +173,21 @@ $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <p>Отзывов пока нет.</p>
                 <?php endif; ?>
 
-                <!-- Форма добавления отзыва -->
-                <h3>Оставить отзыв</h3>
+                <!-- Форма отзыва -->
                 <?php if (isset($_SESSION['user_id'])): ?>
-                    <form action="add_review.php" method="POST" enctype="multipart/form-data">
-                        <input type="hidden" name="product_id" value="<?= $product['id']; ?>">
-                        <label>Оценка:</label>
-                        <select name="rating" required>
-                            <option value="5">⭐️⭐️⭐️⭐️⭐️</option>
-                            <option value="4">⭐️⭐️⭐️⭐️</option>
-                            <option value="3">⭐️⭐️⭐️</option>
-                            <option value="2">⭐️⭐️</option>
-                            <option value="1">⭐️</option>
-                        </select><br><br>
-
-                        <label>Отзыв:</label>
-                        <textarea name="comment" required></textarea><br><br>
-
-                        <label>Фото (необязательно):</label>
-                        <input type="file" name="image" accept="image/*"><br><br>
-
-                        <button type="submit">Отправить</button>
-                    </form>
+                    <div class="review-form">
+                        <h3>Оставить отзыв</h3>
+                        <form action="submit_review.php" method="POST" enctype="multipart/form-data">
+                            <input type="hidden" name="product_id" value="<?= $product['id']; ?>">
+                            <label>Рейтинг:</label>
+                            <input type="number" name="rating" min="1" max="5" required><br><br>
+                            <label>Отзыв:</label>
+                            <textarea name="comment" required></textarea><br><br>
+                            <label>Фото (необязательно):</label>
+                            <input type="file" name="image" accept="image/*"><br><br>
+                            <button type="submit">Отправить</button>
+                        </form>
+                    </div>
                 <?php else: ?>
                     <p>Для добавления отзыва <a href="login.php">авторизуйтесь</a>.</p>
                 <?php endif; ?>
@@ -206,13 +199,17 @@ $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <h2>Похожие товары</h2>
             <div class="products-grid">
                 <?php foreach ($related_products as $related): ?>
+                    <?php
+                    $related_images = json_decode($related['images'], true);
+                    $related_image = !empty($related_images) ? "/mysterymakers/" . $related_images[0] : ($related['image'] ? "/mysterymakers/" . $related['image'] : "/mysterymakers/public/assets/default.jpg");
+                    ?>
                     <div class="product-card">
-                        <a href="product.php?slug=<?= htmlspecialchars($related['slug']); ?>">
-                            <img src="../<?= json_decode($related['images'], true)[0]; ?>" alt="<?= htmlspecialchars($related['name']); ?>">
+                        <a href="product.php?id=<?= htmlspecialchars($related['id']); ?>">
+                            <img src="<?= htmlspecialchars($related_image); ?>" alt="<?= htmlspecialchars($related['name']); ?>">
                         </a>
                         <h3><?= htmlspecialchars($related['name']); ?></h3>
-                        <p>Цена: <?= number_format($related['price'], 2, '.', ''); ?> ₽</p>
-                        <a href="product.php?slug=<?= htmlspecialchars($related['slug']); ?>" class="btn">Подробнее</a>
+                        <p>Цена: <?= number_format($related['price'], 2, '.', ''); ?> грн</p>
+                        <a href="product.php?id=<?= htmlspecialchars($related['id']); ?>" class="btn">Подробнее</a>
                     </div>
                 <?php endforeach; ?>
             </div>
@@ -244,26 +241,25 @@ $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         // Добавление в корзину
         function addToCart(productId) {
-    fetch('add_to_cart.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: 'id=' + productId
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.status === 'success') {
-            const countEl = document.getElementById('cart-count');
-            if (countEl) countEl.textContent = data.cart_count;
-            alert("Товар добавлен в корзину!");
-        } else {
-            alert("Ошибка добавления");
+            fetch('add_to_cart.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: 'id=' + productId
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    const countEl = document.getElementById('cart-count');
+                    if (countEl) countEl.textContent = data.cart_count;
+                    alert("Товар добавлен в корзину!");
+                } else {
+                    alert("Ошибка добавления");
+                }
+            })
+            .catch(error => console.error('Ошибка:', error));
         }
-    })
-    .catch(error => console.error('Ошибка:', error));
-}
-
     </script>
 
     <?php include 'footer.php'; ?>
