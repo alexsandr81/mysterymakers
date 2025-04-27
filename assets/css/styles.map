@@ -6,13 +6,15 @@
 		"../sass/_product.sass",
 		"../sass/_header.sass",
 		"../sass/_footer.sass",
-		"../sass/_btn.sass"
+		"../sass/_btn.sass",
+		"../sass/_account.sass"
 	],
 	"sourcesContent": [
-		"@import \"product\";\n@import \"header\";\n@import \"footer\";\n@import \"btn\";\n\n",
+		"@import \"product\";\n@import \"header\";\n@import \"footer\";\n@import \"btn\";\n@import \"account\";\n",
 		".product-page {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 20px;\n  max-width: 1200px;\n  margin: 0 auto;\n  padding: 20px; }\n\n.gallery {\n  flex: 1;\n  min-width: 300px; }\n\n.zoom-wrapper {\n  width: 100%;\n  overflow: hidden;\n\n  img {\n    max-width: 400px;\n    max-height: 400px;\n    width: 100%;\n    height: auto;\n    object-fit: contain;\n    display: block;\n    margin: 0 auto; } }\n\n.thumbnails {\n  display: flex;\n  gap: 10px;\n  margin-top: 10px;\n  flex-wrap: wrap;\n\n  img {\n    width: 80px;\n    height: 80px;\n    object-fit: contain;\n    cursor: pointer;\n    border: 1px solid #ddd;\n    border-radius: 3px;\n\n    &:hover {\n      border-color: #007bff; } } }\n\n.details {\n  flex: 1;\n  min-width: 300px;\n\n  h1 {\n    font-size: 24px;\n    margin-bottom: 10px; }\n\n  .price, .discount-price {\n    font-size: 20px;\n    color: #28a745;\n    font-weight: bold; }\n\n  .old-price {\n    color: #999;\n    text-decoration: line-through;\n    margin-right: 10px; }\n\n  .discount-info {\n    color: #dc3545;\n    font-size: 14px; }\n\n  .sku {\n    font-size: 16px;\n    color: #333;\n    margin: 10px 0; }\n\n  .stock {\n    font-size: 16px;\n    margin: 10px 0; }\n\n  button {\n    padding: 10px 20px;\n    margin: 5px;\n    border: none;\n    border-radius: 3px;\n    cursor: pointer; }\n\n  form {\n    button {\n      background-color: #dc3545;\n      color: white;\n\n      &:hover {\n        background-color: #c82333; } } } }\n\n.btn-cart {\n  background-color: #28a745;\n  color: white;\n\n  &:hover {\n    background-color: #218838; } }\n\n.btn-buy {\n  background-color: #007bff;\n  color: white;\n\n  &:hover {\n    background-color: #0056b3; } }\n\n.reviews {\n  margin-top: 20px; }\n\n.review {\n  border-bottom: 1px solid #ddd;\n  padding: 10px 0; }\n\n.review-form {\n  margin-top: 20px;\n\n  label {\n    display: block;\n    margin: 10px 0 5px; }\n\n  input, textarea {\n    width: 100%;\n    padding: 8px;\n    margin-bottom: 10px;\n    border: 1px solid #ddd;\n    border-radius: 3px; }\n\n  button {\n    padding: 10px 20px;\n    background-color: #007bff;\n    color: white;\n    border: none;\n    border-radius: 3px;\n    cursor: pointer;\n\n    &:hover {\n      background-color: #0056b3; } } }\n\n.products-grid {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 20px;\n  margin-top: 20px; }\n\n.product-card {\n  border: 1px solid #ddd;\n  padding: 10px;\n  width: 200px;\n  text-align: center;\n\n  img {\n    max-width: 150px;\n    max-height: 150px;\n    width: 100%;\n    height: auto;\n    object-fit: contain; }\n\n  h3 {\n    font-size: 16px;\n    margin: 10px 0; }\n\n  .btn {\n    display: inline-block;\n    padding: 8px 16px;\n    background-color: #007bff;\n    color: white;\n    text-decoration: none;\n    border-radius: 3px;\n\n    &:hover {\n      background-color: #0056b3; } } }\n",
 		"",
 		"\n\n",
+		"",
 		""
 	],
 	"names": [],
