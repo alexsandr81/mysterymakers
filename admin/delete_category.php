@@ -18,3 +18,4 @@ $stmt->execute([$id]);
 header("Location: categories.php");
 exit();
 ?>
+

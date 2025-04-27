@@ -153,7 +153,7 @@ CREATE TABLE `favorites` (
   KEY `product_id` (`product_id`),
   CONSTRAINT `favorites_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
   CONSTRAINT `favorites_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -162,6 +162,7 @@ CREATE TABLE `favorites` (
 
 LOCK TABLES `favorites` WRITE;
 /*!40000 ALTER TABLE `favorites` DISABLE KEYS */;
+INSERT INTO `favorites` VALUES (11,15,24,'2025-04-22 16:18:53'),(13,15,26,'2025-04-23 19:40:26'),(14,15,31,'2025-04-23 19:44:36'),(15,15,32,'2025-04-26 14:25:52');
 /*!40000 ALTER TABLE `favorites` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -208,7 +209,7 @@ CREATE TABLE `order_items` (
   KEY `product_id` (`product_id`),
   CONSTRAINT `order_items_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`),
   CONSTRAINT `order_items_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=62 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=63 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -217,7 +218,7 @@ CREATE TABLE `order_items` (
 
 LOCK TABLES `order_items` WRITE;
 /*!40000 ALTER TABLE `order_items` DISABLE KEYS */;
-INSERT INTO `order_items` VALUES (61,56,31,1,7777.00);
+INSERT INTO `order_items` VALUES (61,56,31,1,7777.00),(62,57,31,1,7777.00);
 /*!40000 ALTER TABLE `order_items` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -247,7 +248,7 @@ CREATE TABLE `orders` (
   UNIQUE KEY `order_number` (`order_number`),
   KEY `user_id` (`user_id`),
   CONSTRAINT `orders_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=57 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=58 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -256,7 +257,7 @@ CREATE TABLE `orders` (
 
 LOCK TABLES `orders` WRITE;
 /*!40000 ALTER TABLE `orders` DISABLE KEYS */;
-INSERT INTO `orders` VALUES (56,'MM1745093956593','380664219497','alexsandr81aa@gmail.com','',7777.00,'2025-04-19 20:19:16',15,'Доставлен','Margo','Курьер','Наличными',0.00,0.00);
+INSERT INTO `orders` VALUES (56,'MM1745093956593','380664219497','alexsandr81aa@gmail.com','',7777.00,'2025-04-19 20:19:16',15,'Доставлен','Margo','Курьер','Наличными',0.00,0.00),(57,'MM1745345118119','+380664219490','alexsandr81aa@gmail.com','',7777.00,'2025-04-22 18:05:18',15,'Новый','Margo','Курьер','Наличными',0.00,0.00);
 /*!40000 ALTER TABLE `orders` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -355,7 +356,7 @@ CREATE TABLE `reviews` (
   KEY `user_id` (`user_id`),
   CONSTRAINT `reviews_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE,
   CONSTRAINT `reviews_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -420,6 +421,34 @@ INSERT INTO `subcategories` VALUES (5,4,'ДЖ тематика'),(6,5,'Коро�
 UNLOCK TABLES;
 
 --
+-- Table structure for table `user_addresses`
+--
+
+DROP TABLE IF EXISTS `user_addresses`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `user_addresses` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `address` text NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`),
+  CONSTRAINT `user_addresses_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `user_addresses`
+--
+
+LOCK TABLES `user_addresses` WRITE;
+/*!40000 ALTER TABLE `user_addresses` DISABLE KEYS */;
+INSERT INTO `user_addresses` VALUES (1,15,'днепр','2025-04-22 16:23:37'),(2,15,'днепр','2025-04-22 16:24:56'),(3,15,'днепр','2025-04-22 16:27:23'),(4,15,'днепр','2025-04-22 17:12:36');
+/*!40000 ALTER TABLE `user_addresses` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `users`
 --
 
@@ -435,6 +464,7 @@ CREATE TABLE `users` (
   `reset_token` varchar(64) DEFAULT NULL,
   `reset_token_created_at` timestamp NULL DEFAULT NULL,
   `status` enum('active','blocked') DEFAULT 'active',
+  `phone` varchar(20) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`)
 ) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -446,7 +476,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (15,'Margo','alexsandr81aa@gmail.com','$2y$10$drmPWRZHL.V9CtMgxLmq/uxL8.S/.M2MNjSuVHkAleY/i1XKaj9FG','2025-04-19 19:43:14',NULL,NULL,'active');
+INSERT INTO `users` VALUES (15,'Margo','alexsandr81aa@gmail.com','$2y$10$drmPWRZHL.V9CtMgxLmq/uxL8.S/.M2MNjSuVHkAleY/i1XKaj9FG','2025-04-19 19:43:14',NULL,NULL,'active','+380664219497');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -459,4 +489,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-04-22 18:48:57
+-- Dump completed on 2025-04-27 17:13:47
