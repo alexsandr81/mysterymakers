@@ -55,7 +55,14 @@ $favorites = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <?php include 'header.php'; ?>
 
 <main>
+<link rel="stylesheet" href="/mysterymakers/assets/css/styles.css">
     <h1>Избранное</h1>
+    <!-- Навигация по разделам -->
+    <nav class="account-nav">
+        <a href="account.php" class="account-nav__link">Профиль</a>
+        <a href="favorites.php" class="account-nav__link active">Избранное</a>
+        <a href="history.php" class="account-nav__link ">Заказы</a>
+    </nav>
 
     <?php if (empty($favorites)): ?>
         <p>В вашем избранном пока нет товаров.</p>

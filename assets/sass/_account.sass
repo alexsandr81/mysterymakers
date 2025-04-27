@@ -1,0 +1,130 @@
+// Стили для страницы личного кабинета
+
+// Навигация по разделам
+.account-nav
+  display: flex
+  gap: 20px
+  margin-bottom: 20px
+
+  &__link
+    text-decoration: none
+    color: #333
+    font-size: 16px
+    padding: 10px 15px
+    border-radius: 5px
+    transition: background-color 0.3s
+
+    &:hover
+      background-color: #f0f0f0
+
+    &.active
+      background-color: #007bff
+      color: #fff
+
+// Информация о пользователе
+.profile-info
+  max-width: 600px
+  margin: 0 auto
+
+  h2
+    font-size: 24px
+    margin-bottom: 20px
+
+  ul
+    list-style: none
+    padding: 0
+    margin-bottom: 20px
+
+  li
+    font-size: 16px
+    margin-bottom: 10px
+
+    strong
+      display: inline-block
+      width: 150px
+
+// Форма редактирования
+.profile-form
+  max-width: 600px
+  margin: 0 auto
+
+  h2
+    font-size: 24px
+    margin-bottom: 20px
+
+  form
+    display: flex
+    flex-direction: column
+    gap: 15px
+
+    label
+      font-size: 16px
+      margin-bottom: 5px
+
+    input, textarea
+      padding: 10px
+      font-size: 16px
+      border: 1px solid #ccc
+      border-radius: 5px
+      width: 100%
+      box-sizing: border-box
+
+// Кнопка "Редактировать"
+.edit-profile-btn
+  padding: 10px 20px
+  background-color: #007bff
+  color: #fff
+  border: none
+  border-radius: 5px
+  cursor: pointer
+  font-size: 16px
+  transition: background-color 0.3s
+
+  &:hover
+    background-color: #0056b3
+
+// Кнопки формы
+.form-actions
+  display: flex
+  gap: 10px
+  margin-top: 10px
+
+  button
+    padding: 10px 20px
+    border: none
+    border-radius: 5px
+    cursor: pointer
+    font-size: 16px
+    transition: background-color 0.3s
+
+  button[type="submit"]
+    background-color: #007bff
+    color: #fff
+
+    &:hover
+      background-color: #0056b3
+
+.cancel-btn
+  background-color: #6c757d
+  color: #fff
+
+  &:hover
+    background-color: #5a6268
+
+// Сообщения
+.success
+  color: green
+  margin-bottom: 15px
+
+.error
+  color: red
+  margin-bottom: 15px
+
+// Кнопка выхода
+.logout-btn
+  color: #dc3545
+  text-decoration: none
+  font-size: 16px
+
+  &:hover
+    text-decoration: underline
