@@ -69,7 +69,7 @@ $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <?php endif; ?>
         <?php endif; ?>
     </p>
-    <p><strong>Сумма:</strong> <?= number_format($order['total_price'], 2, '.', ''); ?> ₽</p>
+    <p><strong>Сумма:</strong> <?= number_format($order['total_price'], 2, '.', ''); ?> грн.</p>
     <p><strong>Статус:</strong> <?= htmlspecialchars($order['status']); ?></p>
     <p><strong>Дата:</strong> <?= $order['created_at']; ?></p>
     <h3>Товары в заказе</h3>
@@ -93,16 +93,16 @@ $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <tr>
                     <td><?= htmlspecialchars($item['name']); ?></td>
                     <td><?= htmlspecialchars($item['quantity']); ?></td>
-                    <td><?= number_format($original_price, 2, '.', ''); ?> ₽</td>
+                    <td><?= number_format($original_price, 2, '.', ''); ?> грн.</td>
                     <td>
                         <?php if ($discount_value): ?>
-                            <?= $item['discount_type'] == 'fixed' ? number_format($discount_value, 2, '.', '') . ' ₽' : $discount_value . '%'; ?>
+                            <?= $item['discount_type'] == 'fixed' ? number_format($discount_value, 2, '.', '') . ' грн.' : $discount_value . '%'; ?>
                         <?php else: ?>
                             —
                         <?php endif; ?>
                     </td>
-                    <td><?= number_format($final_price, 2, '.', ''); ?> ₽</td>
-                    <td><?= number_format($subtotal, 2, '.', ''); ?> ₽</td>
+                    <td><?= number_format($final_price, 2, '.', ''); ?> грн.</td>
+                    <td><?= number_format($subtotal, 2, '.', ''); ?> грн.</td>
                 </tr>
             <?php endforeach; ?>
         </table>

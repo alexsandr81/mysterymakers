@@ -48,9 +48,9 @@ $sales_chart = $conn->query("
     <div class="dashboard">
         <div class="stat">
             <h3>💰 Оборот</h3>
-            <p>Сегодня: <b><?= number_format($sales_today ?: 0, 2, '.', ''); ?> ₽</b></p>
-            <p>Неделя: <b><?= number_format($sales_week ?: 0, 2, '.', ''); ?> ₽</b></p>
-            <p>Месяц: <b><?= number_format($sales_month ?: 0, 2, '.', ''); ?> ₽</b></p>
+            <p>Сегодня: <b><?= number_format($sales_today ?: 0, 2, '.', ''); ?> грн.</b></p>
+            <p>Неделя: <b><?= number_format($sales_week ?: 0, 2, '.', ''); ?> грн.</b></p>
+            <p>Месяц: <b><?= number_format($sales_month ?: 0, 2, '.', ''); ?> грн.</b></p>
         </div>
         <div class="stat">
             <h3>📦 Заказы</h3>
@@ -90,7 +90,7 @@ $sales_chart = $conn->query("
             data: {
                 labels: salesLabels,
                 datasets: [{
-                    label: 'Оборот (₽)',
+                    label: 'Оборот (грн.)',
                     data: salesData,
                     borderColor: 'blue',
                     borderWidth: 2,

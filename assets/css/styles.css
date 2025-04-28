@@ -407,4 +407,217 @@
   text-decoration: underline;
 }
 
+/* line 3, ../xampp/htdocs/mysterymakers/assets/sass/_add_product.sass */
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* line 10, ../xampp/htdocs/mysterymakers/assets/sass/_add_product.sass */
+form label {
+  font-size: 16px;
+  margin-bottom: 5px;
+}
+
+/* line 14, ../xampp/htdocs/mysterymakers/assets/sass/_add_product.sass */
+form input, form textarea, form select {
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* line 22, ../xampp/htdocs/mysterymakers/assets/sass/_add_product.sass */
+form button {
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s;
+}
+
+/* line 32, ../xampp/htdocs/mysterymakers/assets/sass/_add_product.sass */
+form button:hover {
+  background-color: #0056b3;
+}
+
+/* line 35, ../xampp/htdocs/mysterymakers/assets/sass/_add_product.sass */
+form button[type="button"] {
+  padding: 5px 10px;
+  font-size: 14px;
+  margin-left: 10px;
+}
+
+/* line 40, ../xampp/htdocs/mysterymakers/assets/sass/_add_product.sass */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+}
+
+/* line 50, ../xampp/htdocs/mysterymakers/assets/sass/_add_product.sass */
+.modal-content {
+  background: white;
+  padding: 20px;
+  margin: 100px auto;
+  max-width: 300px;
+  text-align: center;
+  border-radius: 8px;
+}
+
+/* line 58, ../xampp/htdocs/mysterymakers/assets/sass/_add_product.sass */
+.modal-content input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+/* line 65, ../xampp/htdocs/mysterymakers/assets/sass/_add_product.sass */
+.modal-content button {
+  margin: 5px;
+}
+
+/* line 68, ../xampp/htdocs/mysterymakers/assets/sass/_add_product.sass */
+.success {
+  color: green;
+  margin-bottom: 15px;
+}
+
+/* line 72, ../xampp/htdocs/mysterymakers/assets/sass/_add_product.sass */
+.error {
+  color: red;
+  margin-bottom: 15px;
+}
+
+/* line 3, ../xampp/htdocs/mysterymakers/assets/sass/_edit_product.sass */
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* line 10, ../xampp/htdocs/mysterymakers/assets/sass/_edit_product.sass */
+form label {
+  font-size: 16px;
+  margin-bottom: 5px;
+}
+
+/* line 14, ../xampp/htdocs/mysterymakers/assets/sass/_edit_product.sass */
+form input, form textarea, form select {
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* line 22, ../xampp/htdocs/mysterymakers/assets/sass/_edit_product.sass */
+form button {
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s;
+}
+
+/* line 32, ../xampp/htdocs/mysterymakers/assets/sass/_edit_product.sass */
+form button:hover {
+  background-color: #0056b3;
+}
+
+/* line 35, ../xampp/htdocs/mysterymakers/assets/sass/_edit_product.sass */
+form button[type="button"] {
+  padding: 5px 10px;
+  font-size: 14px;
+  margin-left: 10px;
+}
+
+/* line 40, ../xampp/htdocs/mysterymakers/assets/sass/_edit_product.sass */
+.image-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+/* line 46, ../xampp/htdocs/mysterymakers/assets/sass/_edit_product.sass */
+.image-preview div {
+  text-align: center;
+}
+
+/* line 49, ../xampp/htdocs/mysterymakers/assets/sass/_edit_product.sass */
+.image-preview div img {
+  width: 100px;
+  height: auto;
+}
+
+/* line 53, ../xampp/htdocs/mysterymakers/assets/sass/_edit_product.sass */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+}
+
+/* line 63, ../xampp/htdocs/mysterymakers/assets/sass/_edit_product.sass */
+.modal-content {
+  background: white;
+  padding: 20px;
+  margin: 100px auto;
+  max-width: 300px;
+  text-align: center;
+  border-radius: 8px;
+}
+
+/* line 71, ../xampp/htdocs/mysterymakers/assets/sass/_edit_product.sass */
+.modal-content input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+/* line 78, ../xampp/htdocs/mysterymakers/assets/sass/_edit_product.sass */
+.modal-content button {
+  margin: 5px;
+}
+
+/* line 81, ../xampp/htdocs/mysterymakers/assets/sass/_edit_product.sass */
+.success {
+  color: green;
+  margin-bottom: 15px;
+}
+
+/* line 85, ../xampp/htdocs/mysterymakers/assets/sass/_edit_product.sass */
+.error {
+  color: red;
+  margin-bottom: 15px;
+}
+
 /*# sourceMappingURL=styles.css.map */

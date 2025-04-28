@@ -46,7 +46,7 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         (Пользователь: <?= htmlspecialchars($order['user_name']); ?>)
                     <?php endif; ?>
                 </td>
-                <td><?= number_format($order['total_price'], 2, '.', ''); ?> ₽</td>
+                <td><?= number_format($order['total_price'], 2, '.', ''); ?> грн.</td>
                 <td>
                     <form method="POST" action="update_order_status.php">
                         <input type="hidden" name="order_id" value="<?= $order['id']; ?>">

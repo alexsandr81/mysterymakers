@@ -1,0 +1,87 @@
+// Стили для страницы редактирования товара
+
+form
+  display: flex
+  flex-direction: column
+  gap: 15px
+  max-width: 600px
+  margin: 0 auto
+
+  label
+    font-size: 16px
+    margin-bottom: 5px
+
+  input, textarea, select
+    padding: 10px
+    font-size: 16px
+    border: 1px solid #ccc
+    border-radius: 5px
+    width: 100%
+    box-sizing: border-box
+
+  button
+    padding: 10px 20px
+    background-color: #007bff
+    color: #fff
+    border: none
+    border-radius: 5px
+    cursor: pointer
+    font-size: 16px
+    transition: background-color 0.3s
+
+    &:hover
+      background-color: #0056b3
+
+  button[type="button"]
+    padding: 5px 10px
+    font-size: 14px
+    margin-left: 10px
+
+.image-preview
+  display: flex
+  flex-wrap: wrap
+  gap: 10px
+  margin-bottom: 10px
+
+  div
+    text-align: center
+
+    img
+      width: 100px
+      height: auto
+
+.modal
+  display: none
+  position: fixed
+  top: 0
+  left: 0
+  right: 0
+  bottom: 0
+  background: rgba(0,0,0,0.5)
+  z-index: 999
+
+.modal-content
+  background: white
+  padding: 20px
+  margin: 100px auto
+  max-width: 300px
+  text-align: center
+  border-radius: 8px
+
+  input
+    width: 100%
+    padding: 10px
+    margin-bottom: 10px
+    border: 1px solid #ccc
+    border-radius: 5px
+
+  button
+    margin: 5px
+
+.success
+  color: green
+  margin-bottom: 15px
+
+.error
+  color: red
+  margin-bottom: 15px

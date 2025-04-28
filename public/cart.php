@@ -67,7 +67,7 @@ $cart = $_SESSION['cart'] ?? [];
                     if ($discount) {
                         if ($discount['discount_type'] == 'fixed') {
                             $discount_value = min((float)$discount['discount_value'], $original_price);
-                            $discount_text = "- " . number_format($discount_value, 2, '.', '') . " ₽";
+                            $discount_text = "- " . number_format($discount_value, 2, '.', '') . " грн.";
                         } elseif ($discount['discount_type'] == 'percentage') {
                             $discount_value = $original_price * ((float)$discount['discount_value'] / 100);
                             $discount_text = "- " . number_format($discount['discount_value'], 0) . "%";
@@ -84,10 +84,10 @@ $cart = $_SESSION['cart'] ?? [];
                         <td><?= htmlspecialchars($product['name']); ?></td>
                         <td>
                             <?php if ($has_discount): ?>
-                                <del style="color: red;"><?= number_format($original_price, 2, '.', ''); ?> ₽</del>
-                                <span style="color: green;"><?= number_format($final_price, 2, '.', ''); ?> ₽</span>
+                                <del style="color: red;"><?= number_format($original_price, 2, '.', ''); ?> грн.</del>
+                                <span style="color: green;"><?= number_format($final_price, 2, '.', ''); ?> грн.</span>
                             <?php else: ?>
-                                <span><?= number_format($original_price, 2, '.', ''); ?> ₽</span>
+                                <span><?= number_format($original_price, 2, '.', ''); ?> грн.</span>
                             <?php endif; ?>
                         </td>
                         <td><?= $discount_text; ?></td>
@@ -104,7 +104,7 @@ $cart = $_SESSION['cart'] ?? [];
                                 <button type="button" onclick="changeQuantity(<?= $product_id; ?>, 1)" style="width: 20px;">+</button>
                             </div>
                         </td>
-                        <td><strong><?= number_format($subtotal, 2, '.', ''); ?> ₽</strong></td>
+                        <td><strong><?= number_format($subtotal, 2, '.', ''); ?> грн.</strong></td>
                         <td>
                             <button type="button" onclick="confirmRemoveFromCart(<?= $product_id; ?>)">❌</button>
                         </td>
@@ -113,12 +113,12 @@ $cart = $_SESSION['cart'] ?? [];
 
                 <tr>
                     <td colspan="4"><strong>Итого:</strong></td>
-                    <td><strong><?= number_format($total, 2, '.', ''); ?> ₽</strong></td>
+                    <td><strong><?= number_format($total, 2, '.', ''); ?> грн.</strong></td>
                     <td></td>
                 </tr>
                 <tr>
                     <td colspan="4"><strong>Скидка:</strong></td>
-                    <td><strong><?= number_format($total_discount, 2, '.', ''); ?> ₽</strong></td>
+                    <td><strong><?= number_format($total_discount, 2, '.', ''); ?> грн.</strong></td>
                     <td></td>
                 </tr>
             </table>

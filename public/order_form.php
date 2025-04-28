@@ -86,9 +86,9 @@ unset($_SESSION['form_errors'], $_SESSION['form_data']);
     </form>
 
     <!-- Отображаем итоговую сумму для пользователя -->
-    <p><strong>Итого:</strong> <?= number_format($_SESSION['cart_totals']['total_price'], 2, '.', ''); ?> ₽</p>
+    <p><strong>Итого:</strong> <?= number_format($_SESSION['cart_totals']['total_price'], 2, '.', ''); ?> грн.</p>
     <?php if ($_SESSION['cart_totals']['total_discount'] > 0): ?>
-        <p><strong>Скидка:</strong> <?= number_format($_SESSION['cart_totals']['total_discount'], 2, '.', ''); ?> ₽</p>
+        <p><strong>Скидка:</strong> <?= number_format($_SESSION['cart_totals']['total_discount'], 2, '.', ''); ?> грн.</p>
     <?php endif; ?>
 </main>
 

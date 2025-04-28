@@ -77,7 +77,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     <label>Тип скидки:</label>
     <select name="discount_type" required>
-        <option value="fixed" <?= ($discount['discount_type'] == 'fixed') ? 'selected' : ''; ?>>Фиксированная (₽)</option>
+        <option value="fixed" <?= ($discount['discount_type'] == 'fixed') ? 'selected' : ''; ?>>Фиксированная (грн.)</option>
         <option value="percentage" <?= ($discount['discount_type'] == 'percentage') ? 'selected' : ''; ?>>Процентная (%)</option>
     </select>
 

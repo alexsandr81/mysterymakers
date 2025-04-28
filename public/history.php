@@ -55,7 +55,7 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <?php foreach ($orders as $order): ?>
                     <tr>
                         <td><?= htmlspecialchars($order['order_number']); ?></td>
-                        <td><?= number_format($order['total_price'], 2, '.', ''); ?> ₽</td>
+                        <td><?= number_format($order['total_price'], 2, '.', ''); ?> грн.</td>
                         <td><?= htmlspecialchars($order['status']); ?></td>
                         <td><?= htmlspecialchars($order['created_at']); ?></td>
                         <td><a href="order_details.php?id=<?= $order['id']; ?>" class="action-link">Подробности</a></td>

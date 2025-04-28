@@ -251,7 +251,7 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
        style="width: 60px;" 
                    onchange="updateStock(<?= $product['id']; ?>, this.value)">
         </td>
-        <td><?= number_format($product['price'], 2, '.', ''); ?> ₽</td>
+        <td><?= number_format($product['price'], 2, '.', ''); ?> грн.</td>
         <td><?= $product['created_at']; ?></td>
         <td>
     <?= ($product['status'] == 1) ? '✅ Активен' : '❌ Скрыт'; ?>

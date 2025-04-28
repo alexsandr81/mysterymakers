@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once '../database/db.php';
+require_once '../includes/security.php';
 
 if (!isset($_SESSION['admin_id'])) {
     header("Location: login.php");
@@ -11,44 +12,18 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'superadmin') {
     exit();
 }
 
+// Генерация CSRF-токена
+$csrf_token = generateCsrfToken();
+
 function rusToTranslit($string)
 {
     $converter = array(
-        'а' => 'a',
-        'б' => 'b',
-        'в' => 'v',
-        'г' => 'g',
-        'д' => 'd',
-        'е' => 'e',
-        'ё' => 'yo',
-        'ж' => 'zh',
-        'з' => 'z',
-        'и' => 'i',
-        'й' => 'y',
-        'к' => 'k',
-        'л' => 'l',
-        'м' => 'm',
-        'н' => 'n',
-        'о' => 'o',
-        'п' => 'p',
-        'р' => 'r',
-        'с' => 's',
-        'т' => 't',
-        'у' => 'u',
-        'ф' => 'f',
-        'х' => 'h',
-        'ц' => 'ts',
-        'ч' => 'ch',
-        'ш' => 'sh',
-        'щ' => 'sch',
-        'ъ' => '',
-        'ы' => 'y',
-        'ь' => '',
-        'э' => 'e',
-        'ю' => 'yu',
-        'я' => 'ya'
+        'а' => 'a', 'б' => 'b', 'в' => 'v', 'г' => 'g', 'д' => 'd', 'е' => 'e', 'ё' => 'yo',
+        'ж' => 'zh', 'з' => 'z', 'и' => 'i', 'й' => 'y', 'к' => 'k', 'л' => 'l', 'м' => 'm',
+        'н' => 'n', 'о' => 'o', 'п' => 'p', 'р' => 'r', 'с' => 's', 'т' => 't', 'у' => 'u',
+        'ф' => 'f', 'х' => 'h', 'ц' => 'ts', 'ч' => 'ch', 'ш' => 'sh', 'щ' => 'sch', 'ъ' => '',
+        'ы' => 'y', 'ь' => '', 'э' => 'e', 'ю' => 'yu', 'я' => 'ya'
     );
-
     return strtr(mb_strtolower($string), $converter);
 }
 
@@ -68,7 +43,6 @@ function generateSlug($name, $conn)
         if ($stmt->fetchColumn() == 0) break;
         $slug = $original_slug . '-' . $counter++;
     }
-
     return $slug;
 }
 
@@ -82,66 +56,129 @@ if (!empty($categories)) {
     $stmt->execute([$categories[0]['id']]);
     $subcategories = $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
+$errors = [];
+$success = $_GET['success'] ?? '';
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $name = trim($_POST['name']);
-    $description = trim($_POST['description']);
-    $price = floatval($_POST['price']);
-    $category_id = intval($_POST['category']);
-    $subcategory_id = intval($_POST['subcategory']);
-    $size_id = intval($_POST['size']);
-    $material_id = intval($_POST['material']);
-    $sku = trim($_POST['sku']);
-    $stock = intval($_POST['stock']);
-    $seo_title = trim($_POST['seo_title']) ?: $name;
-    $seo_description = trim($_POST['seo_description']) ?: "Купить $name по лучшей цене. Описание, характеристики, отзывы.";
-    $seo_keywords = trim($_POST['seo_keywords']) ?: str_replace(' ', ',', $name);
+    // Проверка CSRF-токена
+    if (!isset($_POST['csrf_token']) || !verifyCsrfToken($_POST['csrf_token'])) {
+        $errors[] = "Недействительный запрос.";
+    } else {
+        // Регенерация CSRF-токена
+        generateCsrfToken();
 
-    $slug = generateSlug($name, $conn);
+        $name = trim($_POST['name']);
+        $description = trim($_POST['description']);
+        $price = floatval($_POST['price']);
+        $category_id = intval($_POST['category']);
+        $subcategory_id = intval($_POST['subcategory']);
+        $size_id = intval($_POST['size']);
+        $material_id = intval($_POST['material']);
+        $sku = trim($_POST['sku']);
+        $stock = intval($_POST['stock']);
+        $seo_title = trim($_POST['seo_title']) ?: $name;
+        $seo_description = trim($_POST['seo_description']) ?: "Купить $name по лучшей цене. Описание, характеристики, отзывы.";
+        $seo_keywords = trim($_POST['seo_keywords']) ?: str_replace(' ', ',', $name);
 
-    if (!$subcategory_id) {
-        die("Ошибка: Выберите подкатегорию!");
-    }
+        // Валидация
+        if (empty($name)) $errors[] = "Название обязательно.";
+        if ($price <= 0) $errors[] = "Цена должна быть больше 0.";
+        if (!$category_id) $errors[] = "Выберите категорию.";
+        if (!$subcategory_id) $errors[] = "Выберите подкатегорию.";
+        if ($stock < 0) $errors[] = "Количество не может быть отрицательным.";
+        if (empty($sku)) $errors[] = "Артикул обязателен.";
 
-    $upload_dir = __DIR__ . '/../assets/products/';
-    if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
+        // Обработка изображений
+        $image_paths = [];
+        $upload_dir = __DIR__ . '/../assets/products/';
+        if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
 
-    $image_paths = [];
-    if (count($_FILES['images']['name']) > 5) {
-        die("Можно загрузить максимум 5 изображений!");
-    }
+        if (count($_FILES['images']['name']) > 5) {
+            $errors[] = "Можно загрузить максимум 5 изображений.";
+        } else {
+            foreach ($_FILES['images']['tmp_name'] as $key => $tmp_name) {
+                if ($_FILES['images']['size'][$key] > 0) {
+                    $file = $_FILES['images'];
+                    $file_ext = strtolower(pathinfo($file['name'][$key], PATHINFO_EXTENSION));
+                    $allowed_ext = ['jpg', 'jpeg', 'png'];
+                    $max_size = 5 * 1024 * 1024; // 2 МБ
 
-    foreach ($_FILES['images']['tmp_name'] as $key => $tmp_name) {
-        if ($_FILES['images']['size'][$key] > 0) {
-            $file_ext = strtolower(pathinfo($_FILES['images']['name'][$key], PATHINFO_EXTENSION));
-            $allowed_ext = ['jpg', 'jpeg', 'png', 'gif'];
-            if (!in_array($file_ext, $allowed_ext)) {
-                die("Недопустимый формат файла: {$_FILES['images']['name'][$key]}");
+                    if (!in_array($file_ext, $allowed_ext)) {
+                        $errors[] = "Недопустимый формат файла: {$file['name'][$key]} (только JPEG/PNG).";
+                    } elseif ($file['size'][$key] > $max_size) {
+                        $errors[] = "Файл {$file['name'][$key]} превышает 2 МБ.";
+                    } else {
+                        // Уменьшение размера изображения
+                        $image = null;
+                        if ($file_ext === 'jpg' || $file_ext === 'jpeg') {
+                            $image = imagecreatefromjpeg($file['tmp_name'][$key]);
+                        } elseif ($file_ext === 'png') {
+                            $image = imagecreatefrompng($file['tmp_name'][$key]);
+                        }
+
+                        if ($image) {
+                            $max_width = 800;
+                            $max_height = 800;
+                            $width = imagesx($image);
+                            $height = imagesy($image);
+                            $ratio = min($max_width / $width, $max_height / $height, 1);
+                            $new_width = (int)($width * $ratio);
+                            $new_height = (int)($height * $ratio);
+
+                            $new_image = imagecreatetruecolor($new_width, $new_height);
+                            if ($file_ext === 'png') {
+                                imagealphablending($new_image, false);
+                                imagesavealpha($new_image, true);
+                            }
+                            imagecopyresampled($new_image, $image, 0, 0, 0, 0, $new_width, $new_height, $width, $height);
+
+                            $file_name = md5(uniqid(rand(), true)) . "." . $file_ext;
+                            $file_path = $upload_dir . $file_name;
+
+                            if ($file_ext === 'jpg' || $file_ext === 'jpeg') {
+                                imagejpeg($new_image, $file_path, 80);
+                            } else {
+                                imagepng($new_image, $file_path, 8);
+                            }
+
+                            imagedestroy($image);
+                            imagedestroy($new_image);
+                            $image_paths[] = 'assets/products/' . $file_name;
+                        } else {
+                            $errors[] = "Ошибка обработки файла: {$file['name'][$key]}.";
+                        }
+                    }
+                }
             }
+        }
+        if (empty($image_paths)) {
+            $errors[] = "Загрузите хотя бы одно изображение.";
+        }
 
-            $file_name = md5(uniqid(rand(), true)) . "." . $file_ext;
-            $file_path = $upload_dir . $file_name;
-            if (move_uploaded_file($tmp_name, $file_path)) {
-                $image_paths[] = 'assets/products/' . $file_name;
-            } else {
-                die("Ошибка загрузки файла: {$_FILES['images']['name'][$key]}");
+        // Сохранение в БД
+        if (empty($errors)) {
+            try {
+                $slug = generateSlug($name, $conn);
+                $images_json = json_encode($image_paths, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+
+                $stmt = $conn->prepare("
+                    INSERT INTO products 
+                    (name, description, price, category_id, subcategory, size, material, sku, stock, images, seo_title, seo_description, seo_keywords, slug) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt->execute([
+                    $name, $description, $price, $category_id, $subcategory_id, $size_id, $material_id,
+                    $sku, $stock, $images_json, $seo_title, $seo_description, $seo_keywords, $slug
+                ]);
+
+                header("Location: products.php?success=Товар успешно добавлен");
+                exit();
+            } catch (Exception $e) {
+                $errors[] = "Ошибка базы данных: " . $e->getMessage();
             }
         }
     }
 
-    $images_json = json_encode($image_paths, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
-
-    $stmt = $conn->prepare("INSERT INTO products 
-        (name, description, price, category_id, subcategory, size, material, sku, stock, images, seo_title, seo_description, seo_keywords, slug) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-
-    $stmt->execute([
-        $name, $description, $price, $category_id, $subcategory_id, $size_id, $material_id,
-        $sku, $stock, $images_json, $seo_title, $seo_description, $seo_keywords, $slug
-    ]);
-
-    header("Location: products.php");
-    exit();
+    $_SESSION['form_errors'] = $errors;
 }
 ?>
 
@@ -149,132 +186,133 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Добавить товар</title>
-    <link rel="stylesheet" href="styles.css">
-    <style>
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 999;
-        }
-        .modal-content {
-            background: white;
-            padding: 20px;
-            margin: 100px auto;
-            max-width: 300px;
-            text-align: center;
-            border-radius: 8px;
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Добавить товар - MysteryMakers</title>
+    <link rel="stylesheet" href="/mysterymakers/assets/css/styles.css">
 </head>
 <body>
 
 <h2>Добавить товар</h2>
 
+<?php if ($success): ?>
+    <p class="success"><?= htmlspecialchars($success); ?></p>
+<?php endif; ?>
+<?php if (!empty($errors)): ?>
+    <?php foreach ($errors as $error): ?>
+        <p class="error"><?= htmlspecialchars($error); ?></p>
+    <?php endforeach; ?>
+<?php endif; ?>
+
 <form method="POST" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrf_token); ?>">
     <label>Название:</label>
-    <input type="text" name="name" required><br><br>
+    <input type="text" name="name" value="<?= htmlspecialchars($_POST['name'] ?? ''); ?>" required><br><br>
 
     <label>Описание:</label>
-    <textarea name="description" required></textarea><br><br>
+    <textarea name="description" required><?= htmlspecialchars($_POST['description'] ?? ''); ?></textarea><br><br>
 
-    <label>Цена:</label>
-    <input type="number" name="price" step="0.01" required><br><br>
+    <label>Цена (грн):</label>
+    <input type="number" name="price" step="0.01" value="<?= htmlspecialchars($_POST['price'] ?? ''); ?>" required><br><br>
 
-    <label>Категория:</label><br>
-<select name="category" id="category" required>
-    <option value="">Выберите категорию</option>
-    <?php foreach ($categories as $category): ?>
-        <option value="<?= $category['id']; ?>"><?= htmlspecialchars($category['name']); ?></option>
-    <?php endforeach; ?>
-</select>
+    <label>Категория:</label>
+    <select name="category" id="category" required>
+        <option value="">Выберите категорию</option>
+        <?php foreach ($categories as $category): ?>
+            <option value="<?= $category['id']; ?>" <?= (($_POST['category'] ?? '') == $category['id']) ? 'selected' : ''; ?>>
+                <?= htmlspecialchars($category['name']); ?>
+            </option>
+        <?php endforeach; ?>
+    </select>
     <button type="button" onclick="openModal('modal-category')">➕</button><br><br>
-
     <label>Подкатегория:</label>
     <select name="subcategory" id="subcategory" required>
-        <option value="">Выберите подкатегорию:</option>
+        <option value="">Выберите подкатегорию</option>
         <?php foreach ($subcategories as $sub): ?>
-            <option value="<?= $sub['id']; ?>"><?= htmlspecialchars($sub['name']); ?></option>
+            <option value="<?= $sub['id']; ?>" <?= (($_POST['subcategory'] ?? '') == $sub['id']) ? 'selected' : ''; ?>>
+                <?= htmlspecialchars($sub['name']); ?>
+            </option>
         <?php endforeach; ?>
     </select>
     <button type="button" onclick="openModal('modal-subcategory')">➕</button><br><br>
 
     <label>Размер:</label>
     <select name="size" id="size" required>
-        <option value="">Размер:</option>
+        <option value="">Выберите размер</option>
         <?php foreach ($sizes as $size): ?>
-            <option value="<?= $size['id']; ?>"><?= htmlspecialchars($size['name']); ?></option>
+            <option value="<?= $size['id']; ?>" <?= (($_POST['size'] ?? '') == $size['id']) ? 'selected' : ''; ?>>
+                <?= htmlspecialchars($size['name']); ?>
+            </option>
         <?php endforeach; ?>
     </select>
     <button type="button" onclick="openModal('modal-size')">➕</button><br><br>
 
     <label>Материал:</label>
     <select name="material" id="material" required>
-        <option value="">Материал:</option>
+        <option value="">Выберите материал</option>
         <?php foreach ($materials as $material): ?>
-            <option value="<?= $material['id']; ?>"><?= htmlspecialchars($material['name']); ?></option>
+            <option value="<?= $material['id']; ?>" <?= (($_POST['material'] ?? '') == $material['id']) ? 'selected' : ''; ?>>
+                <?= htmlspecialchars($material['name']); ?>
+            </option>
         <?php endforeach; ?>
     </select>
     <button type="button" onclick="openModal('modal-material')">➕</button><br><br>
 
     <label>Артикул:</label>
-    <input type="text" name="sku" required><br><br>
+    <input type="text" name="sku" value="<?= htmlspecialchars($_POST['sku'] ?? ''); ?>" required><br><br>
 
     <label>Количество:</label>
-    <input type="number" name="stock" required><br><br>
+    <input type="number" name="stock" value="<?= htmlspecialchars($_POST['stock'] ?? ''); ?>" required><br><br>
 
     <label>SEO Title:</label>
-    <input type="text" name="seo_title"><br><br>
+    <input type="text" name="seo_title" value="<?= htmlspecialchars($_POST['seo_title'] ?? ''); ?>"><br><br>
 
     <label>SEO Description:</label>
-    <textarea name="seo_description"></textarea><br><br>
+    <textarea name="seo_description"><?= htmlspecialchars($_POST['seo_description'] ?? ''); ?></textarea><br><br>
 
     <label>SEO Keywords:</label>
-    <input type="text" name="seo_keywords"><br><br>
+    <input type="text" name="seo_keywords" value="<?= htmlspecialchars($_POST['seo_keywords'] ?? ''); ?>"><br><br>
 
     <label>Изображения (до 5):</label>
-    <input type="file" name="images[]" multiple accept="image/*" required><br><br>
+    <input type="file" name="images[]" multiple accept="image/jpeg,image/png" required><br><br>
 
     <button type="submit">Добавить</button>
 </form>
 
 <!-- Модальные окна -->
 <div class="modal" id="modal-category">
-  <div class="modal-content">
-    <h3>Добавить категорию</h3>
-    <input type="text" id="input-category" placeholder="Название категории">
-    <button onclick="addEntity('category')">Добавить</button>
-    <button onclick="closeModal('modal-category')">Отмена</button>
-  </div>
+    <div class="modal-content">
+        <h3>Добавить категорию</h3>
+        <input type="text" id="input-category" placeholder="Название категории">
+        <button onclick="addEntity('category')">Добавить</button>
+        <button onclick="closeModal('modal-category')">Отмена</button>
+    </div>
 </div>
 
 <div class="modal" id="modal-subcategory">
-  <div class="modal-content">
-    <h3>Добавить подкатегорию</h3>
-    <input type="text" id="input-subcategory" placeholder="Название подкатегории">
-    <button onclick="addEntity('subcategory')">Добавить</button>
-    <button onclick="closeModal('modal-subcategory')">Отмена</button>
-  </div>
+    <div class="modal-content">
+        <h3>Добавить подкатегорию</h3>
+        <input type="text" id="input-subcategory" placeholder="Название подкатегории">
+        <button onclick="addEntity('subcategory')">Добавить</button>
+        <button onclick="closeModal('modal-subcategory')">Отмена</button>
+    </div>
 </div>
 
 <div class="modal" id="modal-size">
-  <div class="modal-content">
-    <h3>Добавить размер</h3>
-    <input type="text" id="input-size" placeholder="Название размера">
-    <button onclick="addEntity('size')">Добавить</button>
-    <button onclick="closeModal('modal-size')">Отмена</button>
-  </div>
+    <div class="modal-content">
+        <h3>Добавить размер</h3>
+        <input type="text" id="input-size" placeholder="Название размера">
+        <button onclick="addEntity('size')">Добавить</button>
+        <button onclick="closeModal('modal-size')">Отмена</button>
+    </div>
 </div>
 
 <div class="modal" id="modal-material">
-  <div class="modal-content">
-    <h3>Добавить материал</h3>
-    <input type="text" id="input-material" placeholder="Название материала">
-    <button onclick="addEntity('material')">Добавить</button>
-    <button onclick="closeModal('modal-material')">Отмена</button>
-  </div>
+    <div class="modal-content">
+        <h3>Добавить материал</h3>
+        <input type="text" id="input-material" placeholder="Название материала">
+        <button onclick="addEntity('material')">Добавить</button>
+        <button onclick="closeModal('modal-material')">Отмена</button>
+    </div>
 </div>
 
 <script>
@@ -345,7 +383,7 @@ function addEntity(type) {
     })
     .catch(() => alert("Ошибка сети"));
 }
-
 </script>
+
 </body>
 </html>

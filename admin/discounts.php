@@ -51,7 +51,7 @@ $discounts = $conn->query("SELECT d.*, p.name AS product_name, c.name AS categor
 
     <label>Тип скидки:</label>
     <select name="discount_type" required>
-        <option value="fixed">Фиксированная (₽)</option>
+        <option value="fixed">Фиксированная (грн.)</option>
         <option value="percentage">Процентная (%)</option>
     </select>
 
@@ -84,7 +84,7 @@ $discounts = $conn->query("SELECT d.*, p.name AS product_name, c.name AS categor
         <td><?= $d['product_name'] ?? $d['category_name'] ?? 'Все товары'; ?></td>
         <td>
     <?php if ($d['discount_type'] == 'fixed'): ?>
-        💵 Скидка: <?= "₽ " . number_format($d['discount_value'], 2, '.', ''); ?>
+        💵 Скидка: <?= "грн. " . number_format($d['discount_value'], 2, '.', ''); ?>
     <?php elseif ($d['discount_type'] == 'percentage'): ?>
         📉 Скидка: <?= $d['discount_value'] . "%"; ?>
     <?php else: ?>

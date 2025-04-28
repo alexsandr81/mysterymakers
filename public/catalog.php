@@ -192,14 +192,14 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             ?>
 
                             <?php if ($discount_value): ?>
-                                <p class="old-price"><s><?= number_format($original_price, 2, '.', ''); ?> ₽</s></p>
-                                <p class="discount-price"><?= number_format($discount_price, 2, '.', ''); ?> ₽</p>
+                                <p class="old-price"><s><?= number_format($original_price, 2, '.', ''); ?> грн.</s></p>
+                                <p class="discount-price"><?= number_format($discount_price, 2, '.', ''); ?> грн.</p>
                                 <p class="discount-info">
-                                    Скидка <?= ($product['discount_type'] == 'fixed') ? $product['discount_value'] . ' ₽' : $product['discount_value'] . '%'; ?>
+                                    Скидка <?= ($product['discount_type'] == 'fixed') ? $product['discount_value'] . ' грн.' : $product['discount_value'] . '%'; ?>
                                     <?php if ($product['end_date']): ?> (до <?= date('d.m.Y H:i', strtotime($product['end_date'])); ?>) <?php endif; ?>
                                 </p>
                             <?php else: ?>
-                                <p class="price"><?= number_format($original_price, 2, '.', ''); ?> ₽</p>
+                                <p class="price"><?= number_format($original_price, 2, '.', ''); ?> грн.</p>
                             <?php endif; ?>
 
                             <button onclick="addToCart(<?= $product['id']; ?>)">🛒 В корзину</button>
