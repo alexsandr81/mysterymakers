@@ -3,6 +3,10 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 require_once '../database/db.php';
+require_once '../includes/security.php';
+
+// Генерация CSRF-токена
+$csrf_token = generateCsrfToken();
 
 // Проверяем куки для "Запомнить меня"
 if (!isset($_SESSION['user_id']) && isset($_COOKIE['user_id'])) {
@@ -14,11 +18,11 @@ if (!isset($_SESSION['user_id']) && isset($_COOKIE['user_id'])) {
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['user_name'] = $user['name'];
     } else {
-        setcookie("user_id", "", time() - 3600, "/mysterymakers/"); // Очищаем куки
+        setcookie("user_id", "", time() - 3600, "/mysterymakers/");
     }
 }
 
-// Проверяем, существует ли пользователь и его статус
+// Проверяем статус пользователя
 if (isset($_SESSION['user_id'])) {
     $stmt = $conn->prepare("SELECT status FROM users WHERE id = ?");
     $stmt->execute([$_SESSION['user_id']]);
@@ -27,7 +31,7 @@ if (isset($_SESSION['user_id'])) {
         unset($_SESSION['user_id']);
         unset($_SESSION['user_name']);
         unset($_SESSION['cart']);
-        setcookie("user_id", "", time() - 3600, "/mysterymakers/"); // Очищаем куки
+        setcookie("user_id", "", time() - 3600, "/mysterymakers/");
         header("Location: /mysterymakers/public/login.php");
         exit();
     }
@@ -61,15 +65,16 @@ if (isset($_SESSION['user_id'])) {
     </nav>
 
     <div class="search">
-        <form method="GET" action="search.php" class="search-form">
-            <input type="text" name="q" placeholder="Поиск..." value="<?= htmlspecialchars($_GET['q'] ?? ''); ?>">
+        <form method="GET" action="/mysterymakers/public/search.php" class="search-form">
+            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrf_token); ?>">
+            <input type="text" name="q" placeholder="Поиск по названию, артикулу..." value="<?= htmlspecialchars($_GET['q'] ?? ''); ?>">
             <button type="submit">Найти</button>
         </form>
     </div>
 
     <div class="icons">
         <?php if (isset($_SESSION['user_id'])): ?>
-            <a href="favorites.php">❤️</a>
+            <a href="/mysterymakers/public/favorites.php">❤️</a>
             <a href="/mysterymakers/public/cart.php" class="cart-icon">
                 🛒 <span id="cart-count"><?= array_sum($_SESSION['cart'] ?? []); ?></span>
             </a>
@@ -92,6 +97,3 @@ function updateCartCount() {
 }
 document.addEventListener('DOMContentLoaded', updateCartCount);
 </script>
-
-</body>
-</html>

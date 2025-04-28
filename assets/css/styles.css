@@ -620,4 +620,155 @@ form button[type="button"] {
   margin-bottom: 15px;
 }
 
+/* line 3, ../xampp/htdocs/mysterymakers/assets/sass/_search.sass */
+.search {
+  margin: 0 20px;
+}
+
+/* line 6, ../xampp/htdocs/mysterymakers/assets/sass/_search.sass */
+.search-form {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* line 11, ../xampp/htdocs/mysterymakers/assets/sass/_search.sass */
+.search-form input[type="text"] {
+  padding: 8px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  width: 200px;
+  box-sizing: border-box;
+}
+
+/* line 19, ../xampp/htdocs/mysterymakers/assets/sass/_search.sass */
+.search-form button {
+  padding: 8px 15px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s;
+}
+
+/* line 29, ../xampp/htdocs/mysterymakers/assets/sass/_search.sass */
+.search-form button:hover {
+  background-color: #0056b3;
+}
+
+/* line 32, ../xampp/htdocs/mysterymakers/assets/sass/_search.sass */
+main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* line 37, ../xampp/htdocs/mysterymakers/assets/sass/_search.sass */
+.products {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+/* line 43, ../xampp/htdocs/mysterymakers/assets/sass/_search.sass */
+.product {
+  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 5px;
+  text-align: center;
+  transition: transform 0.2s;
+}
+
+/* line 50, ../xampp/htdocs/mysterymakers/assets/sass/_search.sass */
+.product:hover {
+  transform: scale(1.05);
+}
+
+/* line 53, ../xampp/htdocs/mysterymakers/assets/sass/_search.sass */
+.product img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 5px;
+}
+
+/* line 58, ../xampp/htdocs/mysterymakers/assets/sass/_search.sass */
+.product h3 {
+  font-size: 18px;
+  margin: 10px 0;
+}
+
+/* line 62, ../xampp/htdocs/mysterymakers/assets/sass/_search.sass */
+.product .price, .product .discount-price {
+  font-size: 16px;
+  color: #333;
+  font-weight: bold;
+}
+
+/* line 67, ../xampp/htdocs/mysterymakers/assets/sass/_search.sass */
+.product .old-price {
+  color: #999;
+  font-size: 14px;
+}
+
+/* line 71, ../xampp/htdocs/mysterymakers/assets/sass/_search.sass */
+.product .discount-info {
+  color: #e44d26;
+  font-size: 14px;
+}
+
+/* line 75, ../xampp/htdocs/mysterymakers/assets/sass/_search.sass */
+.product .rating {
+  color: #f1c40f;
+  font-size: 14px;
+}
+
+/* line 79, ../xampp/htdocs/mysterymakers/assets/sass/_search.sass */
+.product .stock {
+  font-size: 14px;
+  color: #28a745;
+}
+
+/* line 82, ../xampp/htdocs/mysterymakers/assets/sass/_search.sass */
+.product .stock.out-of-stock {
+  color: #dc3545;
+}
+
+/* line 85, ../xampp/htdocs/mysterymakers/assets/sass/_search.sass */
+.pagination {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+/* line 91, ../xampp/htdocs/mysterymakers/assets/sass/_search.sass */
+.pagination a {
+  padding: 5px 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  text-decoration: none;
+  color: #007bff;
+}
+
+/* line 98, ../xampp/htdocs/mysterymakers/assets/sass/_search.sass */
+.pagination a.active {
+  background-color: #007bff;
+  color: #fff;
+}
+
+/* line 102, ../xampp/htdocs/mysterymakers/assets/sass/_search.sass */
+.pagination a:hover {
+  background-color: #f0f0f0;
+}
+
+/* line 105, ../xampp/htdocs/mysterymakers/assets/sass/_search.sass */
+.error {
+  color: red;
+  margin-bottom: 15px;
+}
+
 /*# sourceMappingURL=styles.css.map */
