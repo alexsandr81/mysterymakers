@@ -82,7 +82,6 @@ $total_pages = ceil($total_products / $per_page);
 <?php include 'header.php'; ?>
 
 <main>
-<link rel="stylesheet" href="/mysterymakers/assets/css/styles.css">
     <h1>Поиск товаров</h1>
 
     <?php if ($errors): ?>
@@ -104,7 +103,6 @@ $total_pages = ceil($total_products / $per_page);
                         $images = [];
                     }
                     $main_image = !empty($images) ? "/mysterymakers/" . $images[0] : "/mysterymakers/public/assets/default.jpg";
-
                     $original_price = $product['price'];
                     $discount_value = $product['discount_value'] ?? 0;
                     $discount_price = $original_price;

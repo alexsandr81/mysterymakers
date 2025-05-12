@@ -26,7 +26,7 @@ $error_messages = [
     <link rel="stylesheet" href="/mysterymakers/assets/styles.css">
 </head>
 <body>
-
+<?php include 'header.php'; ?>
 <h2>Вход</h2>
 
 <?php if ($error && isset($error_messages[$error])): ?>
