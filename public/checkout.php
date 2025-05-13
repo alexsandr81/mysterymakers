@@ -1,17 +1,36 @@
 <?php
 session_start();
 require_once '../database/db.php';
+require_once '../includes/security.php';
 
-// Включаем отображение ошибок для отладки
+// Включаем отображение ошибок и логирование
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
+file_put_contents('checkout_log.txt', date('Y-m-d H:i:s') . " - Начало checkout.php\n", FILE_APPEND);
+
+// Проверяем CSRF-токен
+if (!isset($_POST['csrf_token']) || !verifyCsrfToken($_POST['csrf_token'])) {
+    file_put_contents('checkout_log.txt', date('Y-m-d H:i:s') . " - Ошибка CSRF-токена\n", FILE_APPEND);
+    $_SESSION['form_errors'] = ['general' => 'Недействительный CSRF-токен'];
+    header("Location: cart.php");
+    exit();
+}
 
 // Проверяем, есть ли данные формы и корзина
+$is_guest = !isset($_SESSION['user_id']) || isset($_SESSION['logged_out']);
+$cart_key = $is_guest ? 'guest_cart' : 'cart';
+
+file_put_contents('checkout_log.txt', date('Y-m-d H:i:s') . " - is_guest: $is_guest, cart_key: $cart_key\n", FILE_APPEND);
+file_put_contents('checkout_log.txt', date('Y-m-d H:i:s') . " - POST: " . print_r($_POST, true) . "\n", FILE_APPEND);
+file_put_contents('checkout_log.txt', date('Y-m-d H:i:s') . " - SESSION[cart_key]: " . print_r($_SESSION[$cart_key] ?? [], true) . "\n", FILE_APPEND);
+file_put_contents('checkout_log.txt', date('Y-m-d H:i:s') . " - SESSION[cart_totals]: " . print_r($_SESSION['cart_totals'] ?? [], true) . "\n", FILE_APPEND);
+
 if (!isset($_POST['delivery_name'], $_POST['phone'], $_POST['email'], $_POST['delivery'], $_POST['payment']) ||
-    !isset($_SESSION['cart']) || empty($_SESSION['cart']) ||
+    !isset($_SESSION[$cart_key]) || empty($_SESSION[$cart_key]) ||
     !isset($_SESSION['cart_totals'])) {
+    file_put_contents('checkout_log.txt', date('Y-m-d H:i:s') . " - Ошибка: Не все данные доступны\n", FILE_APPEND);
     $_SESSION['form_errors'] = ['general' => 'Не все данные доступны.'];
-    header("Location: order_form.php");
+    header("Location: cart.php");
     exit();
 }
 
@@ -53,6 +72,7 @@ if (!in_array($payment, ['Наличными', 'Картой'])) {
 
 // Если есть ошибки, сохраняем данные и возвращаемся к форме
 if (!empty($errors)) {
+    file_put_contents('checkout_log.txt', date('Y-m-d H:i:s') . " - Ошибки валидации: " . print_r($errors, true) . "\n", FILE_APPEND);
     $_SESSION['form_errors'] = $errors;
     $_SESSION['form_data'] = [
         'delivery_name' => $delivery_name,
@@ -66,7 +86,7 @@ if (!empty($errors)) {
 }
 
 // Пересчитываем корзину для валидации
-$cart = $_SESSION['cart'];
+$cart = $_SESSION[$cart_key];
 $placeholders = implode(',', array_fill(0, count($cart), '?'));
 $stmt = $conn->prepare("SELECT id, price, category_id FROM products WHERE id IN ($placeholders)");
 $stmt->execute(array_keys($cart));
@@ -109,6 +129,7 @@ foreach ($products as $product) {
 
 // Валидация: проверяем, что значения из сессии совпадают с пересчётом
 if (abs($calculated_total - $total_price) > 0.01 || abs($calculated_discount - $total_discount) > 0.01) {
+    file_put_contents('checkout_log.txt', date('Y-m-d H:i:s') . " - Ошибка: Итоговая сумма или скидка не совпадают\n", FILE_APPEND);
     $_SESSION['form_errors'] = ['general' => 'Итоговая сумма или скидка не совпадают с корзиной.'];
     $_SESSION['form_data'] = [
         'delivery_name' => $delivery_name,
@@ -142,6 +163,7 @@ try {
         ':payment' => $payment
     ]);
 } catch (PDOException $e) {
+    file_put_contents('checkout_log.txt', date('Y-m-d H:i:s') . " - Ошибка базы данных: " . $e->getMessage() . "\n", FILE_APPEND);
     $_SESSION['form_errors'] = ['general' => 'Ошибка при создании заказа: ' . $e->getMessage()];
     $_SESSION['form_data'] = [
         'delivery_name' => $delivery_name,
@@ -157,7 +179,7 @@ try {
 $order_id = $conn->lastInsertId();
 
 // Добавляем товары в `order_items`
-foreach ($_SESSION['cart'] as $product_id => $quantity) {
+foreach ($_SESSION[$cart_key] as $product_id => $quantity) {
     $stmt = $conn->prepare("SELECT price, category_id FROM products WHERE id = :product_id");
     $stmt->execute([':product_id' => $product_id]);
     $product = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -199,6 +221,7 @@ foreach ($_SESSION['cart'] as $product_id => $quantity) {
                 ':price' => $final_price
             ]);
         } catch (PDOException $e) {
+            file_put_contents('checkout_log.txt', date('Y-m-d H:i:s') . " - Ошибка добавления товара: " . $e->getMessage() . "\n", FILE_APPEND);
             $_SESSION['form_errors'] = ['general' => 'Ошибка при добавлении товара в заказ: ' . $e->getMessage()];
             $_SESSION['form_data'] = [
                 'delivery_name' => $delivery_name,
@@ -214,12 +237,13 @@ foreach ($_SESSION['cart'] as $product_id => $quantity) {
 }
 
 // Очищаем корзину и временные данные
-unset($_SESSION['cart']);
+unset($_SESSION[$cart_key]);
 unset($_SESSION['cart_totals']);
 unset($_SESSION['form_errors']);
 unset($_SESSION['form_data']);
 
 // Перенаправляем на страницу "Спасибо за заказ!"
+file_put_contents('checkout_log.txt', date('Y-m-d H:i:s') . " - Заказ создан, order_number: $order_number\n", FILE_APPEND);
 header("Location: thank_you.php?order_number=$order_number");
 exit();
 ?>

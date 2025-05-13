@@ -1,5 +1,5 @@
-<?php 
-include 'header.php'; 
+<?php
+include 'header.php';
 require_once '../database/db.php';
 require_once '../includes/security.php';
 
@@ -12,11 +12,13 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
+// Логирование
+file_put_contents('account_log.txt', date('Y-m-d H:i:s') . " - Начало account.php, session: " . print_r($_SESSION, true) . "\n", FILE_APPEND);
+
 // Генерация CSRF-токена
 $csrf_token = generateCsrfToken();
 
 $user_id = $_SESSION['user_id'];
-$user_name = htmlspecialchars($_SESSION['user_name'], ENT_QUOTES, 'UTF-8');
 
 // Получаем данные пользователя
 $stmt = $conn->prepare("SELECT name, email, phone FROM users WHERE id = ?");
@@ -24,12 +26,13 @@ $stmt->execute([$user_id]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
 if (!$user) {
     unset($_SESSION['user_id']);
-    unset($_SESSION['user_name']);
     unset($_SESSION['cart']);
     setcookie("user_id", "", time() - 3600, "/mysterymakers/");
     header("Location: login.php?error=account_deleted");
     exit();
 }
+
+$user_name = htmlspecialchars($user['name'], ENT_QUOTES, 'UTF-8');
 
 // Получаем последний адрес из user_addresses
 $stmt = $conn->prepare("SELECT address FROM user_addresses WHERE user_id = ? ORDER BY created_at DESC LIMIT 1");

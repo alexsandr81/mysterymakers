@@ -1,5 +1,9 @@
 <?php
 require_once '../database/db.php';
+require_once '../includes/security.php';
+
+// Генерация CSRF-токена
+$csrf_token = generateCsrfToken();
 
 // Получение ID товара из URL
 $product_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
@@ -137,7 +141,7 @@ $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <h3>Рейтинг: <?= ($rating > 0) ? "$rating ⭐" : "Нет отзывов"; ?></h3>
 
             <!-- Кнопки покупки -->
-            <button class="btn-cart" onclick="addToCart(<?= $product['id']; ?>, <?= isset($_SESSION['user_id']) ? 'true' : 'false'; ?>)">🛒 Добавить в корзину</button>
+            <button class="btn-cart" onclick="addToCart(<?= $product['id']; ?>)">🛒 Добавить в корзину</button>
             <button class="btn-buy">⚡ Купить в 1 клик</button>
             <button onclick="addToFavorites(<?= $product['id']; ?>, <?= isset($_SESSION['user_id']) ? 'true' : 'false'; ?>)">❤️ В избранное</button>
 
@@ -221,18 +225,15 @@ function changeImage(img) {
     document.getElementById('mainImage').src = img.src;
 }
 
-function addToCart(productId, isAuthenticated) {
-    if (!isAuthenticated) {
-        alert('Пожалуйста, авторизуйтесь для добавления товара в корзину');
-        window.location.href = '/mysterymakers/public/login.php';
-        return;
-    }
+function addToCart(productId) {
     fetch('add_to_cart.php', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
         },
-        body: 'id=' + productId
+        body: 'id=' + encodeURIComponent(productId) + 
+              '&quantity=1' + 
+              '&csrf_token=' + encodeURIComponent('<?= htmlspecialchars($csrf_token); ?>')
     })
     .then(response => response.json())
     .then(data => {
@@ -241,10 +242,13 @@ function addToCart(productId, isAuthenticated) {
             if (countEl) countEl.textContent = data.cart_count;
             alert("Товар добавлен в корзину!");
         } else {
-            alert("Ошибка добавления");
+            alert("Ошибка добавления: " + (data.message || "Неизвестная ошибка"));
         }
     })
-    .catch(error => console.error('Ошибка:', error));
+    .catch(error => {
+        console.error('Ошибка:', error);
+        alert("Ошибка соединения");
+    });
 }
 
 function addToFavorites(productId, isAuthenticated) {
@@ -258,11 +262,14 @@ function addToFavorites(productId, isAuthenticated) {
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
         },
-        body: 'id=' + productId
+        body: 'id=' + encodeURIComponent(productId)
     })
     .then(response => response.text())
     .then(data => alert("Товар добавлен в избранное!"))
-    .catch(error => console.error('Ошибка:', error));
+    .catch(error => {
+        console.error('Ошибка:', error);
+        alert("Ошибка добавления в избранное");
+    });
 }
 
 // Эффект увеличения

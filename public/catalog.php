@@ -1,5 +1,9 @@
 <?php
 require_once '../database/db.php';
+require_once '../includes/security.php';
+
+// Генерация CSRF-токена
+$csrf_token = generateCsrfToken();
 
 // Загружаем все категории
 $categories = $conn->query("SELECT * FROM categories ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
@@ -110,7 +114,7 @@ $stmt->bindValue(count($params) + 2, $offset, PDO::PARAM_INT);
 $stmt->execute();
 $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
-
+<link rel="stylesheet" href="/mysterymakers/assets/styles.css">
 <?php include 'header.php'; ?>
 
 <div class="container">
@@ -184,7 +188,7 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <?php else: ?>
                             <p class="price"><?= number_format($original_price, 2, '.', ''); ?> грн.</p>
                         <?php endif; ?>
-                        <button onclick="addToCart(<?= $product['id']; ?>, <?= isset($_SESSION['user_id']) ? 'true' : 'false'; ?>)">🛒 В корзину</button>
+                        <button onclick="addToCart(<?= $product['id']; ?>)">🛒 В корзину</button>
                         <button onclick="addToFavorites(<?= $product['id']; ?>, <?= isset($_SESSION['user_id']) ? 'true' : 'false'; ?>)">❤️ В избранное</button>
                     </div>
                 <?php endforeach; ?>
@@ -213,18 +217,15 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <?php include 'footer.php'; ?>
 
 <script>
-function addToCart(productId, isAuthenticated) {
-    if (!isAuthenticated) {
-        alert('Пожалуйста, авторизуйтесь для добавления товара в корзину');
-        window.location.href = '/mysterymakers/public/login.php';
-        return;
-    }
+function addToCart(productId) {
     fetch('add_to_cart.php', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
         },
-        body: 'id=' + productId
+        body: 'id=' + encodeURIComponent(productId) + 
+              '&quantity=1' + 
+              '&csrf_token=' + encodeURIComponent('<?= htmlspecialchars($csrf_token); ?>')
     })
     .then(response => response.json())
     .then(data => {
@@ -233,10 +234,13 @@ function addToCart(productId, isAuthenticated) {
             if (countEl) countEl.textContent = data.cart_count;
             alert("Товар добавлен в корзину!");
         } else {
-            alert("Ошибка добавления");
+            alert("Ошибка добавления: " + (data.message || "Неизвестная ошибка"));
         }
     })
-    .catch(error => console.error('Ошибка:', error));
+    .catch(error => {
+        console.error('Ошибка:', error);
+        alert("Ошибка соединения");
+    });
 }
 
 function addToFavorites(productId, isAuthenticated) {
@@ -250,10 +254,13 @@ function addToFavorites(productId, isAuthenticated) {
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
         },
-        body: 'id=' + productId
+        body: 'id=' + encodeURIComponent(productId)
     })
     .then(response => response.text())
     .then(data => alert("Товар добавлен в избранное!"))
-    .catch(error => console.error('Ошибка:', error));
+    .catch(error => {
+        console.error('Ошибка:', error);
+        alert("Ошибка добавления в избранное");
+    });
 }
 </script>

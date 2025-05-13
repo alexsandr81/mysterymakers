@@ -1,30 +1,24 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+session_start();
+
+// Логирование
+file_put_contents('logout_log.txt', date('Y-m-d H:i:s') . " - Начало logout.php, session before: " . print_r($_SESSION, true) . "\n", FILE_APPEND);
+
+// Сохраняем админские данные
+$preserve_keys = [];
+foreach ($_SESSION as $key => $value) {
+    if (strpos($key, 'admin_') === 0 || in_array($key, ['admin_id', 'role', 'admin_role'])) {
+        $preserve_keys[$key] = $value;
+    }
 }
 
-// Устанавливаем флаг выхода
+// Очищаем сессию и восстанавливаем админские данные
+$_SESSION = $preserve_keys;
 $_SESSION['logged_out'] = true;
 
-// Очищаем все переменные сессии
-$_SESSION = [];
+file_put_contents('logout_log.txt', date('Y-m-d H:i:s') . " - После очистки, session: " . print_r($_SESSION, true) . "\n", FILE_APPEND);
 
-// Очищаем куки "Запомнить меня" с разными вариантами параметров
-if (isset($_COOKIE['user_id'])) {
-    setcookie("user_id", "", time() - 3600, "/mysterymakers/", "", false, true); // secure, httponly
-    setcookie("user_id", "", time() - 3600, "/mysterymakers/"); // без secure/httponly
-    setcookie("user_id", "", time() - 3600, "/"); // корневой путь
-}
-
-// Уничтожаем сессию
-session_destroy();
-
-// Предотвращаем кэширование
-header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-header("Pragma: no-cache");
-header("Expires: 0");
-
-// Перенаправляем на страницу логина
-header("Location: /mysterymakers/public/login.php");
+// Перенаправляем
+header("Location: login.php");
 exit();
 ?>
