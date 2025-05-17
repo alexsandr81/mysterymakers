@@ -126,4 +126,4 @@ $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <p><a href="account.php" class="back-link">Вернуться в личный кабинет</a></p>
 </main>
 
-<?php include 'footer.php'; ?>
+<?php include 'footer.php'; ?>  
