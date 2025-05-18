@@ -1,0 +1,7 @@
+public/account_log.txt
+public/checkout_log.txt
+public/login_log.txt
+public/logout_log.txt
+public/order_form_log.txt
+public/remove_cart_log.txt
+public/update_cart_log.txt

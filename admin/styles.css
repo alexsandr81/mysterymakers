@@ -1,0 +1,212 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+}
+
+h2 {
+    color: #333;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+}
+
+ul li {
+    margin: 10px 0;
+}
+
+ul li a {
+    text-decoration: none;
+    background: #007bff;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 5px;
+}
+
+ul li a:hover {
+    background: #0056b3;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    text-align: center;
+    padding: 50px;
+}
+
+h2 {
+    color: #333;
+}
+
+form {
+    background: white;
+    padding: 20px;
+    max-width: 300px;
+    margin: auto;
+    border-radius: 5px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #0056b3;
+}
+
+.error {
+    color: red;
+}
+
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+}
+
+th {
+    background-color: #007bff;
+    color: white;
+}
+
+tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+.status-new {
+    color: white;
+    background: orange;
+    padding: 5px;
+    border-radius: 4px;
+}
+
+.status-processing {
+    color: white;
+    background: blue;
+    padding: 5px;
+    border-radius: 4px;
+}
+
+.status-shipped {
+    color: white;
+    background: purple;
+    padding: 5px;
+    border-radius: 4px;
+}
+
+.status-delivered {
+    color: white;
+    background: green;
+    padding: 5px;
+    border-radius: 4px;
+}
+
+.status-cancelled {
+    color: white;
+    background: red;
+    padding: 5px;
+    border-radius: 4px;
+}
+
+/* Стилизация таблицы */
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.admin-table th, .admin-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+}
+
+.admin-table th {
+    background-color: #007bff;
+    color: white;
+}
+
+.admin-table tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+/* Стили для ролей */
+.role-superadmin {
+    color: white;
+    background: red;
+    padding: 5px;
+    border-radius: 4px;
+}
+
+.role-admin {
+    color: white;
+    background: blue;
+    padding: 5px;
+    border-radius: 4px;
+}
+
+.role-moderator {
+    color: white;
+    background: orange;
+    padding: 5px;
+    border-radius: 4px;
+}
+
+.role-unknown {
+    color: black;
+    background: gray;
+    padding: 5px;
+    border-radius: 4px;
+}
+
+/* Стили для кнопок */
+.btn {
+    display: inline-block;
+    padding: 8px 12px;
+    margin: 5px;
+    text-decoration: none;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+.btn-add {
+    background: green;
+    color: white;
+}
+
+.btn-edit {
+    background: blue;
+    color: white;
+}
+
+.btn-delete {
+    background: red;
+    color: white;
+}
+
+.btn:hover {
+    opacity: 0.8;
+}
