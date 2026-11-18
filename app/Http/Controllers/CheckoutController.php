@@ -60,16 +60,20 @@ class CheckoutController extends Controller
             }
 
             $order = Order::create($data + [
-                'number' => 'MM' . now()->format('ymd') . strtoupper(Str::random(5)),
+                'number' => 'tmp' . Str::random(20), // временно, ниже заменяется на цифровой номер
                 'user_id' => $request->user()?->id,
                 'total' => $total,
                 'status' => 'new',
             ]);
 
+            // Номер заказа — только цифры (1001, 1002, ...)
+            $order->update(['number' => (string) (1000 + $order->id)]);
+
             foreach ($lines as [$product, $qty]) {
                 $order->items()->create([
                     'product_id' => $product->id,
                     'name' => $product->name_uk,
+                    'image' => $product->images[0] ?? null,
                     'price' => $product->price,
                     'quantity' => $qty,
                 ]);

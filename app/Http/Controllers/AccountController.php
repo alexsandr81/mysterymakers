@@ -10,7 +10,8 @@ class AccountController extends Controller
     {
         return view('account.index', [
             'user' => $request->user(),
-            'orders' => $request->user()->orders()->with('items')->latest()->get(),
+            'orders' => $request->user()->orders()->with('items.product')->latest()->get(),
+            'favorites' => $request->user()->favorites()->active()->latest('favorites.created_at')->get(),
         ]);
     }
 

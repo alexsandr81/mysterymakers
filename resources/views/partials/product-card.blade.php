@@ -6,6 +6,7 @@
             <span class="tag tag--sale">−{{ $product->discount_percent }}%</span>
         @endif
     </a>
+    @include('partials.favorite-button', ['product' => $product])
     <a href="{{ route('product', $product) }}" class="card__title">{{ $product->name }}</a>
     <div class="card__price">
         @if($product->has_discount)

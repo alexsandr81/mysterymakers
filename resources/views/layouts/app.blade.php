@@ -103,5 +103,6 @@
     </div>
     <div class="footer__copy">© {{ date('Y') }} MysteryMakers. {{ __('shop.footer_rights') }}</div>
 </footer>
+@include('partials.password-toggle')
 </body>
 </html>

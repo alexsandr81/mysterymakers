@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LocaleController;
@@ -52,6 +53,7 @@ Route::middleware(SetLocale::class)->group(function () {
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
         Route::get('/account', [AccountController::class, 'index'])->name('account');
         Route::patch('/account', [AccountController::class, 'update'])->name('account.update');
+        Route::post('/favorites/{product}', [FavoriteController::class, 'toggle'])->name('favorites.toggle');
     });
 
     // Админка: только для пользователей с is_admin = 1
@@ -61,6 +63,7 @@ Route::middleware(SetLocale::class)->group(function () {
         Route::resource('categories', Admin\CategoryController::class)->except('show');
         Route::get('/settings', [Admin\SettingController::class, 'edit'])->name('settings.edit');
         Route::put('/settings', [Admin\SettingController::class, 'update'])->name('settings.update');
+        Route::resource('users', Admin\UserController::class)->only(['index', 'edit', 'update', 'destroy']);
         Route::resource('pages', Admin\PageController::class)->except('show');
         Route::resource('banners', Admin\BannerController::class)->except('show');
         Route::resource('characteristics', Admin\CharacteristicController::class)->except('show');

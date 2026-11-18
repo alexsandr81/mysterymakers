@@ -369,3 +369,24 @@ a.pagination__item:hover { border-color: var(--brand, #8b5a2b); }
 .divider::before, .divider::after { content: ""; flex: 1; border-top: 1px solid var(--border, #e3d5c3); }
 .btn--google { display: inline-flex; align-items: center; justify-content: center; gap: 10px; background: #fff; border: 1px solid var(--border, #e3d5c3); color: #3c3c3c; }
 .btn--google:hover { border-color: var(--brand, #8b5a2b); }
+
+/* Глазок «Показать пароль» */
+.pw { position: relative; display: block; }
+.pw input { width: 100%; padding-right: 44px; }
+.pw__btn { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); border: 0; background: none; cursor: pointer; font-size: 1.1rem; padding: 6px 8px; line-height: 1; }
+input[type="password"]::-ms-reveal, input[type="password"]::-ms-clear { display: none; } /* убираем встроенный глазок Edge, чтобы не было двух */
+
+/* Избранное */
+.card { position: relative; }
+.fav { position: absolute; top: 18px; right: 18px; z-index: 2; margin: 0; }
+.fav__btn { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; border: 0; background: rgba(255,255,255,.92); color: var(--brand); font-size: 1.3rem; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,.18); }
+.fav__btn:hover { color: var(--accent); }
+.fav__btn.is-on { color: #c0392b; }
+.fav--wide { position: static; display: inline-block; margin-bottom: 12px; }
+.fav--wide .fav__btn { width: auto; height: auto; border-radius: 8px; padding: 8px 14px; font-size: 1rem; gap: 8px; border: 1px solid var(--line); background: #fff; box-shadow: none; }
+.account__wide { grid-column: 1 / -1; order: 2; }
+
+/* Позиции заказа с фото */
+.order-items { list-style: none; padding: 0; margin: 10px 0; display: flex; flex-direction: column; gap: 8px; }
+.order-items li { display: flex; align-items: center; gap: 10px; }
+.order-items img { width: 48px; height: 48px; object-fit: cover; border-radius: 8px; background: #f1e7da; flex: none; }

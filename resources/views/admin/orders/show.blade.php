@@ -41,17 +41,18 @@
 </div>
 
 <table class="table">
-    <thead><tr><th>Товар</th><th>Цена</th><th>Кол-во</th><th>Сумма</th></tr></thead>
+    <thead><tr><th></th><th>Товар</th><th>Цена</th><th>Кол-во</th><th>Сумма</th></tr></thead>
     <tbody>
     @foreach($order->items as $item)
         <tr>
-            <td>{{ $item->name }}</td>
+            <td class="thumb"><img src="{{ $item->image_url }}" alt=""></td>
+            <td>{{ $item->product?->name_ru ?? $item->name }}</td>
             <td>{{ Money::format($item->price) }}</td>
             <td>{{ $item->quantity }}</td>
             <td>{{ Money::format($item->price * $item->quantity) }}</td>
         </tr>
     @endforeach
     </tbody>
-    <tfoot><tr><td colspan="3" class="right"><strong>Итого</strong></td><td><strong>{{ Money::format($order->total) }} грн</strong></td></tr></tfoot>
+    <tfoot><tr><td colspan="4" class="right"><strong>Итого</strong></td><td><strong>{{ Money::format($order->total) }} грн</strong></td></tr></tfoot>
 </table>
 @endsection

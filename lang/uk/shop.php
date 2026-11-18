@@ -82,4 +82,10 @@ return [
     'login_google' => 'Увійти через Google',
     'google_error' => 'Не вдалося увійти через Google. Спробуйте ще раз.',
     'or' => 'або',
+    'favorites' => 'Обране',
+    'favorites_empty' => 'Поки нічого немає. Натисніть ♡ на картці товару.',
+    'favorite_add' => 'В обране',
+    'favorite_remove' => 'Прибрати з обраного',
+    'show_password' => 'Показати пароль',
+    'hide_password' => 'Сховати пароль',
 ];

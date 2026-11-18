@@ -39,6 +39,8 @@
             <div class="now {{ $product->has_discount ? 'now--sale' : '' }}">{{ Money::format($product->price) }} {{ __('shop.currency') }}</div>
         </div>
 
+        @include('partials.favorite-button', ['product' => $product, 'wide' => true])
+
         @if($product->in_stock)
             <form action="{{ route('cart.add', $product) }}" method="POST" class="buy">
                 @csrf

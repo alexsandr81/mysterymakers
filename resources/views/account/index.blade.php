@@ -27,6 +27,19 @@
         </form>
     </section>
 
+    <section id="favorites" class="account__wide">
+        <h3>♥ {{ __('shop.favorites') }}</h3>
+        @if($favorites->isEmpty())
+            <p class="muted">{{ __('shop.favorites_empty') }}</p>
+        @else
+            <div class="grid">
+                @foreach($favorites as $product)
+                    @include('partials.product-card', ['product' => $product])
+                @endforeach
+            </div>
+        @endif
+    </section>
+
     <section>
         <h3>{{ __('shop.my_orders') }}</h3>
         @forelse($orders as $order)
@@ -36,9 +49,15 @@
                     <span class="status status--{{ $order->status }}">{{ __('shop.statuses.' . $order->status) }}</span>
                 </div>
                 <div class="muted">{{ $order->created_at->format('d.m.Y H:i') }}</div>
-                <ul>
+                <ul class="order-items">
                     @foreach($order->items as $item)
-                        <li>{{ $item->name }} × {{ $item->quantity }} — {{ Money::format($item->price * $item->quantity) }}</li>
+                        <li>
+                            <img src="{{ $item->image_url }}" alt="">
+                            <span>
+                                @if($item->product)<a href="{{ route('product', $item->product) }}">{{ $item->product->name }}</a>@else{{ $item->name }}@endif
+                                × {{ $item->quantity }} — {{ Money::format($item->price * $item->quantity) }}
+                            </span>
+                        </li>
                     @endforeach
                 </ul>
                 <div>{{ __('shop.total') }}: <strong>{{ Money::format($order->total) }} {{ __('shop.currency') }}</strong></div>
