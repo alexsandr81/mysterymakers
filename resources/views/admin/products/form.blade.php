@@ -97,7 +97,7 @@
     @endif
 
     <label>Новые фото (до 5, JPG/PNG/WebP, до 4 МБ)
-        <input type="file" name="images[]" multiple accept="image/jpeg,image/png,image/webp">
+        <input type="file" name="images[]" id="product-files" multiple accept="image/jpeg,image/png,image/webp">
     </label>
 
     <div>
@@ -105,4 +105,22 @@
         <a href="{{ route('admin.products.index') }}" class="btn">Отмена</a>
     </div>
 </form>
+<script>
+(function () {
+    var input = document.getElementById('product-files');
+    if (!input) return;
+    var box = document.createElement('div');
+    box.className = 'preview-row';
+    input.closest('label').after(box);
+    input.addEventListener('change', function () {
+        box.innerHTML = '';
+        Array.prototype.forEach.call(input.files, function (f) {
+            var im = document.createElement('img');
+            im.src = URL.createObjectURL(f);
+            im.className = 'preview-thumb';
+            box.appendChild(im);
+        });
+    });
+})();
+</script>
 @endsection

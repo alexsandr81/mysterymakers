@@ -49,4 +49,26 @@ class OrderController extends Controller
 
         return back()->with('status', 'Статус обновлён');
     }
+
+    /**
+     * Удаление заказа. Если заказ ещё не выполнен (новый / в обработке), товары возвращаются на склад.
+     * У отменённых остаток уже возвращён, у отправленных и выполненных товар считается проданным.
+     */
+    public function destroy(Order $order)
+    {
+        DB::transaction(function () use ($order) {
+            $order = Order::whereKey($order->id)->lockForUpdate()->first();
+
+            if (in_array($order->status, ['new', 'processing'], true)) {
+                foreach ($order->items()->whereNotNull('product_id')->get() as $item) {
+                    $item->product?->increment('stock', $item->quantity);
+                }
+            }
+
+            $order->items()->delete();
+            $order->delete();
+        });
+
+        return redirect()->route('admin.orders.index')->with('status', 'Заказ удалён');
+    }
 }

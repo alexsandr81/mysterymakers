@@ -21,6 +21,11 @@
     @if($banners->count() > 1)
         <button type="button" class="slider__btn slider__btn--prev" id="slider-prev" aria-label="←">‹</button>
         <button type="button" class="slider__btn slider__btn--next" id="slider-next" aria-label="→">›</button>
+        <div class="slider__dots">
+            @foreach($banners as $banner)
+                <button type="button" class="slider__dot {{ $loop->first ? 'is-active' : '' }}" aria-label="{{ $loop->iteration }}"></button>
+            @endforeach
+        </div>
     @endif
 </section>
 
@@ -28,20 +33,35 @@
 <script>
 (function () {
     var track = document.getElementById('slider-track');
+    var dots = document.querySelectorAll('.slider__dot');
     var count = track.children.length;
-    function go(step) {
-        var width = track.clientWidth;
-        var index = Math.round(track.scrollLeft / width) + step;
-        if (index >= count) index = 0;
+    var timer = null;
+
+    function current() { return Math.round(track.scrollLeft / track.clientWidth); }
+    function goTo(index) {
+        if (index >= count) index = 0;          // после последнего — снова первый (по кругу)
         if (index < 0) index = count - 1;
-        track.scrollTo({ left: index * width, behavior: 'smooth' });
+        track.scrollTo({ left: index * track.clientWidth, behavior: 'smooth' });
     }
-    document.getElementById('slider-prev').addEventListener('click', function () { go(-1); });
-    document.getElementById('slider-next').addEventListener('click', function () { go(1); });
-    var timer = setInterval(function () { go(1); }, 6000);
-    ['pointerdown', 'wheel', 'touchstart'].forEach(function (name) {
-        track.addEventListener(name, function () { clearInterval(timer); }, { passive: true });
-    });
+    function start() { stop(); timer = setInterval(function () { goTo(current() + 1); }, 5000); }
+    function stop() { if (timer) { clearInterval(timer); timer = null; } }
+
+    document.getElementById('slider-prev').addEventListener('click', function () { goTo(current() - 1); start(); });
+    document.getElementById('slider-next').addEventListener('click', function () { goTo(current() + 1); start(); });
+    dots.forEach(function (d, i) { d.addEventListener('click', function () { goTo(i); start(); }); });
+
+    track.addEventListener('scroll', function () {
+        var c = current();
+        dots.forEach(function (d, i) { d.classList.toggle('is-active', i === c); });
+    }, { passive: true });
+
+    // Пока курсор над слайдером — не крутим; после ухода (или касания) автопрокрутка продолжается
+    track.addEventListener('mouseenter', stop);
+    track.addEventListener('mouseleave', start);
+    track.addEventListener('touchend', start, { passive: true });
+    document.addEventListener('visibilitychange', function () { document.hidden ? stop() : start(); });
+
+    start();
 })();
 </script>
 @endif

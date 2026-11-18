@@ -390,3 +390,16 @@ input[type="password"]::-ms-reveal, input[type="password"]::-ms-clear { display:
 .order-items { list-style: none; padding: 0; margin: 10px 0; display: flex; flex-direction: column; gap: 8px; }
 .order-items li { display: flex; align-items: center; gap: 10px; }
 .order-items img { width: 48px; height: 48px; object-fit: cover; border-radius: 8px; background: #f1e7da; flex: none; }
+
+/* Точки слайдера */
+.slider__dots { position: absolute; left: 0; right: 0; bottom: 10px; display: flex; justify-content: center; gap: 8px; pointer-events: none; }
+.slider__dot { pointer-events: auto; width: 10px; height: 10px; padding: 0; border-radius: 50%; border: 1px solid #fff; background: rgba(255,255,255,.4); cursor: pointer; }
+.slider__dot.is-active { background: #fff; }
+
+/* Админка: превью, кнопки */
+.preview-row { display: flex; flex-wrap: wrap; gap: 10px; }
+.preview-thumb { width: 120px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); }
+.admin-head__actions { display: flex; gap: 10px; align-items: center; }
+.admin-head__actions form { margin: 0; }
+.btn--danger { background: #fff; color: var(--sale); border: 1px solid var(--sale); }
+.btn--danger:hover { background: var(--sale); color: #fff; }

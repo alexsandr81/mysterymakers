@@ -29,7 +29,7 @@ class UserController extends Controller
     {
         return view('admin.users.form', [
             'user' => $user,
-            'orders' => $user->orders()->latest()->take(10)->get(),
+            'orders' => $user->orders()->with('items.product')->latest()->get(),
             'favoritesCount' => $user->favorites()->count(),
         ]);
     }

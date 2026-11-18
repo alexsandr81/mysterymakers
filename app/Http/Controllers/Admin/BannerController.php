@@ -22,11 +22,23 @@ class BannerController extends Controller
     public function store(Request $request)
     {
         $data = $this->validated($request, true);
-        $data['image'] = $request->file('image')->store('banners', 'public');
 
-        Banner::create($data);
+        // Можно загрузить сразу до 5 картинок: каждая станет отдельным слайдом
+        $request->validate([
+            'images' => ['required', 'array', 'min:1', 'max:5'],
+            'images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+        ]);
 
-        return redirect()->route('admin.banners.index')->with('status', 'Баннер создан');
+        foreach (array_values($request->file('images')) as $i => $file) {
+            Banner::create($data + [
+                'image' => $file->store('banners', 'public'),
+            ]);
+        }
+
+        $count = count($request->file('images'));
+
+        return redirect()->route('admin.banners.index')
+            ->with('status', $count > 1 ? "Добавлено баннеров: $count" : 'Баннер создан');
     }
 
     public function edit(Banner $banner)
@@ -66,7 +78,7 @@ class BannerController extends Controller
             // только http(s):// или путь внутри сайта — чтобы нельзя было подставить javascript:
             'url' => ['nullable', 'string', 'max:255', 'regex:#^(https?://|/)#i'],
             'sort' => ['required', 'integer', 'min:0'],
-            'image' => [$imageRequired ? 'required' : 'nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'image' => [$imageRequired ? 'prohibited' : 'nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ]);
 
         unset($data['image']);

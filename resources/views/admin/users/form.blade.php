@@ -38,14 +38,28 @@
     </section>
 
     <section class="panel">
-        <h3>Последние заказы</h3>
+        <h3>История заказов ({{ $orders->count() }})</h3>
+        @php $spent = $orders->where('status', '!=', 'canceled')->sum('total'); @endphp
+        <p class="muted">Сумма без отменённых: <strong>{{ Money::format($spent) }} грн</strong></p>
         @forelse($orders as $o)
-            <p>
-                <a href="{{ route('admin.orders.show', $o) }}">№ {{ $o->number }}</a>
-                — {{ Money::format($o->total) }} грн,
-                {{ __('shop.statuses.' . $o->status, [], 'ru') }},
-                {{ $o->created_at->format('d.m.Y') }}
-            </p>
+            <div class="order-box">
+                <div class="order-box__head">
+                    <a href="{{ route('admin.orders.show', $o) }}"><strong>№ {{ $o->number }}</strong></a>
+                    <span class="status status--{{ $o->status }}">{{ __('shop.statuses.' . $o->status, [], 'ru') }}</span>
+                </div>
+                <div class="muted">{{ $o->created_at->format('d.m.Y H:i') }} · {{ Money::format($o->total) }} грн</div>
+                <ul class="order-items">
+                    @foreach($o->items as $item)
+                        <li>
+                            <img src="{{ $item->image_url }}" alt="">
+                            <span>
+                                @if($item->product)<a href="{{ route('admin.products.edit', $item->product) }}">{{ $item->product->sku }} · {{ $item->product->name_ru }}</a>@else{{ $item->name }}@endif
+                                × {{ $item->quantity }}
+                            </span>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
         @empty
             <p class="muted">Заказов нет</p>
         @endforelse

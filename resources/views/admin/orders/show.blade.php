@@ -7,13 +7,26 @@
 @section('content')
 <div class="admin-head">
     <h1>Заказ {{ $order->number }}</h1>
-    <a href="{{ route('admin.orders.index') }}" class="btn">← К списку</a>
+    <div class="admin-head__actions">
+        <a href="{{ route('admin.orders.index') }}" class="btn">← К списку</a>
+        <form action="{{ route('admin.orders.destroy', $order) }}" method="POST" onsubmit="return confirm('Удалить заказ {{ $order->number }}? Это нельзя отменить.')">
+            @csrf @method('DELETE')
+            <button class="btn btn--danger">🗑 Удалить заказ</button>
+        </form>
+    </div>
 </div>
 
 <div class="order-grid">
     <section class="panel">
         <h3>Клиент</h3>
-        <p><strong>{{ $order->name }}</strong></p>
+        <p>
+            @if($order->user_id)
+                <strong><a href="{{ route('admin.users.edit', $order->user_id) }}" title="Открыть клиента и историю его заказов">{{ $order->name }}</a></strong>
+                <span class="muted">(зарегистрированный клиент)</span>
+            @else
+                <strong>{{ $order->name }}</strong> <span class="muted">(гость, без регистрации)</span>
+            @endif
+        </p>
         <p>{{ $order->phone }}</p>
         @if($order->email)<p>{{ $order->email }}</p>@endif
         <h3>Доставка и оплата</h3>
@@ -41,18 +54,19 @@
 </div>
 
 <table class="table">
-    <thead><tr><th></th><th>Товар</th><th>Цена</th><th>Кол-во</th><th>Сумма</th></tr></thead>
+    <thead><tr><th></th><th>Артикул</th><th>Товар</th><th>Цена</th><th>Кол-во</th><th>Сумма</th></tr></thead>
     <tbody>
     @foreach($order->items as $item)
         <tr>
             <td class="thumb"><img src="{{ $item->image_url }}" alt=""></td>
-            <td>{{ $item->product?->name_ru ?? $item->name }}</td>
+            <td>@if($item->product)<a href="{{ route('admin.products.edit', $item->product) }}" title="Открыть товар">{{ $item->product->sku }}</a>@else<span class="muted">—</span>@endif</td>
+            <td>@if($item->product)<a href="{{ route('admin.products.edit', $item->product) }}">{{ $item->product->name_ru }}</a>@else{{ $item->name }} <span class="muted">(товар удалён)</span>@endif</td>
             <td>{{ Money::format($item->price) }}</td>
             <td>{{ $item->quantity }}</td>
             <td>{{ Money::format($item->price * $item->quantity) }}</td>
         </tr>
     @endforeach
     </tbody>
-    <tfoot><tr><td colspan="4" class="right"><strong>Итого</strong></td><td><strong>{{ Money::format($order->total) }} грн</strong></td></tr></tfoot>
+    <tfoot><tr><td colspan="5" class="right"><strong>Итого</strong></td><td><strong>{{ Money::format($order->total) }} грн</strong></td></tr></tfoot>
 </table>
 @endsection

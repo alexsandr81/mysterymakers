@@ -69,6 +69,7 @@ Route::middleware(SetLocale::class)->group(function () {
         Route::resource('characteristics', Admin\CharacteristicController::class)->except('show');
         Route::get('/orders', [Admin\OrderController::class, 'index'])->name('orders.index');
         Route::get('/orders/{order}', [Admin\OrderController::class, 'show'])->name('orders.show');
+        Route::delete('/orders/{order}', [Admin\OrderController::class, 'destroy'])->name('orders.destroy');
         Route::patch('/orders/{order}/status', [Admin\OrderController::class, 'updateStatus'])->name('orders.status');
     });
 });
