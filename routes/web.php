@@ -56,6 +56,8 @@ Route::middleware(SetLocale::class)->group(function () {
         Route::get('/', [Admin\DashboardController::class, 'index'])->name('dashboard');
         Route::resource('products', Admin\ProductController::class)->except('show');
         Route::resource('categories', Admin\CategoryController::class)->except('show');
+        Route::get('/settings', [Admin\SettingController::class, 'edit'])->name('settings.edit');
+        Route::put('/settings', [Admin\SettingController::class, 'update'])->name('settings.update');
         Route::resource('pages', Admin\PageController::class)->except('show');
         Route::resource('banners', Admin\BannerController::class)->except('show');
         Route::resource('characteristics', Admin\CharacteristicController::class)->except('show');

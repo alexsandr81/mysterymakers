@@ -96,8 +96,9 @@
         @endif
         <div>
             <strong>{{ __('shop.contacts') }}</strong>
-            <span>+380 00 000 00 00</span>
-            <span>info@mysterymakers.local</span>
+            <span>{{ \App\Models\Setting::get('phone') }}</span>
+            @if(\App\Models\Setting::get('email'))<span>{{ \App\Models\Setting::get('email') }}</span>@endif
+            @if(\App\Models\Setting::get('address'))<span>{{ \App\Models\Setting::get('address') }}</span>@endif
         </div>
     </div>
     <div class="footer__copy">© {{ date('Y') }} MysteryMakers. {{ __('shop.footer_rights') }}</div>

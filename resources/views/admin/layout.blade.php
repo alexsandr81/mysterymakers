@@ -18,6 +18,7 @@
             <a href="{{ route('admin.characteristics.index') }}" class="{{ request()->routeIs('admin.characteristics.*') ? 'active' : '' }}">🏷 Характеристики</a>
             <a href="{{ route('admin.banners.index') }}" class="{{ request()->routeIs('admin.banners.*') ? 'active' : '' }}">🖼 Баннеры</a>
             <a href="{{ route('admin.pages.index') }}" class="{{ request()->routeIs('admin.pages.*') ? 'active' : '' }}">📄 Страницы</a>
+            <a href="{{ route('admin.settings.edit') }}" class="{{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">⚙ Настройки</a>
             <a href="{{ route('home') }}">↩ На сайт</a>
         </nav>
         <form action="{{ route('logout') }}" method="POST">
