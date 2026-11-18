@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Models\Characteristic;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -33,6 +34,8 @@ class ProductController extends Controller
         return view('admin.products.form', [
             'product' => new Product(['is_active' => true, 'stock' => 0]),
             'categories' => Category::orderBy('sort')->get(),
+            'characteristics' => Characteristic::with('values')->orderBy('sort')->orderBy('id')->get(),
+            'selectedValues' => [],
         ]);
     }
 
@@ -42,7 +45,8 @@ class ProductController extends Controller
         $data['slug'] = $this->uniqueSlug($data['name_uk']);
         $data['images'] = $this->storeImages($request);
 
-        Product::create($data);
+        $product = Product::create($data);
+        $product->characteristicValues()->sync($this->selectedValueIds($request));
 
         return redirect()->route('admin.products.index')->with('status', 'Товар создан');
     }
@@ -52,6 +56,8 @@ class ProductController extends Controller
         return view('admin.products.form', [
             'product' => $product,
             'categories' => Category::orderBy('sort')->get(),
+            'characteristics' => Characteristic::with('values')->orderBy('sort')->orderBy('id')->get(),
+            'selectedValues' => $product->characteristicValues()->pluck('characteristic_values.id')->all(),
         ]);
     }
 
@@ -69,6 +75,7 @@ class ProductController extends Controller
 
         $data['images'] = $images;
         $product->update($data);
+        $product->characteristicValues()->sync($this->selectedValueIds($request));
 
         return redirect()->route('admin.products.index')->with('status', 'Товар сохранён');
     }
@@ -96,12 +103,23 @@ class ProductController extends Controller
             'old_price' => ['nullable', 'numeric', 'gt:price', 'max:99999999'],
             'stock' => ['required', 'integer', 'min:0'],
             'images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+            'char' => ['nullable', 'array'],
+            'char.*' => ['nullable', 'integer', 'exists:characteristic_values,id'],
         ]);
 
-        unset($data['images']);
+        unset($data['images'], $data['char']);
         $data['is_active'] = $request->boolean('is_active');
 
         return $data;
+    }
+
+    /** id выбранных значений характеристик (пустые «— не выбрано —» отбрасываются) */
+    private function selectedValueIds(Request $request): array
+    {
+        return collect((array) $request->input('char', []))
+            ->filter(fn ($id) => is_numeric($id) && (int) $id > 0)
+            ->map(fn ($id) => (int) $id)
+            ->unique()->values()->all();
     }
 
     /** @return array<int, string> */

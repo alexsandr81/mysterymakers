@@ -6,6 +6,7 @@ use App\Models\Concerns\Localized;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Facades\Storage;
 
 class Product extends Model
@@ -41,6 +42,12 @@ class Product extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    /** Выбранные значения характеристик (Материал: Фанера, Цвет: Тёмный...) */
+    public function characteristicValues(): BelongsToMany
+    {
+        return $this->belongsToMany(CharacteristicValue::class, 'characteristic_value_product');
     }
 
     public function scopeActive(Builder $query): Builder

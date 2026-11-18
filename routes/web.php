@@ -8,6 +8,7 @@ use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LocaleController;
+use App\Http\Controllers\PageController;
 use App\Http\Middleware\EnsureAdmin;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Support\Facades\Route;
@@ -21,6 +22,9 @@ Route::middleware(SetLocale::class)->group(function () {
     Route::get('/catalog', [CatalogController::class, 'index'])->name('catalog');
     Route::get('/catalog/{category:slug}', [CatalogController::class, 'index'])->name('catalog.category');
     Route::get('/product/{product:slug}', [CatalogController::class, 'show'])->name('product');
+
+    // Статические страницы («Доставка», «Контакты», «О нас»...)
+    Route::get('/page/{page:slug}', [PageController::class, 'show'])->name('page');
 
     // Корзина
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
@@ -52,6 +56,9 @@ Route::middleware(SetLocale::class)->group(function () {
         Route::get('/', [Admin\DashboardController::class, 'index'])->name('dashboard');
         Route::resource('products', Admin\ProductController::class)->except('show');
         Route::resource('categories', Admin\CategoryController::class)->except('show');
+        Route::resource('pages', Admin\PageController::class)->except('show');
+        Route::resource('banners', Admin\BannerController::class)->except('show');
+        Route::resource('characteristics', Admin\CharacteristicController::class)->except('show');
         Route::get('/orders', [Admin\OrderController::class, 'index'])->name('orders.index');
         Route::get('/orders/{order}', [Admin\OrderController::class, 'show'])->name('orders.show');
         Route::patch('/orders/{order}/status', [Admin\OrderController::class, 'updateStatus'])->name('orders.status');

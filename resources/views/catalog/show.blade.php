@@ -47,6 +47,24 @@
             </form>
         @endif
 
+        @php
+            // Группируем выбранные значения по характеристике: «Цвет: Белый, Тёмный»
+            $specs = $product->characteristicValues
+                ->groupBy('characteristic_id')
+                ->sortBy(fn ($values) => $values->first()->characteristic->sort);
+        @endphp
+        @if($specs->isNotEmpty())
+            <h3>{{ __('shop.specs') }}</h3>
+            <table class="specs">
+                @foreach($specs as $values)
+                    <tr>
+                        <th>{{ $values->first()->characteristic->name }}</th>
+                        <td>{{ $values->map(fn ($v) => $v->title)->implode(', ') }}</td>
+                    </tr>
+                @endforeach
+            </table>
+        @endif
+
         @if($product->description)
             <h3>{{ __('shop.description') }}</h3>
             <p>{!! nl2br(e($product->description)) !!}</p>

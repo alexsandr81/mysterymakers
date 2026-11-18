@@ -58,6 +58,30 @@
         </label>
     </div>
 
+    @if($characteristics->isNotEmpty())
+        @php
+            // После ошибки валидации показываем то, что человек уже выбрал
+            $chosen = old('char') !== null
+                ? array_map('intval', array_filter((array) old('char'), 'is_numeric'))
+                : $selectedValues;
+        @endphp
+        <div>
+            <strong>Характеристики</strong>
+            <div class="form__cols form__cols--4 specs-edit">
+                @foreach($characteristics as $characteristic)
+                    <label>{{ $characteristic->name_ru }}
+                        <select name="char[{{ $characteristic->id }}]">
+                            <option value="">— не выбрано —</option>
+                            @foreach($characteristic->values as $value)
+                                <option value="{{ $value->id }}" @selected(in_array($value->id, $chosen, true))>{{ $value->value_ru }}</option>
+                            @endforeach
+                        </select>
+                    </label>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
     @if(!$isNew && !empty($product->images))
         <div>
             <strong>Текущие фото</strong> (отметьте, чтобы удалить)

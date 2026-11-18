@@ -12,6 +12,7 @@
     $cartCount = app(\App\Services\Cart::class)->count();
     $menuCategories = \App\Models\Category::whereNull('parent_id')->orderBy('sort')->get();
     $otherLocale = app()->getLocale() === 'uk' ? 'ru' : 'uk';
+    $footerPages = \App\Models\Page::where('is_published', true)->where('show_in_footer', true)->orderBy('sort')->orderBy('id')->get();
 @endphp
 
 <div class="topbar">
@@ -85,6 +86,14 @@
                 <a href="{{ route('catalog.category', $c) }}">{{ $c->name }}</a>
             @endforeach
         </div>
+        @if($footerPages->isNotEmpty())
+        <div>
+            <strong>{{ __('shop.info') }}</strong>
+            @foreach($footerPages as $p)
+                <a href="{{ route('page', $p) }}">{{ $p->title }}</a>
+            @endforeach
+        </div>
+        @endif
         <div>
             <strong>{{ __('shop.contacts') }}</strong>
             <span>+380 00 000 00 00</span>

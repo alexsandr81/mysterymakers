@@ -13,7 +13,8 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Администратор для первого входа. СМЕНИТЕ ПАРОЛЬ после установки!
-        User::updateOrCreate(
+        // firstOrCreate: при повторном запуске сида уже изменённый пароль не сбрасывается.
+        User::firstOrCreate(
             ['email' => 'admin@mysterymakers.local'],
             ['name' => 'Admin', 'password' => Hash::make('admin12345'), 'is_admin' => true]
         );
@@ -27,7 +28,7 @@ class DatabaseSeeder extends Seeder
 
         $ids = [];
         foreach ($categories as $i => [$slug, $uk, $ru]) {
-            $ids[$slug] = Category::updateOrCreate(
+            $ids[$slug] = Category::firstOrCreate(
                 ['slug' => $slug],
                 ['name_uk' => $uk, 'name_ru' => $ru, 'sort' => $i]
             )->id;
@@ -43,7 +44,8 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($products as [$cat, $sku, $slug, $nameUk, $nameRu, $price, $old, $stock]) {
-            Product::updateOrCreate(['sku' => $sku], [
+            // firstOrCreate: повторный запуск не затирает цены и описания, изменённые в админке
+            Product::firstOrCreate(['sku' => $sku], [
                 'category_id' => $ids[$cat],
                 'slug' => $slug,
                 'name_uk' => $nameUk,
@@ -56,5 +58,7 @@ class DatabaseSeeder extends Seeder
                 'is_active' => true,
             ]);
         }
+
+        $this->call(ContentSeeder::class);
     }
 }

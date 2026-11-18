@@ -34,8 +34,25 @@
                 <input type="number" name="max" min="0" value="{{ request('max') }}">
             </div>
             <label class="check"><input type="checkbox" name="in_stock" value="1" @checked(request()->boolean('in_stock'))> {{ __('shop.only_in_stock') }}</label>
+
+            @foreach($filters as $characteristic)
+                <div class="filter-group">
+                    <strong>{{ $characteristic->name }}</strong>
+                    @foreach($characteristic->values as $value)
+                        <label class="check">
+                            <input type="checkbox" name="attr[{{ $characteristic->id }}][]" value="{{ $value->id }}"
+                                   @checked(in_array($value->id, $selectedValues, true))>
+                            {{ $value->title }}
+                        </label>
+                    @endforeach
+                </div>
+            @endforeach
+
             <input type="hidden" name="sort" value="{{ $sort }}">
             <button type="submit" class="btn btn--brand btn--block">{{ __('shop.apply') }}</button>
+            @if(request()->hasAny(['min', 'max', 'in_stock', 'attr']))
+                <a href="{{ $category ? route('catalog.category', $category) : route('catalog') }}" class="reset-link">{{ __('shop.reset') }}</a>
+            @endif
         </form>
     </aside>
 
@@ -46,16 +63,14 @@
                 @else {{ $category?->name ?? __('shop.all_products') }}
                 @endif
             </h1>
-            <form method="GET" class="sort">
-                @foreach(request()->except(['sort', 'page']) as $k => $v)
-                    <input type="hidden" name="{{ $k }}" value="{{ $v }}">
-                @endforeach
-                <select name="sort" onchange="this.form.submit()">
-                    <option value="new" @selected($sort === 'new')>{{ __('shop.sort_new') }}</option>
-                    <option value="price_asc" @selected($sort === 'price_asc')>{{ __('shop.sort_price_asc') }}</option>
-                    <option value="price_desc" @selected($sort === 'price_desc')>{{ __('shop.sort_price_desc') }}</option>
+            {{-- Сортировка: каждая опция — готовая ссылка, все текущие фильтры сохраняются --}}
+            <div class="sort">
+                <select onchange="window.location = this.value" aria-label="{{ __('shop.sort') }}">
+                    @foreach(['new' => 'sort_new', 'price_asc' => 'sort_price_asc', 'price_desc' => 'sort_price_desc'] as $key => $label)
+                        <option value="{{ request()->fullUrlWithQuery(['sort' => $key, 'page' => null]) }}" @selected($sort === $key)>{{ __('shop.' . $label) }}</option>
+                    @endforeach
                 </select>
-            </form>
+            </div>
         </div>
 
         @if($products->count())
