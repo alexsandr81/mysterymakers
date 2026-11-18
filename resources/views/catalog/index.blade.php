@@ -79,7 +79,7 @@
                     @include('partials.product-card', ['product' => $product])
                 @endforeach
             </div>
-            <div class="pager">{{ $products->links('pagination::default') }}</div>
+            <div class="pager">{{ $products->links('partials.pagination') }}</div>
         @else
             <p class="muted">{{ __('shop.nothing_found') }}</p>
         @endif

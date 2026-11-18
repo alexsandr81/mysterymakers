@@ -31,5 +31,5 @@
     @endforelse
     </tbody>
 </table>
-<div class="pager">{{ $orders->links('pagination::default') }}</div>
+<div class="pager">{{ $orders->links('partials.pagination') }}</div>
 @endsection

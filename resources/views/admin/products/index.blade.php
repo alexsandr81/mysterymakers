@@ -38,5 +38,5 @@
     @endforeach
     </tbody>
 </table>
-<div class="pager">{{ $products->links('pagination::default') }}</div>
+<div class="pager">{{ $products->links('partials.pagination') }}</div>
 @endsection
