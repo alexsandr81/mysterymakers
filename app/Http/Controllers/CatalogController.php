@@ -67,7 +67,8 @@ class CatalogController extends Controller
 
     public function show(Product $product)
     {
-        abort_unless($product->is_active, 404);
+        // Скрытые товары видит только администратор (например, из заказа)
+        abort_unless($product->is_active || auth()->user()?->is_admin, 404);
 
         return view('catalog.show', [
             'product' => $product->load('category', 'characteristicValues.characteristic'),

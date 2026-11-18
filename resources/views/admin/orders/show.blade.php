@@ -59,8 +59,8 @@
     @foreach($order->items as $item)
         <tr>
             <td class="thumb"><img src="{{ $item->image_url }}" alt=""></td>
-            <td>@if($item->product)<a href="{{ route('admin.products.edit', $item->product) }}" title="Открыть товар">{{ $item->product->sku }}</a>@else<span class="muted">—</span>@endif</td>
-            <td>@if($item->product)<a href="{{ route('admin.products.edit', $item->product) }}">{{ $item->product->name_ru }}</a>@else{{ $item->name }} <span class="muted">(товар удалён)</span>@endif</td>
+            <td>@if($item->product)<a href="{{ route('product', $item->product) }}" title="Открыть страницу товара на сайте" target="_blank">{{ $item->product->sku }}</a>@else<span class="muted">—</span>@endif</td>
+            <td>@if($item->product)<a href="{{ route('product', $item->product) }}" target="_blank">{{ $item->product->name_ru }}</a>@else{{ $item->name }} <span class="muted">(товар удалён)</span>@endif</td>
             <td>{{ Money::format($item->price) }}</td>
             <td>{{ $item->quantity }}</td>
             <td>{{ Money::format($item->price * $item->quantity) }}</td>

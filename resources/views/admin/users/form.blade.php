@@ -53,7 +53,7 @@
                         <li>
                             <img src="{{ $item->image_url }}" alt="">
                             <span>
-                                @if($item->product)<a href="{{ route('admin.products.edit', $item->product) }}">{{ $item->product->sku }} · {{ $item->product->name_ru }}</a>@else{{ $item->name }}@endif
+                                @if($item->product)<a href="{{ route('product', $item->product) }}" target="_blank">{{ $item->product->sku }} · {{ $item->product->name_ru }}</a>@else{{ $item->name }}@endif
                                 × {{ $item->quantity }}
                             </span>
                         </li>
