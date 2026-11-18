@@ -7,11 +7,11 @@ cd "$(dirname "$0")"
 
 command -v composer >/dev/null || { echo "Composer не найден"; exit 1; }
 command -v php >/dev/null || { echo "PHP не найден"; exit 1; }
-for d in app database lang public resources routes; do [ -d "$d" ] || { echo "Не найдена папка $d рядом со скриптом"; exit 1; }; done
+for d in app config database lang public resources routes; do [ -d "$d" ] || { echo "Не найдена папка $d рядом со скриптом"; exit 1; }; done
 [ -e shop ] && { echo 'Папка "shop" уже существует'; exit 1; }
 
 composer create-project laravel/laravel shop
-for d in app database lang public resources routes; do cp -R "$d/." "shop/$d/"; done
+for d in app config database lang public resources routes; do cp -R "$d/." "shop/$d/"; done
 
 sed -i.bak -E 's/^APP_LOCALE=.*/APP_LOCALE=uk/; s/^APP_FALLBACK_LOCALE=.*/APP_FALLBACK_LOCALE=uk/; s/^APP_NAME=.*/APP_NAME=MysteryMakers/' shop/.env
 rm -f shop/.env.bak

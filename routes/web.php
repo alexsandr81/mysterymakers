@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\PageController;
@@ -16,6 +17,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(SetLocale::class)->group(function () {
 
     Route::get('/', [HomeController::class, 'index'])->name('home');
+    Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('google.callback');
     Route::get('/lang/{locale}', [LocaleController::class, 'switch'])->name('locale');
 
     // Каталог и поиск
@@ -43,6 +45,7 @@ Route::middleware(SetLocale::class)->group(function () {
         Route::post('/login', [AuthController::class, 'login']);
         Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
         Route::post('/register', [AuthController::class, 'register']);
+        Route::get('/auth/google', [GoogleAuthController::class, 'redirect'])->name('google.redirect');
     });
 
     Route::middleware('auth')->group(function () {

@@ -363,3 +363,9 @@ body.admin { background: #f6f1e9; }
 a.pagination__item:hover { border-color: var(--brand, #8b5a2b); }
 .pagination__item.is-active { background: var(--brand, #8b5a2b); border-color: var(--brand, #8b5a2b); color: #fff; }
 .pagination__item.is-disabled { opacity: .45; }
+
+/* Вход через Google */
+.divider { display: flex; align-items: center; gap: 12px; margin: 16px 0; color: var(--muted, #8a7a6a); font-size: 14px; }
+.divider::before, .divider::after { content: ""; flex: 1; border-top: 1px solid var(--border, #e3d5c3); }
+.btn--google { display: inline-flex; align-items: center; justify-content: center; gap: 10px; background: #fff; border: 1px solid var(--border, #e3d5c3); color: #3c3c3c; }
+.btn--google:hover { border-color: var(--brand, #8b5a2b); }

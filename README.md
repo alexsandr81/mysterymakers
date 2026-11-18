@@ -52,6 +52,25 @@ php artisan serve
 Первый вход: `admin@mysterymakers.local` / `admin12345` — **сразу смените пароль**
 (пока через `php artisan tinker`, форма смены пароля — в планах).
 
+## Вход через Google
+
+Кнопка «Войти через Google» появляется на страницах входа и регистрации, только когда в `.env` заданы ключи.
+
+1. Откройте https://console.cloud.google.com/ → создайте проект → **APIs & Services → OAuth consent screen**
+   (тип External, укажите название и свой email; пока приложение в режиме Testing, добавьте свой Gmail в «Test users»).
+2. **Credentials → Create credentials → OAuth client ID → Web application**.
+3. В **Authorized redirect URIs** добавьте (оба варианта, для локальной работы):
+   `http://127.0.0.1:8000/auth/google/callback` и `http://localhost:8000/auth/google/callback`.
+   На хостинге добавьте `https://ваш-домен/auth/google/callback`.
+4. Скопируйте Client ID и Client secret в файл `.env` сайта:
+   ```
+   GOOGLE_CLIENT_ID=...apps.googleusercontent.com
+   GOOGLE_CLIENT_SECRET=...
+   ```
+5. Выполните `php artisan config:clear` и перезапустите `php artisan serve`.
+
+Если у человека уже есть аккаунт с тем же email, Google-вход привяжется к нему. Секрет никогда не коммитьте в репозиторий.
+
 ## Обновление уже установленного сайта
 
 Когда в репозитории появились новые функции, а сайт у вас уже стоит (например, в `C:\laragon\www\shop`):
@@ -91,5 +110,5 @@ update.bat "C:\laragon\www\shop"
 6. Сменить пароль администратора и удалить демо-товары.
 
 ## Чего пока нет (следующие шаги)
-Онлайн-оплата, письма клиенту о заказе, восстановление и смена пароля, отзывы, избранное, промокоды,
+Онлайн-оплата, письма клиенту о заказе, восстановление и смена пароля (для входа через Google не нужно), отзывы, избранное, промокоды,
 управление пользователями в админке и тесты.
