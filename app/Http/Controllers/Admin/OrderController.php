@@ -28,8 +28,11 @@ class OrderController extends Controller
     {
         $data = $request->validate(['status' => ['required', 'in:' . implode(',', Order::STATUSES)]]);
 
-        DB::transaction(function () use ($order, $data) {
+        $changed = false;
+
+        DB::transaction(function () use ($order, $data, &$changed) {
             $order = Order::whereKey($order->id)->lockForUpdate()->first();
+            $changed = $order->status !== $data['status'];
 
             // При отмене возвращаем товар на склад (только один раз)
             if ($data['status'] === 'canceled' && $order->status !== 'canceled') {
@@ -47,7 +50,11 @@ class OrderController extends Controller
             $order->update(['status' => $data['status']]);
         });
 
-        return back()->with('status', 'Статус обновлён');
+        if ($changed) {
+            \App\Services\OrderMail::statusChanged($order->fresh());
+        }
+
+        return back()->with('status', $changed ? 'Статус обновлён, клиенту отправлено письмо' : 'Статус не изменился');
     }
 
     /**

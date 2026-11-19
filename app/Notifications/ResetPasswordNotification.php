@@ -34,11 +34,6 @@ class ResetPasswordNotification extends Notification
 
         return (new MailMessage)
             ->subject(__('shop.reset_mail_subject'))
-            ->greeting(__('shop.reset_mail_greeting'))
-            ->line(__('shop.reset_mail_line1'))
-            ->action(__('shop.reset_mail_action'), $url)
-            ->line(__('shop.reset_mail_expire', ['minutes' => $minutes]))
-            ->line(__('shop.reset_mail_ignore'))
-            ->salutation('MysteryMakers');
+            ->view('emails.password-reset', ['url' => $url, 'minutes' => $minutes]);
     }
 }

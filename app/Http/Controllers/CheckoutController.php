@@ -64,6 +64,7 @@ class CheckoutController extends Controller
                 'user_id' => $request->user()?->id,
                 'total' => $total,
                 'status' => 'new',
+                'locale' => app()->getLocale(),
             ]);
 
             // Номер заказа — только цифры (1001, 1002, ...)
@@ -84,6 +85,9 @@ class CheckoutController extends Controller
         });
 
         $cart->clear();
+
+        // Письмо клиенту (если почта не настроена или упала — заказ всё равно оформлен)
+        \App\Services\OrderMail::placed($order);
 
         return redirect()->route('checkout.done')->with('order_number', $order->number);
     }
