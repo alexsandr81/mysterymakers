@@ -12,7 +12,8 @@
         <a href="{{ route('admin.dashboard') }}" class="logo logo--footer">Mystery<b>Makers</b></a>
         <nav>
             <a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">📊 Дашборд</a>
-            <a href="{{ route('admin.orders.index') }}" class="{{ request()->routeIs('admin.orders.*') ? 'active' : '' }}">🛒 Заказы</a>
+            @php $newOrders = \App\Models\Order::where('status', 'new')->count(); @endphp
+            <a href="{{ route('admin.orders.index') }}" class="{{ request()->routeIs('admin.orders.*') ? 'active' : '' }}">🛒 Заказы@if($newOrders) <span class="badge">{{ $newOrders }}</span>@endif</a>
             <a href="{{ route('admin.products.index') }}" class="{{ request()->routeIs('admin.products.*') ? 'active' : '' }}">📦 Товары</a>
             @php $pendingReviews = \App\Models\Review::where('status', 'pending')->count(); @endphp
             <a href="{{ route('admin.reviews.index') }}" class="{{ request()->routeIs('admin.reviews.*') ? 'active' : '' }}">💬 Отзывы@if($pendingReviews) <span class="badge">{{ $pendingReviews }}</span>@endif</a>
