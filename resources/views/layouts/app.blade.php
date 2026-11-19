@@ -96,8 +96,18 @@
         @endif
         <div>
             <strong>{{ __('shop.contacts') }}</strong>
-            <span>{{ \App\Models\Setting::get('phone') }}</span>
-            @if(\App\Models\Setting::get('email'))<span>{{ \App\Models\Setting::get('email') }}</span>@endif
+            @php $phoneDigits = \App\Models\Setting::phoneDigits(); @endphp
+            @if($phoneDigits)
+                <a href="tel:+{{ $phoneDigits }}">📞 {{ \App\Models\Setting::get('phone') }}</a>
+                <div class="messengers">
+                    <a href="viber://chat?number=%2B{{ $phoneDigits }}" class="messenger messenger--viber">Viber</a>
+                    <a href="https://wa.me/{{ $phoneDigits }}" target="_blank" rel="noopener" class="messenger messenger--wa">WhatsApp</a>
+                    <a href="https://t.me/+{{ $phoneDigits }}" target="_blank" rel="noopener" class="messenger messenger--tg">Telegram</a>
+                </div>
+            @else
+                <span>{{ \App\Models\Setting::get('phone') }}</span>
+            @endif
+            @if(\App\Models\Setting::get('email'))<a href="mailto:{{ \App\Models\Setting::get('email') }}">✉ {{ \App\Models\Setting::get('email') }}</a>@endif
             @if(\App\Models\Setting::get('address'))<span>{{ \App\Models\Setting::get('address') }}</span>@endif
         </div>
     </div>

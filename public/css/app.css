@@ -449,3 +449,11 @@ input[type="password"]::-ms-reveal, input[type="password"]::-ms-clear { display:
 .ac__list[hidden] { display: none; }
 .ac__list li { padding: 8px 14px; cursor: pointer; font-weight: 400; }
 .ac__list li:hover { background: #fdf3e3; }
+
+/* Мессенджеры в подвале */
+.messengers { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 8px; }
+.footer__inner .messenger { display: inline-block; padding: 3px 10px; border-radius: 14px; font-size: .82rem; color: #fff; }
+.messenger--viber { background: #7360f2; }
+.messenger--wa { background: #25a244; }
+.messenger--tg { background: #2a8bc8; }
+.footer__inner .messenger:hover { color: #fff; filter: brightness(1.12); text-decoration: none; }

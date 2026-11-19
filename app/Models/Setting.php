@@ -52,4 +52,21 @@ class Setting extends Model
         self::updateOrCreate(['key' => $key], ['value' => $value]);
         self::$cache = null;
     }
+
+    /**
+     * Телефон в международном виде только из цифр: «066 421 94 97» -> «380664219497».
+     * null, если из строки нельзя получить номер (тогда ссылки не показываются).
+     */
+    public static function phoneDigits(): ?string
+    {
+        $digits = preg_replace('/\D+/', '', self::get('phone'));
+
+        if (strlen($digits) === 10 && $digits[0] === '0') {
+            $digits = '38' . $digits;
+        } elseif (strlen($digits) === 11 && str_starts_with($digits, '80')) {
+            $digits = '3' . $digits;
+        }
+
+        return strlen($digits) >= 11 && strlen($digits) <= 13 ? $digits : null;
+    }
 }
