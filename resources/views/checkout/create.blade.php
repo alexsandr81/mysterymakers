@@ -80,7 +80,7 @@
             </label>
             <label>{{ __('shop.up_index') }}
                 <input type="text" name="up_index" value="{{ old('up_index') }}" inputmode="numeric" maxlength="5" pattern="\d{5}" placeholder="01001">
-                <span class="muted">{{ __('shop.up_index_hint') }} <a href="https://ukrposhta.ua/ua/vidshukati-viddilennya" target="_blank" rel="noopener">ukrposhta.ua</a></span>
+                <span class="muted">{{ __('shop.up_index_hint') }} <a href="https://index.ukrposhta.ua/" target="_blank" rel="noopener">index.ukrposhta.ua</a></span>
                 @error('up_index')<span class="err">{{ $message }}</span>@enderror
             </label>
         </fieldset>
