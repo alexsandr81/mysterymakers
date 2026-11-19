@@ -35,7 +35,15 @@ class OrderMail
         }
 
         try {
-            Mail::to($to)->locale($order->locale ?: 'uk')->send($mailable);
+            $pending = Mail::to($to)->locale($order->locale ?: 'uk');
+
+            // Клиент нажимает «Ответить» — письмо уходит на почту магазина из настроек сайта
+            $replyTo = \App\Models\Setting::get('email');
+            if ($replyTo !== '' && filter_var($replyTo, FILTER_VALIDATE_EMAIL)) {
+                $mailable->replyTo($replyTo, \App\Models\Setting::siteName());
+            }
+
+            $pending->send($mailable);
         } catch (\Throwable $e) {
             Log::error('Не удалось отправить письмо по заказу ' . $order->number . ': ' . $e->getMessage());
         }

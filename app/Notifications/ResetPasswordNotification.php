@@ -32,7 +32,14 @@ class ResetPasswordNotification extends Notification
             Log::info('PASSWORD RESET LINK for ' . $notifiable->email . ': ' . $url);
         }
 
-        return (new MailMessage)
+        $message = new MailMessage;
+
+        $replyTo = \App\Models\Setting::get('email');
+        if ($replyTo !== '' && filter_var($replyTo, FILTER_VALIDATE_EMAIL)) {
+            $message->replyTo($replyTo, \App\Models\Setting::siteName());
+        }
+
+        return $message
             ->subject(__('shop.reset_mail_subject'))
             ->view('emails.password-reset', ['url' => $url, 'minutes' => $minutes]);
     }
