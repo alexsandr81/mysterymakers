@@ -164,8 +164,7 @@
     afterSync = function () { setWhEnabled(!!cityRef.value); };
     afterSync();
 
-    cityInput.addEventListener('input', debounce(function () {
-        cityRef.value = ''; whRef.value = ''; whInput.value = ''; setWhEnabled(false);
+    function searchCity() {
         var q = cityInput.value.trim();
         if (q.length < 2) { cityList.hidden = true; return; }
         load(citiesUrl + '?q=' + encodeURIComponent(q), function (items) {
@@ -173,7 +172,16 @@
                 cityInput.value = item.title; cityRef.value = item.ref; setWhEnabled(true); whInput.focus();
             });
         });
+    }
+    cityInput.addEventListener('input', debounce(function () {
+        cityRef.value = ''; whRef.value = ''; whInput.value = ''; setWhEnabled(false);
+        searchCity();
     }, 250));
+    // Список снова открывается, если город ещё не выбран, а поле активно
+    function reopenCity() { if (!cityRef.value) searchCity(); }
+    cityInput.addEventListener('focus', reopenCity);
+    cityInput.addEventListener('click', reopenCity);
+    whInput.addEventListener('click', function () { if (!whRef.value) loadWh(); });
 
     function loadWh() {
         if (!cityRef.value) return;
@@ -184,8 +192,14 @@
     whInput.addEventListener('focus', loadWh);
     whInput.addEventListener('input', debounce(function () { whRef.value = ''; loadWh(); }, 250));
 
+    // Список остаётся открытым, пока не выбран пункт. Закрывается по Esc или клику вне поля и списка.
     [[cityInput, cityList], [whInput, whList]].forEach(function (p) {
-        p[0].addEventListener('blur', function () { setTimeout(function () { p[1].hidden = true; }, 150); });
+        p[0].addEventListener('keydown', function (e) { if (e.key === 'Escape') p[1].hidden = true; });
+    });
+    document.addEventListener('mousedown', function (e) {
+        [[cityInput, cityList], [whInput, whList]].forEach(function (p) {
+            if (e.target !== p[0] && !p[1].contains(e.target)) p[1].hidden = true;
+        });
     });
 
     // Не даём отправить форму, если город/отделение набраны вручную, а не выбраны из списка
