@@ -10,7 +10,8 @@ class Order extends Model
 {
     public const STATUSES = ['new', 'processing', 'shipped', 'done', 'canceled'];
     public const DELIVERY = ['nova_poshta', 'ukrposhta'];
-    public const PAYMENT = ['card', 'cod'];
+    // Оплата картой будет добавлена позже (онлайн-эквайринг); 'card' оставлен в названиях для совместимости
+    public const PAYMENT = ['cod'];
 
     protected $fillable = [
         'number', 'user_id', 'name', 'phone', 'email', 'delivery',
