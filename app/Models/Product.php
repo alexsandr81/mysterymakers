@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 
 class Product extends Model
@@ -48,6 +49,24 @@ class Product extends Model
     public function characteristicValues(): BelongsToMany
     {
         return $this->belongsToMany(CharacteristicValue::class, 'characteristic_value_product');
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    public function approvedReviews(): HasMany
+    {
+        return $this->reviews()->where('status', 'approved');
+    }
+
+    /** Добавляет reviews_count и reviews_avg (только опубликованные отзывы) — для звёзд на карточках */
+    public function scopeWithRating(Builder $query): Builder
+    {
+        return $query
+            ->withCount(['reviews as reviews_count' => fn ($r) => $r->where('status', 'approved')])
+            ->withAvg(['reviews as reviews_avg' => fn ($r) => $r->where('status', 'approved')], 'rating');
     }
 
     public function scopeActive(Builder $query): Builder

@@ -18,7 +18,7 @@ class CatalogController extends Controller
     /** Каталог: все товары, либо категория (/catalog/{slug}), либо поиск (?q=) */
     public function index(Request $request, ?Category $category = null)
     {
-        $query = Product::active()->with('category');
+        $query = Product::active()->withRating()->with('category');
 
         if ($category) {
             $query->whereIn('category_id', $category->selfAndChildrenIds());
@@ -70,9 +70,17 @@ class CatalogController extends Controller
         // Скрытые товары видит только администратор (например, из заказа)
         abort_unless($product->is_active || auth()->user()?->is_admin, 404);
 
+        $reviews = $product->approvedReviews()->with('user')->latest()->get();
+        $myReview = auth()->check()
+            ? $product->reviews()->where('user_id', auth()->id())->first()
+            : null;
+
         return view('catalog.show', [
             'product' => $product->load('category', 'characteristicValues.characteristic'),
-            'related' => Product::active()
+            'reviews' => $reviews,
+            'ratingAvg' => $reviews->avg('rating'),
+            'myReview' => $myReview,
+            'related' => Product::active()->withRating()
                 ->where('category_id', $product->category_id)
                 ->whereKeyNot($product->id)
                 ->inRandomOrder()->take(4)->get(),

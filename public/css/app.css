@@ -403,3 +403,26 @@ input[type="password"]::-ms-reveal, input[type="password"]::-ms-clear { display:
 .admin-head__actions form { margin: 0; }
 .btn--danger { background: #fff; color: var(--sale); border: 1px solid var(--sale); }
 .btn--danger:hover { background: var(--sale); color: #fff; }
+
+/* Отзывы и звёзды */
+.stars { color: #e0a02b; letter-spacing: 1px; white-space: nowrap; }
+.card__rating { font-size: .9rem; }
+.rating-link { display: inline-block; margin: 6px 0; color: var(--text); }
+.reviews { margin-top: 40px; }
+.reviews__layout { display: grid; grid-template-columns: 1fr 360px; gap: 32px; align-items: start; }
+.review { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 12px; }
+.review__head { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.review p { margin: 8px 0 0; }
+.rating-input { display: inline-flex; flex-direction: row-reverse; justify-content: flex-end; gap: 2px; }
+.rating-input input { position: absolute; opacity: 0; pointer-events: none; }
+.rating-input label { font-size: 2rem; line-height: 1; color: #d9cbb8; cursor: pointer; font-weight: 400; display: inline; }
+.rating-input input:checked ~ label, .rating-input label:hover, .rating-input label:hover ~ label { color: #e0a02b; }
+.forgot-link { font-size: .92rem; }
+@media (max-width: 800px) { .reviews__layout { grid-template-columns: 1fr; } }
+
+/* Модерация отзывов */
+.review-admin { margin-bottom: 14px; }
+.review-admin__head { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+.review-admin .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.review-admin .actions form { margin: 0; }
+.badge { display: inline-block; min-width: 20px; padding: 0 6px; border-radius: 10px; background: var(--accent); color: #fff; font-size: .78rem; text-align: center; }

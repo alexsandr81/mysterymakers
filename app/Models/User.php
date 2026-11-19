@@ -24,6 +24,12 @@ class User extends Authenticatable
         ];
     }
 
+    /** Письмо для сброса пароля — на языке сайта */
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new \App\Notifications\ResetPasswordNotification($token));
+    }
+
     private ?array $favoriteIdsCache = null;
 
     public function favorites(): BelongsToMany

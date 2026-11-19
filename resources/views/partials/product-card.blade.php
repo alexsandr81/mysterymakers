@@ -8,6 +8,9 @@
     </a>
     @include('partials.favorite-button', ['product' => $product])
     <a href="{{ route('product', $product) }}" class="card__title">{{ $product->name }}</a>
+    @if(($product->reviews_count ?? 0) > 0)
+        <div class="card__rating">@include('partials.stars', ['value' => $product->reviews_avg]) <span class="muted">({{ $product->reviews_count }})</span></div>
+    @endif
     <div class="card__price">
         @if($product->has_discount)
             <s class="old">{{ Money::format($product->old_price) }}</s>

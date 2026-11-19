@@ -9,6 +9,8 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\PasswordResetController;
+use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\PageController;
 use App\Http\Middleware\EnsureAdmin;
@@ -47,12 +49,20 @@ Route::middleware(SetLocale::class)->group(function () {
         Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
         Route::post('/register', [AuthController::class, 'register']);
         Route::get('/auth/google', [GoogleAuthController::class, 'redirect'])->name('google.redirect');
+
+        // Восстановление пароля
+        Route::get('/forgot-password', [PasswordResetController::class, 'showForgot'])->name('password.request');
+        Route::post('/forgot-password', [PasswordResetController::class, 'sendLink'])->middleware('throttle:5,1')->name('password.email');
+        Route::get('/reset-password/{token}', [PasswordResetController::class, 'showReset'])->name('password.reset');
+        Route::post('/reset-password', [PasswordResetController::class, 'reset'])->middleware('throttle:10,1')->name('password.update');
     });
 
     Route::middleware('auth')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
         Route::get('/account', [AccountController::class, 'index'])->name('account');
         Route::patch('/account', [AccountController::class, 'update'])->name('account.update');
+        Route::patch('/account/password', [AccountController::class, 'password'])->name('account.password');
+        Route::post('/product/{product:slug}/reviews', [ReviewController::class, 'store'])->middleware('throttle:10,1')->name('reviews.store');
         Route::post('/favorites/{product}', [FavoriteController::class, 'toggle'])->name('favorites.toggle');
     });
 
@@ -63,6 +73,9 @@ Route::middleware(SetLocale::class)->group(function () {
         Route::resource('categories', Admin\CategoryController::class)->except('show');
         Route::get('/settings', [Admin\SettingController::class, 'edit'])->name('settings.edit');
         Route::put('/settings', [Admin\SettingController::class, 'update'])->name('settings.update');
+        Route::get('/reviews', [Admin\ReviewController::class, 'index'])->name('reviews.index');
+        Route::patch('/reviews/{review}/status', [Admin\ReviewController::class, 'updateStatus'])->name('reviews.status');
+        Route::delete('/reviews/{review}', [Admin\ReviewController::class, 'destroy'])->name('reviews.destroy');
         Route::resource('users', Admin\UserController::class)->only(['index', 'edit', 'update', 'destroy']);
         Route::resource('pages', Admin\PageController::class)->except('show');
         Route::resource('banners', Admin\BannerController::class)->except('show');

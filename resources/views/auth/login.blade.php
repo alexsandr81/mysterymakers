@@ -15,6 +15,7 @@
             <input type="password" name="password" required>
         </label>
         <label class="check"><input type="checkbox" name="remember" value="1"> {{ __('shop.remember') }}</label>
+        <a href="{{ route('password.request') }}" class="forgot-link">{{ __('shop.forgot_password') }}</a>
         <button type="submit" class="btn btn--accent btn--block">{{ __('shop.login') }}</button>
     </form>
     @if(config('shop.google.client_id') && config('shop.google.client_secret'))

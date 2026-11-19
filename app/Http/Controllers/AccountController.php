@@ -11,7 +11,7 @@ class AccountController extends Controller
         return view('account.index', [
             'user' => $request->user(),
             'orders' => $request->user()->orders()->with('items.product')->latest()->get(),
-            'favorites' => $request->user()->favorites()->active()->latest('favorites.created_at')->get(),
+            'favorites' => $request->user()->favorites()->active()->withRating()->latest('favorites.created_at')->get(),
         ]);
     }
 
@@ -25,5 +25,17 @@ class AccountController extends Controller
         $request->user()->update($data);
 
         return back()->with('status', __('shop.saved'));
+    }
+
+    public function password(Request $request)
+    {
+        $data = $request->validate([
+            'current_password' => ['required', 'current_password'],
+            'password' => ['required', 'string', 'min:8', 'confirmed', 'different:current_password'],
+        ]);
+
+        $request->user()->update(['password' => $data['password']]);
+
+        return back()->with('status', __('shop.password_changed'));
     }
 }

@@ -14,6 +14,8 @@
             <a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">📊 Дашборд</a>
             <a href="{{ route('admin.orders.index') }}" class="{{ request()->routeIs('admin.orders.*') ? 'active' : '' }}">🛒 Заказы</a>
             <a href="{{ route('admin.products.index') }}" class="{{ request()->routeIs('admin.products.*') ? 'active' : '' }}">📦 Товары</a>
+            @php $pendingReviews = \App\Models\Review::where('status', 'pending')->count(); @endphp
+            <a href="{{ route('admin.reviews.index') }}" class="{{ request()->routeIs('admin.reviews.*') ? 'active' : '' }}">💬 Отзывы@if($pendingReviews) <span class="badge">{{ $pendingReviews }}</span>@endif</a>
             <a href="{{ route('admin.users.index') }}" class="{{ request()->routeIs('admin.users.*') ? 'active' : '' }}">👥 Пользователи</a>
             <a href="{{ route('admin.categories.index') }}" class="{{ request()->routeIs('admin.categories.*') ? 'active' : '' }}">📂 Категории</a>
             <a href="{{ route('admin.characteristics.index') }}" class="{{ request()->routeIs('admin.characteristics.*') ? 'active' : '' }}">🏷 Характеристики</a>

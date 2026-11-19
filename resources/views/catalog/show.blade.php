@@ -27,6 +27,9 @@
     <div class="product__info">
         <h1>{{ $product->name }}</h1>
         <div class="muted">{{ __('shop.sku') }}: {{ $product->sku }}</div>
+        @if($reviews->isNotEmpty())
+            <a href="#reviews" class="rating-link">@include('partials.stars', ['value' => $ratingAvg]) {{ number_format($ratingAvg, 1) }} · {{ __('shop.reviews_count', ['count' => $reviews->count()]) }}</a>
+        @endif
         <div class="stock {{ $product->in_stock ? 'stock--yes' : 'stock--no' }}">
             {{ $product->in_stock ? '✓ ' . __('shop.in_stock') : '✕ ' . __('shop.out_of_stock') }}
         </div>
@@ -73,6 +76,57 @@
         @endif
     </div>
 </div>
+
+<section id="reviews" class="reviews">
+    <h2 class="section-title">{{ __('shop.reviews') }}@if($reviews->isNotEmpty()) <small class="muted">({{ $reviews->count() }})</small>@endif</h2>
+
+    <div class="reviews__layout">
+        <div class="reviews__list">
+            @forelse($reviews as $review)
+                <article class="review">
+                    <div class="review__head">
+                        @include('partials.stars', ['value' => $review->rating])
+                        <strong>{{ $review->user?->name }}</strong>
+                        <span class="muted">{{ $review->created_at->format('d.m.Y') }}</span>
+                    </div>
+                    <p>{!! nl2br(e($review->body)) !!}</p>
+                </article>
+            @empty
+                <p class="muted">{{ __('shop.no_reviews') }}</p>
+            @endforelse
+        </div>
+
+        <div class="reviews__form">
+            @auth
+                @if($myReview)
+                    <p class="muted">
+                        @if($myReview->status === 'pending') {{ __('shop.review_pending') }}
+                        @elseif($myReview->status === 'approved') {{ __('shop.review_published') }}
+                        @else {{ __('shop.review_rejected') }}
+                        @endif
+                    </p>
+                @else
+                    <h3>{{ __('shop.write_review') }}</h3>
+                    <form action="{{ route('reviews.store', $product) }}" method="POST" class="form">
+                        @csrf
+                        <div class="rating-input">
+                            @for($i = 5; $i >= 1; $i--)
+                                <input type="radio" name="rating" id="star{{ $i }}" value="{{ $i }}" @checked((int) old('rating', 5) === $i)>
+                                <label for="star{{ $i }}" title="{{ $i }}">★</label>
+                            @endfor
+                        </div>
+                        <label>{{ __('shop.your_review') }}
+                            <textarea name="body" rows="4" required minlength="3" maxlength="2000">{{ old('body') }}</textarea>
+                        </label>
+                        <button type="submit" class="btn btn--brand">{{ __('shop.send_review') }}</button>
+                    </form>
+                @endif
+            @else
+                <p class="muted"><a href="{{ route('login') }}">{{ __('shop.login') }}</a>, {{ __('shop.login_to_review') }}</p>
+            @endauth
+        </div>
+    </div>
+</section>
 
 @if($related->isNotEmpty())
     <h2 class="section-title">{{ __('shop.related') }}</h2>

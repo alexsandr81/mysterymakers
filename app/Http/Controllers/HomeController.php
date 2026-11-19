@@ -13,8 +13,8 @@ class HomeController extends Controller
         return view('home', [
             'banners' => Banner::where('is_active', true)->orderBy('sort')->orderBy('id')->get(),
             'categories' => Category::whereNull('parent_id')->orderBy('sort')->get(),
-            'sale' => Product::active()->whereNotNull('old_price')->whereColumn('old_price', '>', 'price')->latest()->take(4)->get(),
-            'latest' => Product::active()->latest()->take(8)->get(),
+            'sale' => Product::active()->withRating()->whereNotNull('old_price')->whereColumn('old_price', '>', 'price')->latest()->take(4)->get(),
+            'latest' => Product::active()->withRating()->latest()->take(8)->get(),
         ]);
     }
 }
