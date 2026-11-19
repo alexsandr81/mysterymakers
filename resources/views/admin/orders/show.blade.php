@@ -62,11 +62,27 @@
                     <form action="{{ route('admin.orders.ttn.destroy', $order) }}" method="POST" onsubmit="return confirm('Удалить накладную {{ $order->np_ttn }}?')">@csrf @method('DELETE')<button class="btn btn--danger">Удалить ТТН</button></form>
                 </div>
             @elseif($order->np_city_ref && $order->np_warehouse_ref)
-                <form action="{{ route('admin.orders.ttn.store', $order) }}" method="POST" onsubmit="return confirm('Создать накладную в Новой Почте?')">
+                <form action="{{ route('admin.orders.ttn.store', $order) }}" method="POST" class="form" onsubmit="return confirm('Создать накладную в Новой Почте?')">
                     @csrf
+                    <div class="form__cols">
+                        <label>Вес, кг <input type="number" step="0.1" min="0.1" name="weight" value="{{ old('weight', \App\Models\Setting::get('np_weight')) }}" required></label>
+                        <label>Длина, см <input type="number" min="1" name="length" value="{{ old('length', \App\Models\Setting::get('np_length')) }}" required></label>
+                        <label>Ширина, см <input type="number" min="1" name="width" value="{{ old('width', \App\Models\Setting::get('np_width')) }}" required></label>
+                        <label>Высота, см <input type="number" min="1" name="height" value="{{ old('height', \App\Models\Setting::get('np_height')) }}" required></label>
+                    </div>
+                    <label>Кто платит за доставку
+                        <select name="payer">
+                            <option value="Recipient">Получатель</option>
+                            <option value="Sender">Отправитель (мы)</option>
+                        </select>
+                    </label>
                     <button class="btn btn--accent">📦 Создать накладную</button>
                 </form>
-                <p class="muted">Получатель оплачивает при получении{{ $order->payment === 'cod' ? ' ' . \App\Support\Money::format($order->total) . ' грн (наложенный платёж)' : '' }}.</p>
+                @if($order->payment === 'cod')
+                    <p class="muted">Наложенный платёж: получатель заплатит {{ \App\Support\Money::format($order->total) }} грн при получении.</p>
+                @else
+                    <p class="muted">Заказ оплачен заранее — деньги с получателя не берутся, обратная доставка не добавляется.</p>
+                @endif
             @else
                 <p class="muted">Город и отделение не выбраны из списка Новой Почты — накладную можно оформить вручную в кабинете my.novaposhta.ua.</p>
             @endif

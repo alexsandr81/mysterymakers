@@ -47,9 +47,19 @@
     </label>
 
     <h3>Посылка по умолчанию</h3>
+    <p class="muted">Подставляется в каждую накладную, перед созданием можно изменить для конкретного заказа.</p>
     <div class="form__cols">
         <label>Вес, кг
             <input type="number" step="0.1" min="0.1" name="np_weight" value="{{ old('np_weight', $v['np_weight']) }}" required>
+        </label>
+        <label>Длина, см
+            <input type="number" step="1" min="1" name="np_length" value="{{ old('np_length', $v['np_length']) }}" required>
+        </label>
+        <label>Ширина, см
+            <input type="number" step="1" min="1" name="np_width" value="{{ old('np_width', $v['np_width']) }}" required>
+        </label>
+        <label>Высота, см
+            <input type="number" step="1" min="1" name="np_height" value="{{ old('np_height', $v['np_height']) }}" required>
         </label>
         <label>Описание груза
             <input type="text" name="np_description" maxlength="100" value="{{ old('np_description', $v['np_description']) }}" required>

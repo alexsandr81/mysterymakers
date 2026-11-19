@@ -6,12 +6,21 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Setting;
 use App\Services\NovaPoshta;
+use Illuminate\Http\Request;
 
 /** Накладные Новой Почты для заказа: создать, обновить статус, распечатать, удалить */
 class OrderTtnController extends Controller
 {
-    public function store(Order $order)
+    public function store(Request $request, Order $order)
     {
+        $in = $request->validate([
+            'weight' => ['required', 'numeric', 'min:0.1', 'max:1000'],
+            'length' => ['required', 'numeric', 'min:1', 'max:300'],
+            'width' => ['required', 'numeric', 'min:1', 'max:300'],
+            'height' => ['required', 'numeric', 'min:1', 'max:300'],
+            'payer' => ['required', 'in:Recipient,Sender'],
+        ]);
+
         if (!NovaPoshta::enabled()) {
             return back()->withErrors(['ttn' => 'Не указан NOVAPOSHTA_API_KEY в .env.']);
         }
@@ -38,14 +47,18 @@ class OrderTtnController extends Controller
 
         $total = (float) $order->total;
         $props = [
-            'PayerType' => 'Recipient',
+            'PayerType' => $in['payer'],
             'PaymentMethod' => 'Cash',
             'DateTime' => now()->format('d.m.Y'),
             'CargoType' => 'Cargo',
-            'VolumeGeneral' => '0.004',
-            'Weight' => (string) Setting::get('np_weight'),
             'ServiceType' => 'WarehouseWarehouse',
             'SeatsAmount' => '1',
+            'OptionsSeat' => [[
+                'volumetricLength' => (string) $in['length'],
+                'volumetricWidth' => (string) $in['width'],
+                'volumetricHeight' => (string) $in['height'],
+                'weight' => (string) $in['weight'],
+            ]],
             'Description' => Setting::get('np_description'),
             'Cost' => (string) max(1, round($total)),
             'CitySender' => Setting::get('np_city_ref'),
@@ -60,7 +73,7 @@ class OrderTtnController extends Controller
             'RecipientsPhone' => NovaPoshta::phone($order->phone),
         ];
 
-        // Наложенный платёж: получатель оплачивает товар при получении
+        // Обратная доставка денег — только при наложенном платеже (при оплате картой не добавляется)
         if ($order->payment === 'cod') {
             $props['BackwardDeliveryData'] = [[
                 'PayerType' => 'Recipient',

@@ -25,7 +25,7 @@ class Setting extends Model
         // Новая Почта: данные отправителя для накладных
         'np_sender_ref' => '', 'np_contact_ref' => '', 'np_sender_phone' => '',
         'np_city_ref' => '', 'np_city_title' => '', 'np_wh_ref' => '', 'np_wh_title' => '',
-        'np_weight' => '1', 'np_description' => 'Дерев’яні вироби',
+        'np_weight' => '1', 'np_length' => '20', 'np_width' => '20', 'np_height' => '10', 'np_description' => 'Дерев’яні вироби',
     ];
 
     private static ?array $cache = null;
