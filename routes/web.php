@@ -78,6 +78,10 @@ Route::middleware(SetLocale::class)->group(function () {
         Route::get('/', [Admin\DashboardController::class, 'index'])->name('dashboard');
         Route::resource('products', Admin\ProductController::class)->except('show');
         Route::resource('categories', Admin\CategoryController::class)->except('show');
+        Route::get('/backups', [Admin\BackupController::class, 'index'])->name('backups.index');
+        Route::post('/backups', [Admin\BackupController::class, 'store'])->name('backups.store');
+        Route::get('/backups/{file}', [Admin\BackupController::class, 'download'])->name('backups.download');
+        Route::delete('/backups/{file}', [Admin\BackupController::class, 'destroy'])->name('backups.destroy');
         Route::get('/settings', [Admin\SettingController::class, 'edit'])->name('settings.edit');
         Route::put('/settings', [Admin\SettingController::class, 'update'])->name('settings.update');
         Route::get('/reviews', [Admin\ReviewController::class, 'index'])->name('reviews.index');
