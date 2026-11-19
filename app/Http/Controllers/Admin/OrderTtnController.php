@@ -50,8 +50,9 @@ class OrderTtnController extends Controller
         $props = [
             'PayerType' => $in['payer'],
             'PaymentMethod' => 'Cash',
-            'DateTime' => now()->format('d.m.Y'),
+            'DateTime' => now('Europe/Kyiv')->format('d.m.Y'), // дата по Киеву, а не по часовому поясу сервера
             'CargoType' => 'Cargo',
+            'Weight' => (string) $in['weight'],
             'ServiceType' => 'WarehouseWarehouse',
             'SeatsAmount' => '1',
             'OptionsSeat' => [[
