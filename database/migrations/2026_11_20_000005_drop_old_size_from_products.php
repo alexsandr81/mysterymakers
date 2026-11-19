@@ -14,6 +14,15 @@ return new class extends Migration
             return;
         }
 
+        // Старая версия предыдущей миграции уже могла примениться без новых колонок — добавляем их
+        if (!Schema::hasColumn('products', 'size_length')) {
+            Schema::table('products', function (Blueprint $table) {
+                $table->unsignedInteger('size_length')->nullable();
+                $table->unsignedInteger('size_width')->nullable();
+                $table->unsignedInteger('size_height')->nullable();
+            });
+        }
+
         foreach (DB::table('products')->whereNotNull('size')->where('size', '!=', '')->get(['id', 'size']) as $row) {
             preg_match_all('/\d+/', $row->size, $m);
             $n = array_slice($m[0], 0, 3);
