@@ -9,6 +9,7 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\NovaPoshtaController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\LocaleController;
@@ -30,6 +31,10 @@ Route::middleware(SetLocale::class)->group(function () {
 
     // Статические страницы («Доставка», «Контакты», «О нас»...)
     Route::get('/page/{page:slug}', [PageController::class, 'show'])->name('page');
+
+    // Подсказки Новой Почты (форма заказа)
+    Route::get('/np/cities', [NovaPoshtaController::class, 'cities'])->middleware('throttle:60,1')->name('np.cities');
+    Route::get('/np/warehouses', [NovaPoshtaController::class, 'warehouses'])->middleware('throttle:90,1')->name('np.warehouses');
 
     // Корзина
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');

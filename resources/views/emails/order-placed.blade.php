@@ -35,6 +35,10 @@
     @endif
 </table>
 
+@if($order->payment === 'card')
+    <p style="margin:16px 0 0;padding:12px 16px;background:#fdf3e3;border:1px solid #f0d9b0;border-radius:10px;font-size:14px;">💳 {{ __('mail.card_note') }}</p>
+@endif
+
 @if($order->user_id)
     @include('emails.partials.button', ['url' => route('account'), 'label' => __('mail.my_orders')])
 @endif

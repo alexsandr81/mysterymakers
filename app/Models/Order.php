@@ -9,12 +9,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Order extends Model
 {
     public const STATUSES = ['new', 'processing', 'shipped', 'done', 'canceled'];
-    public const DELIVERY = ['pickup', 'courier', 'post'];
-    public const PAYMENT = ['cash', 'card'];
+    public const DELIVERY = ['nova_poshta', 'ukrposhta'];
+    public const PAYMENT = ['card', 'cod'];
 
     protected $fillable = [
         'number', 'user_id', 'name', 'phone', 'email', 'delivery',
-        'address', 'payment', 'comment', 'total', 'status', 'locale',
+        'address', 'city', 'branch', 'np_city_ref', 'np_warehouse_ref', 'payment', 'comment', 'total', 'status', 'locale',
     ];
 
     public function user(): BelongsTo

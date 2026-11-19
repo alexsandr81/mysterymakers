@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\Product;
+use App\Services\NovaPoshta;
+use Illuminate\Validation\Rule;
 use App\Services\Cart;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -22,6 +24,7 @@ class CheckoutController extends Controller
             'items' => $cart->items(),
             'total' => $cart->total(),
             'user' => auth()->user(),
+            'npEnabled' => NovaPoshta::enabled(),
         ]);
     }
 
@@ -32,10 +35,34 @@ class CheckoutController extends Controller
             'phone' => ['required', 'regex:/^\+?\d{10,12}$/'],
             'email' => ['nullable', 'email', 'max:255'],
             'delivery' => ['required', 'in:' . implode(',', Order::DELIVERY)],
-            'address' => ['required_unless:delivery,pickup', 'nullable', 'string', 'max:255'],
             'payment' => ['required', 'in:' . implode(',', Order::PAYMENT)],
             'comment' => ['nullable', 'string', 'max:1000'],
+            // Новая Почта: город и отделение (если подключён API — только выбранные из списка)
+            'np_city' => ['required_if:delivery,nova_poshta', 'nullable', 'string', 'max:150'],
+            'np_warehouse' => ['required_if:delivery,nova_poshta', 'nullable', 'string', 'max:255'],
+            'np_city_ref' => [Rule::requiredIf(fn () => $request->input('delivery') === 'nova_poshta' && NovaPoshta::enabled()), 'nullable', 'regex:/^[0-9a-f-]{36}$/i'],
+            'np_warehouse_ref' => [Rule::requiredIf(fn () => $request->input('delivery') === 'nova_poshta' && NovaPoshta::enabled()), 'nullable', 'regex:/^[0-9a-f-]{36}$/i'],
+            // Укрпошта: город и индекс отделения
+            'up_city' => ['required_if:delivery,ukrposhta', 'nullable', 'string', 'max:150'],
+            'up_index' => ['required_if:delivery,ukrposhta', 'nullable', 'regex:/^\d{5}$/'],
         ]);
+
+        if ($data['delivery'] === 'nova_poshta') {
+            $delivery = [
+                'city' => $data['np_city'],
+                'branch' => $data['np_warehouse'],
+                'np_city_ref' => $data['np_city_ref'] ?? null,
+                'np_warehouse_ref' => $data['np_warehouse_ref'] ?? null,
+            ];
+        } else {
+            $delivery = [
+                'city' => $data['up_city'],
+                'branch' => $data['up_index'],
+            ];
+        }
+        $delivery['address'] = $delivery['city'] . ', ' . ($data['delivery'] === 'ukrposhta' ? 'індекс ' : '') . $delivery['branch'];
+
+        $data = array_diff_key($data, array_flip(['np_city', 'np_warehouse', 'np_city_ref', 'np_warehouse_ref', 'up_city', 'up_index'])) + $delivery;
 
         $raw = $cart->raw();
         if (!$raw) {
@@ -89,7 +116,7 @@ class CheckoutController extends Controller
         // Письмо клиенту (если почта не настроена или упала — заказ всё равно оформлен)
         \App\Services\OrderMail::placed($order);
 
-        return redirect()->route('checkout.done')->with('order_number', $order->number);
+        return redirect()->route('checkout.done')->with('order_number', $order->number)->with('order_payment', $order->payment);
     }
 
     public function done()
@@ -99,6 +126,6 @@ class CheckoutController extends Controller
             return redirect()->route('home');
         }
 
-        return view('checkout.done', ['number' => $number]);
+        return view('checkout.done', ['number' => $number, 'payment' => session('order_payment')]);
     }
 }
