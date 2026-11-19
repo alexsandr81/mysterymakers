@@ -21,6 +21,8 @@ class SettingController extends Controller
             'site_name' => ['required', 'string', 'max:60'],
             'tagline_uk' => ['nullable', 'string', 'max:120'],
             'tagline_ru' => ['nullable', 'string', 'max:120'],
+            'description_uk' => ['nullable', 'string', 'max:300'],
+            'description_ru' => ['nullable', 'string', 'max:300'],
             'phone' => ['required', 'string', 'max:300'],
             'email' => ['nullable', 'email', 'max:150'],
             'notify_email' => ['nullable', 'email', 'max:150'],

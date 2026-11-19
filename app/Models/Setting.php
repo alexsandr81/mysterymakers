@@ -16,8 +16,10 @@ class Setting extends Model
     /** Значения по умолчанию, пока в админке ничего не сохранено */
     public const DEFAULTS = [
         'site_name' => 'Mystery Makers',
-        'tagline_uk' => 'майстерня дерев’яних подарунків',
-        'tagline_ru' => 'мастерская деревянных подарков',
+        'tagline_uk' => 'майстерня виробів з фанери',
+        'tagline_ru' => 'мастерская изделий из фанеры',
+        'description_uk' => 'Майстерня виробів з фанери та МДФ: коробки, брелоки, чайні будиночки, дитячий посуд та багато іншого. А ще — моделі та вироби з 3D-друку. Створюємо з любов’ю до деталей і доставляємо по всій Україні.',
+        'description_ru' => 'Мастерская изделий из фанеры и МДФ: коробки, брелки, чайные домики, детская посуда и многое другое. А ещё — модели и изделия с 3D-печати. Создаём с любовью к деталям и доставляем по всей Украине.',
         'phone' => '+380 00 000 00 00', // можно несколько, каждый с новой строки
         'email' => '',
         'notify_email' => '', // куда присылать уведомления о новых заказах (если пусто — на email магазина)
@@ -63,6 +65,15 @@ class Setting extends Model
     {
         $primary = app()->getLocale() === 'ru' ? 'tagline_ru' : 'tagline_uk';
         $other = $primary === 'tagline_ru' ? 'tagline_uk' : 'tagline_ru';
+
+        return self::get($primary) ?: self::get($other);
+    }
+
+    /** Описание магазина на языке сайта (для главной и поисковиков) */
+    public static function description(): string
+    {
+        $primary = app()->getLocale() === 'ru' ? 'description_ru' : 'description_uk';
+        $other = $primary === 'description_ru' ? 'description_uk' : 'description_ru';
 
         return self::get($primary) ?: self::get($other);
     }

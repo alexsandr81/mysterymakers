@@ -491,3 +491,5 @@ a.stat:hover { border-color: var(--accent); }
 .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin: 16px 0 24px; }
 .rowline { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px dashed var(--line); }
 .rowline:last-child { border-bottom: 0; }
+
+.hero__text { max-width: 640px; margin: 0 auto 18px; opacity: .9; line-height: 1.55; }

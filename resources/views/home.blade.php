@@ -69,6 +69,7 @@
 <section class="hero">
     <h1>{{ \App\Models\Setting::siteName() }}</h1>
     <p>{{ \App\Models\Setting::tagline() }}</p>
+    <p class="hero__text">{{ \App\Models\Setting::description() }}</p>
     <a href="{{ route('catalog') }}" class="btn btn--accent btn--lg">{{ __('shop.catalog') }}</a>
 </section>
 @endif

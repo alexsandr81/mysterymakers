@@ -22,6 +22,14 @@
         </label>
     </div>
 
+    <label>Описание магазина (укр.)
+        <textarea name="description_uk" rows="3" maxlength="300">{{ old('description_uk', $values['description_uk']) }}</textarea>
+    </label>
+    <label>Описание магазина (рус.)
+        <textarea name="description_ru" rows="3" maxlength="300">{{ old('description_ru', $values['description_ru']) }}</textarea>
+        <span class="muted">Показывается на главной под названием и в поисковиках (до 300 символов).</span>
+    </label>
+
     <h3>Контакты</h3>
     <p class="muted">Показываются в подвале сайта и в письмах клиентам.</p>
     <label>Телефоны (каждый с новой строки, до 5)
