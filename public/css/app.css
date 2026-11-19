@@ -426,3 +426,11 @@ input[type="password"]::-ms-reveal, input[type="password"]::-ms-clear { display:
 .review-admin .actions { display: flex; gap: 10px; flex-wrap: wrap; }
 .review-admin .actions form { margin: 0; }
 .badge { display: inline-block; min-width: 20px; padding: 0 6px; border-radius: 10px; background: var(--accent); color: #fff; font-size: .78rem; text-align: center; }
+
+/* Смена пароля в профиле: раскрывается по ссылке */
+.pw-change { margin-top: 16px; }
+.pw-change summary { cursor: pointer; color: var(--brand); font-weight: 500; list-style: none; display: inline-block; }
+.pw-change summary::-webkit-details-marker { display: none; }
+.pw-change summary::before { content: "🔒 "; }
+.pw-change summary:hover { text-decoration: underline; color: var(--brand-dark); }
+.pw-change[open] summary { margin-bottom: 12px; }

@@ -25,26 +25,26 @@
             </label>
             <button type="submit" class="btn btn--brand">{{ __('shop.save') }}</button>
         </form>
-    </section>
 
-    <section>
-        <h3>{{ __('shop.change_password') }}</h3>
-        @if($user->google_id)<p class="muted">{{ __('shop.google_password_hint') }}</p>@endif
-        <form action="{{ route('account.password') }}" method="POST" class="form">
-            @csrf @method('PATCH')
-            <label>{{ __('shop.current_password') }}
-                <input type="password" name="current_password" required autocomplete="current-password">
-                @error('current_password')<span class="err">{{ $message }}</span>@enderror
-            </label>
-            <label>{{ __('shop.new_password') }}
-                <input type="password" name="password" required minlength="8" autocomplete="new-password">
-                @error('password')<span class="err">{{ $message }}</span>@enderror
-            </label>
-            <label>{{ __('shop.password_confirm') }}
-                <input type="password" name="password_confirmation" required minlength="8" autocomplete="new-password">
-            </label>
-            <button type="submit" class="btn btn--brand">{{ __('shop.save') }}</button>
-        </form>
+        <details class="pw-change" @if($errors->has('current_password') || $errors->has('password')) open @endif>
+            <summary>{{ __('shop.change_password') }}</summary>
+            @if($user->google_id)<p class="muted">{{ __('shop.google_password_hint') }}</p>@endif
+            <form action="{{ route('account.password') }}" method="POST" class="form">
+                @csrf @method('PATCH')
+                <label>{{ __('shop.current_password') }}
+                    <input type="password" name="current_password" required autocomplete="current-password">
+                    @error('current_password')<span class="err">{{ $message }}</span>@enderror
+                </label>
+                <label>{{ __('shop.new_password') }}
+                    <input type="password" name="password" required minlength="8" autocomplete="new-password">
+                    @error('password')<span class="err">{{ $message }}</span>@enderror
+                </label>
+                <label>{{ __('shop.password_confirm') }}
+                    <input type="password" name="password_confirmation" required minlength="8" autocomplete="new-password">
+                </label>
+                <button type="submit" class="btn btn--brand">{{ __('shop.save') }}</button>
+            </form>
+        </details>
     </section>
 
     <section id="favorites" class="account__wide">
