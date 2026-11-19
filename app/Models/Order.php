@@ -15,7 +15,7 @@ class Order extends Model
 
     protected $fillable = [
         'number', 'user_id', 'name', 'phone', 'email', 'delivery',
-        'address', 'city', 'branch', 'np_city_ref', 'np_warehouse_ref', 'payment', 'comment', 'total', 'status', 'locale',
+        'address', 'city', 'branch', 'np_city_ref', 'np_warehouse_ref', 'payment', 'comment', 'total', 'status', 'locale', 'np_ttn', 'np_ttn_ref', 'np_status',
     ];
 
     public function user(): BelongsTo

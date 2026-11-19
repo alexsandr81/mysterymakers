@@ -22,6 +22,10 @@ class Setting extends Model
         'email' => '',
         'notify_email' => '', // куда присылать уведомления о новых заказах (если пусто — на email магазина)
         'address' => '',
+        // Новая Почта: данные отправителя для накладных
+        'np_sender_ref' => '', 'np_contact_ref' => '', 'np_sender_phone' => '',
+        'np_city_ref' => '', 'np_city_title' => '', 'np_wh_ref' => '', 'np_wh_title' => '',
+        'np_weight' => '1', 'np_description' => 'Дерев’яні вироби',
     ];
 
     private static ?array $cache = null;

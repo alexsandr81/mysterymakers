@@ -50,6 +50,27 @@
             <button class="btn btn--brand">Сохранить</button>
         </form>
         <p class="muted">Отмена заказа возвращает товары на склад.</p>
+
+        @if($order->delivery === 'nova_poshta')
+            <h3>Накладная Новой Почты</h3>
+            @if($order->np_ttn)
+                <p><strong>{{ $order->np_ttn }}</strong></p>
+                <p class="muted">{{ $order->np_status }}</p>
+                <div class="inline-form">
+                    <a class="btn" href="{{ route('admin.orders.ttn.print', $order) }}" target="_blank">🖨 Печать</a>
+                    <form action="{{ route('admin.orders.ttn.refresh', $order) }}" method="POST">@csrf<button class="btn">↻ Статус</button></form>
+                    <form action="{{ route('admin.orders.ttn.destroy', $order) }}" method="POST" onsubmit="return confirm('Удалить накладную {{ $order->np_ttn }}?')">@csrf @method('DELETE')<button class="btn btn--danger">Удалить ТТН</button></form>
+                </div>
+            @elseif($order->np_city_ref && $order->np_warehouse_ref)
+                <form action="{{ route('admin.orders.ttn.store', $order) }}" method="POST" onsubmit="return confirm('Создать накладную в Новой Почте?')">
+                    @csrf
+                    <button class="btn btn--accent">📦 Создать накладную</button>
+                </form>
+                <p class="muted">Получатель оплачивает при получении{{ $order->payment === 'cod' ? ' ' . \App\Support\Money::format($order->total) . ' грн (наложенный платёж)' : '' }}.</p>
+            @else
+                <p class="muted">Город и отделение не выбраны из списка Новой Почты — накладную можно оформить вручную в кабинете my.novaposhta.ua.</p>
+            @endif
+        @endif
     </section>
 </div>
 

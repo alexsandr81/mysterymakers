@@ -22,6 +22,7 @@
             <a href="{{ route('admin.banners.index') }}" class="{{ request()->routeIs('admin.banners.*') ? 'active' : '' }}">🖼 Баннеры</a>
             <a href="{{ route('admin.pages.index') }}" class="{{ request()->routeIs('admin.pages.*') ? 'active' : '' }}">📄 Страницы</a>
             <a href="{{ route('admin.settings.edit') }}" class="{{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">⚙ Настройки</a>
+            <a href="{{ route('admin.novaposhta.edit') }}" class="{{ request()->routeIs('admin.novaposhta.*') ? 'active' : '' }}">📦 Новая Почта</a>
             <a href="{{ route('admin.backups.index') }}" class="{{ request()->routeIs('admin.backups.*') ? 'active' : '' }}">💾 Копии</a>
             <a href="{{ route('home') }}">↩ На сайт</a>
         </nav>

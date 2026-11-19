@@ -82,6 +82,12 @@ Route::middleware(SetLocale::class)->group(function () {
         Route::post('/backups', [Admin\BackupController::class, 'store'])->name('backups.store');
         Route::get('/backups/{file}', [Admin\BackupController::class, 'download'])->name('backups.download');
         Route::delete('/backups/{file}', [Admin\BackupController::class, 'destroy'])->name('backups.destroy');
+        Route::get('/novaposhta', [Admin\NovaPoshtaController::class, 'edit'])->name('novaposhta.edit');
+        Route::put('/novaposhta', [Admin\NovaPoshtaController::class, 'update'])->name('novaposhta.update');
+        Route::post('/orders/{order}/ttn', [Admin\OrderTtnController::class, 'store'])->name('orders.ttn.store');
+        Route::post('/orders/{order}/ttn/refresh', [Admin\OrderTtnController::class, 'refresh'])->name('orders.ttn.refresh');
+        Route::get('/orders/{order}/ttn/print', [Admin\OrderTtnController::class, 'print'])->name('orders.ttn.print');
+        Route::delete('/orders/{order}/ttn', [Admin\OrderTtnController::class, 'destroy'])->name('orders.ttn.destroy');
         Route::get('/settings', [Admin\SettingController::class, 'edit'])->name('settings.edit');
         Route::put('/settings', [Admin\SettingController::class, 'update'])->name('settings.update');
         Route::get('/reviews', [Admin\ReviewController::class, 'index'])->name('reviews.index');
