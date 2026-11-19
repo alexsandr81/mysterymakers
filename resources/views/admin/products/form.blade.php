@@ -50,6 +50,11 @@
         </label>
     </div>
 
+    <label>Размер изделия
+        <input type="text" name="size" maxlength="100" value="{{ old('size', $product->size) }}" placeholder="Например: 120×80×50 мм">
+        <span class="muted">Длина × ширина × высота. Показывается в характеристиках на странице товара.</span>
+    </label>
+
     <div class="form__cols form__cols--4">
         <label>Остаток
             <input type="number" min="0" name="stock" value="{{ old('stock', $product->stock) }}" required>
