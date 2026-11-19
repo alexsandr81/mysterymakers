@@ -8,15 +8,20 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('products', function (Blueprint $table) {
-            $table->string('size', 100)->nullable(); // размер изделия, например «120×80×50 мм»
-        });
+        // Размер изделия в миллиметрах: длина, ширина, высота
+        if (!Schema::hasColumn('products', 'size_length')) {
+            Schema::table('products', function (Blueprint $table) {
+                $table->unsignedInteger('size_length')->nullable();
+                $table->unsignedInteger('size_width')->nullable();
+                $table->unsignedInteger('size_height')->nullable();
+            });
+        }
     }
 
     public function down(): void
     {
         Schema::table('products', function (Blueprint $table) {
-            $table->dropColumn('size');
+            $table->dropColumn(['size_length', 'size_width', 'size_height']);
         });
     }
 };

@@ -91,11 +91,11 @@
                 ->groupBy('characteristic_id')
                 ->sortBy(fn ($values) => $values->first()->characteristic->sort);
         @endphp
-        @if($specs->isNotEmpty() || $product->size)
+        @if($specs->isNotEmpty() || $product->size_text)
             <h3>{{ __('shop.specs') }}</h3>
             <table class="specs">
-                @if($product->size)
-                    <tr><th>{{ __('shop.size') }}</th><td>{{ $product->size }}</td></tr>
+                @if($product->size_text)
+                    <tr><th>{{ __('shop.size') }}</th><td>{{ $product->size_text }}</td></tr>
                 @endif
                 @foreach($specs as $values)
                     <tr>

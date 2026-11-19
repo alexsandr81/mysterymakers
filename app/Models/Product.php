@@ -17,7 +17,7 @@ class Product extends Model
     protected $fillable = [
         'category_id', 'sku', 'slug', 'name_uk', 'name_ru',
         'description_uk', 'description_ru', 'price', 'old_price',
-        'stock', 'is_active', 'images', 'size',
+        'stock', 'is_active', 'images', 'size_length', 'size_width', 'size_height',
     ];
 
     protected function casts(): array
@@ -82,6 +82,14 @@ class Product extends Model
             ->all();
 
         return $urls ?: [asset('img/placeholder.svg')];
+    }
+
+    /** «120 × 80 × 50 мм» — размеры в миллиметрах, только заполненные; пусто, если ничего не указано */
+    public function getSizeTextAttribute(): string
+    {
+        $parts = array_filter([$this->size_length, $this->size_width, $this->size_height]);
+
+        return $parts ? implode(' × ', $parts) . ' ' . __('shop.mm') : '';
     }
 
     public function getMainImageAttribute(): string

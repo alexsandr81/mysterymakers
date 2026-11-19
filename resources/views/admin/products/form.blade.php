@@ -50,10 +50,13 @@
         </label>
     </div>
 
-    <label>Размер изделия
-        <input type="text" name="size" maxlength="100" value="{{ old('size', $product->size) }}" placeholder="Например: 120×80×50 мм">
-        <span class="muted">Длина × ширина × высота. Показывается в характеристиках на странице товара.</span>
-    </label>
+    <h3>Размер изделия, мм</h3>
+    <div class="form__cols form__cols--4">
+        <label>Длина <input type="number" min="1" name="size_length" value="{{ old('size_length', $product->size_length) }}" placeholder="мм"></label>
+        <label>Ширина <input type="number" min="1" name="size_width" value="{{ old('size_width', $product->size_width) }}" placeholder="мм"></label>
+        <label>Высота <input type="number" min="1" name="size_height" value="{{ old('size_height', $product->size_height) }}" placeholder="мм"></label>
+    </div>
+    <p class="muted">Только цифры — «мм» подставится автоматически. Можно заполнить не все поля (например, только диаметр в «Длине»).</p>
 
     <div class="form__cols form__cols--4">
         <label>Остаток
