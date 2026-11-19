@@ -9,6 +9,7 @@ class PageController extends Controller
     public function show(Page $page)
     {
         abort_unless($page->is_published, 404);
+        $page->load('sections');
 
         return view('pages.show', ['page' => $page]);
     }

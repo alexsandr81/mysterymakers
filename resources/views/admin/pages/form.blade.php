@@ -25,6 +25,7 @@
         <span class="muted">Страница будет доступна по адресу /page/<b>адрес</b></span>
     </label>
 
+    <h3>Основной текст страницы <small class="muted">(необязательно)</small></h3>
     <div class="form__cols">
         <label>Текст (укр.)
             <textarea name="body_uk" rows="12">{{ old('body_uk', $page->body_uk) }}</textarea>
@@ -34,6 +35,25 @@
         </label>
     </div>
     <p class="muted">Переводы строк сохраняются как есть. Если текст на одном языке пустой, показывается другой.</p>
+
+    <h3>Разделы страницы</h3>
+    <p class="muted">Каждый раздел показывается на странице отдельным блоком с выделенным жирным заголовком (например, «График работы», «Email», «Адрес»).</p>
+
+    @php
+        $sectionRows = old('sections') ?? $page->sections->map(fn ($s) => [
+            'title_uk' => $s->title_uk, 'title_ru' => $s->title_ru, 'body_uk' => $s->body_uk, 'body_ru' => $s->body_ru,
+        ])->all();
+    @endphp
+    <div id="sections">
+        @foreach($sectionRows as $i => $row)
+            @include('admin.pages.section-row', ['i' => $i, 'row' => $row])
+        @endforeach
+    </div>
+    <div><button type="button" class="btn" id="add-section">+ Добавить раздел</button></div>
+
+    <template id="section-template">
+        @include('admin.pages.section-row', ['i' => '__INDEX__', 'row' => []])
+    </template>
 
     <div class="form__cols form__cols--4">
         <label>Порядок
@@ -52,4 +72,21 @@
         <a href="{{ route('admin.pages.index') }}" class="btn">Отмена</a>
     </div>
 </form>
+
+<script>
+(function () {
+    var box = document.getElementById('sections');
+    var tpl = document.getElementById('section-template').innerHTML;
+    var next = box.children.length ? 1000 : 0; // индексы новых строк не пересекаются со старыми
+    document.getElementById('add-section').addEventListener('click', function () {
+        var wrap = document.createElement('div');
+        wrap.innerHTML = tpl.replace(/__INDEX__/g, next++);
+        box.appendChild(wrap.firstElementChild);
+    });
+    box.addEventListener('click', function (e) {
+        var btn = e.target.closest('[data-remove-section]');
+        if (btn) btn.closest('.section-edit').remove();
+    });
+})();
+</script>
 @endsection

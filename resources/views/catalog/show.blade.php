@@ -7,14 +7,16 @@
 
 @section('content')
 <nav class="crumbs">
-    <a href="{{ route('home') }}">{{ __('shop.brand') }}</a> /
+    <a href="{{ route('home') }}">{{ \App\Models\Setting::siteName() }}</a> /
     <a href="{{ route('catalog') }}">{{ __('shop.catalog') }}</a> /
     <a href="{{ route('catalog.category', $product->category) }}">{{ $product->category->name }}</a>
 </nav>
 
 <div class="product">
     <div class="gallery">
-        <img id="main-image" class="gallery__main" src="{{ $product->main_image }}" alt="{{ $product->name }}">
+        <div class="zoom" id="zoom-box">
+            <img id="main-image" class="gallery__main" src="{{ $product->main_image }}" alt="{{ $product->name }}">
+        </div>
         @if(count($product->image_urls) > 1)
             <div class="gallery__thumbs">
                 @foreach($product->image_urls as $url)
@@ -136,4 +138,18 @@
         @endforeach
     </div>
 @endif
+<script>
+(function () {
+    // Увеличение фото при наведении: картинка увеличивается и «следит» за курсором (только там, где есть мышь)
+    var box = document.getElementById('zoom-box');
+    var img = document.getElementById('main-image');
+    if (!box || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+    box.addEventListener('mousemove', function (e) {
+        var r = box.getBoundingClientRect();
+        img.style.transformOrigin = ((e.clientX - r.left) / r.width * 100) + '% ' + ((e.clientY - r.top) / r.height * 100) + '%';
+        img.style.transform = 'scale(2.2)';
+    });
+    box.addEventListener('mouseleave', function () { img.style.transform = 'scale(1)'; });
+})();
+</script>
 @endsection

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Concerns\Localized;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Page extends Model
 {
@@ -20,6 +21,11 @@ class Page extends Model
             'is_published' => 'boolean',
             'show_in_footer' => 'boolean',
         ];
+    }
+
+    public function sections(): HasMany
+    {
+        return $this->hasMany(PageSection::class)->orderBy('sort')->orderBy('id');
     }
 
     public function getTitleAttribute(): ?string

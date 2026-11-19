@@ -39,14 +39,11 @@
 
         <h3>{{ __('shop.delivery_method') }}</h3>
         @php $deliv = old('delivery', 'nova_poshta'); @endphp
-        <div class="choice-list">
+        <select name="delivery" id="delivery-select" class="select">
             @foreach(\App\Models\Order::DELIVERY as $key)
-                <label class="choice">
-                    <input type="radio" name="delivery" value="{{ $key }}" @checked($deliv === $key)>
-                    <span>{{ __('shop.delivery_types.' . $key) }}</span>
-                </label>
+                <option value="{{ $key }}" @selected($deliv === $key)>{{ __('shop.delivery_types.' . $key) }}</option>
             @endforeach
-        </div>
+        </select>
         @error('delivery')<span class="err">{{ $message }}</span>@enderror
 
         {{-- Новая Почта --}}
@@ -121,12 +118,11 @@
 <script>
 (function () {
     // Показываем только поля выбранной службы доставки; скрытые отключаем, чтобы не мешали отправке
-    var radios = document.querySelectorAll('input[name="delivery"]');
+    var deliverySelect = document.getElementById('delivery-select');
     var boxes = document.querySelectorAll('.delivery-box');
     var afterSync = function () {};
     function syncDelivery() {
-        var current = document.querySelector('input[name="delivery"]:checked');
-        current = current ? current.value : 'nova_poshta';
+        var current = deliverySelect.value || 'nova_poshta';
         boxes.forEach(function (box) {
             var on = box.dataset.delivery === current;
             box.hidden = !on;
@@ -137,7 +133,7 @@
         });
         afterSync();
     }
-    radios.forEach(function (r) { r.addEventListener('change', syncDelivery); });
+    deliverySelect.addEventListener('change', syncDelivery);
     syncDelivery();
 
     @if($npEnabled)
@@ -194,8 +190,7 @@
 
     // Не даём отправить форму, если город/отделение набраны вручную, а не выбраны из списка
     document.querySelector('.checkout form').addEventListener('submit', function (e) {
-        var np = document.querySelector('input[name="delivery"]:checked');
-        if (np && np.value === 'nova_poshta' && (!cityRef.value || !whRef.value)) {
+        if (deliverySelect.value === 'nova_poshta' && (!cityRef.value || !whRef.value)) {
             e.preventDefault();
             alert(@json(__('shop.np_pick_from_list')));
         }

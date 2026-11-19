@@ -457,3 +457,21 @@ input[type="password"]::-ms-reveal, input[type="password"]::-ms-clear { display:
 .messenger--wa { background: #25a244; }
 .messenger--tg { background: #2a8bc8; }
 .footer__inner .messenger:hover { color: #fff; filter: brightness(1.12); text-decoration: none; }
+
+/* Выпадающий список */
+.select { width: 100%; padding: 11px 14px; border: 1px solid var(--line); border-radius: 10px; background: #fff; font: inherit; color: inherit; cursor: pointer; }
+.select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* Увеличение фото при наведении */
+.zoom { overflow: hidden; border-radius: var(--radius); cursor: zoom-in; }
+.zoom .gallery__main { display: block; transition: transform .12s ease-out; will-change: transform; border-radius: 0; }
+
+/* Страница с разделами */
+.page-title { margin-bottom: 18px; }
+.info-cards { display: grid; gap: 16px; max-width: 860px; }
+.info-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px 24px; }
+.info-card__title { margin: 0 0 10px; font-size: 1.15rem; font-weight: 800; color: var(--brand-dark, #3a2a1c); }
+
+/* Редактор разделов страницы в админке */
+.section-edit { border: 1px solid var(--line); border-radius: 10px; padding: 14px; background: #fbf7f1; margin-bottom: 12px; }
+.section-edit__head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }

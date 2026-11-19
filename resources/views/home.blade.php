@@ -67,8 +67,8 @@
 @endif
 @else
 <section class="hero">
-    <h1>{{ __('shop.brand') }}</h1>
-    <p>{{ __('shop.tagline') }}</p>
+    <h1>{{ \App\Models\Setting::siteName() }}</h1>
+    <p>{{ \App\Models\Setting::tagline() }}</p>
     <a href="{{ route('catalog') }}" class="btn btn--accent btn--lg">{{ __('shop.catalog') }}</a>
 </section>
 @endif

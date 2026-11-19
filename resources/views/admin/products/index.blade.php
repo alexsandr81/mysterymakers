@@ -21,8 +21,8 @@
     @foreach($products as $p)
         <tr>
             <td class="thumb"><img src="{{ $p->main_image }}" alt=""></td>
-            <td>{{ $p->name_ru }}</td>
-            <td>{{ $p->sku }}</td>
+            <td><a href="{{ route('product', $p) }}" target="_blank" title="Открыть страницу товара на сайте">{{ $p->name_ru }}</a></td>
+            <td><a href="{{ route('product', $p) }}" target="_blank" title="Открыть страницу товара на сайте">{{ $p->sku }}</a></td>
             <td>{{ $p->category->name_ru }}</td>
             <td>{{ Money::format($p->price) }}</td>
             <td class="{{ $p->stock < 5 ? 'text-warn' : '' }}">{{ $p->stock }}</td>

@@ -127,7 +127,7 @@ class ProductController extends Controller
     {
         $paths = [];
         foreach ($request->file('images', []) as $file) {
-            $paths[] = $file->store('products', 'public');
+            $paths[] = \App\Support\ImageStore::store($file, 'products', 1600);
         }
 
         return array_slice($paths, 0, 5);

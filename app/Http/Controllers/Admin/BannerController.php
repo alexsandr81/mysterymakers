@@ -31,7 +31,7 @@ class BannerController extends Controller
 
         foreach (array_values($request->file('images')) as $i => $file) {
             Banner::create($data + [
-                'image' => $file->store('banners', 'public'),
+                'image' => \App\Support\ImageStore::store($file, 'banners', 1920),
             ]);
         }
 
@@ -52,7 +52,7 @@ class BannerController extends Controller
 
         if ($request->hasFile('image')) {
             Storage::disk('public')->delete($banner->image);
-            $data['image'] = $request->file('image')->store('banners', 'public');
+            $data['image'] = \App\Support\ImageStore::store($request->file('image'), 'banners', 1920);
         }
 
         $banner->update($data);

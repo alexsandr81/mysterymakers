@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Schema;
 
-/** Настройки сайта (контакты в подвале и т. п.), редактируются в админке. */
+/** Настройки сайта (название, контакты и т. п.), редактируются в админке. */
 class Setting extends Model
 {
     protected $primaryKey = 'key';
@@ -15,7 +15,10 @@ class Setting extends Model
 
     /** Значения по умолчанию, пока в админке ничего не сохранено */
     public const DEFAULTS = [
-        'phone' => '+380 00 000 00 00',
+        'site_name' => 'Mystery Makers',
+        'tagline_uk' => 'майстерня дерев’яних подарунків',
+        'tagline_ru' => 'мастерская деревянных подарков',
+        'phone' => '+380 00 000 00 00', // можно несколько, каждый с новой строки
         'email' => '',
         'address' => '',
     ];
@@ -44,13 +47,36 @@ class Setting extends Model
         self::$cache = null;
     }
 
+    /** Название магазина: «Mystery Makers» */
+    public static function siteName(): string
+    {
+        return self::get('site_name');
+    }
+
+    /** Подпись под названием на языке сайта: «мастерская деревянных подарков» */
+    public static function tagline(): string
+    {
+        $primary = app()->getLocale() === 'ru' ? 'tagline_ru' : 'tagline_uk';
+        $other = $primary === 'tagline_ru' ? 'tagline_uk' : 'tagline_ru';
+
+        return self::get($primary) ?: self::get($other);
+    }
+
+    /** Список телефонов (до 5): каждый телефон — отдельная строка в настройках */
+    public static function phones(): array
+    {
+        $lines = preg_split('/\R+/u', self::get('phone')) ?: [];
+
+        return array_slice(array_values(array_filter(array_map('trim', $lines))), 0, 5);
+    }
+
     /**
      * Телефон в международном виде только из цифр: «066 421 94 97» -> «380664219497».
      * null, если из строки нельзя получить номер (тогда ссылки не показываются).
      */
-    public static function phoneDigits(): ?string
+    public static function digits(string $phone): ?string
     {
-        $digits = preg_replace('/\D+/', '', self::get('phone'));
+        $digits = preg_replace('/\D+/', '', $phone);
 
         if (strlen($digits) === 10 && $digits[0] === '0') {
             $digits = '38' . $digits;
