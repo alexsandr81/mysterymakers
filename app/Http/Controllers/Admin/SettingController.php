@@ -23,6 +23,7 @@ class SettingController extends Controller
             'tagline_ru' => ['nullable', 'string', 'max:120'],
             'phone' => ['required', 'string', 'max:300'],
             'email' => ['nullable', 'email', 'max:150'],
+            'notify_email' => ['nullable', 'email', 'max:150'],
             'address' => ['nullable', 'string', 'max:255'],
         ]);
 

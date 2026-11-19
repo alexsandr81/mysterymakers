@@ -32,6 +32,10 @@
     <label>Email
         <input type="email" name="email" value="{{ old('email', $values['email']) }}">
     </label>
+    <label>Email для уведомлений о новых заказах
+        <input type="email" name="notify_email" value="{{ old('notify_email', $values['notify_email']) }}">
+        <span class="muted">Сюда приходит письмо при каждом новом заказе. Если пусто — на Email магазина выше.</span>
+    </label>
     <label>Адрес (необязательно)
         <input type="text" name="address" value="{{ old('address', $values['address']) }}">
     </label>

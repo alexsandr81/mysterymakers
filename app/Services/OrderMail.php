@@ -16,7 +16,24 @@ class OrderMail
 {
     public static function placed(Order $order): void
     {
-        self::send($order, new OrderPlaced($order->loadMissing('items.product')));
+        $order->loadMissing('items.product');
+        self::send($order, new OrderPlaced($order));
+        self::notifyOwner($order);
+    }
+
+    /** Уведомление владельцу о новом заказе: на «Email для уведомлений» или, если он пуст, на email магазина */
+    private static function notifyOwner(Order $order): void
+    {
+        $to = \App\Models\Setting::get('notify_email') ?: \App\Models\Setting::get('email');
+        if (!$to || !filter_var($to, FILTER_VALIDATE_EMAIL)) {
+            return;
+        }
+
+        try {
+            Mail::to($to)->locale('ru')->send(new \App\Mail\NewOrderAdmin($order));
+        } catch (\Throwable $e) {
+            Log::error('Не удалось отправить уведомление о заказе ' . $order->number . ': ' . $e->getMessage());
+        }
     }
 
     public static function statusChanged(Order $order): void

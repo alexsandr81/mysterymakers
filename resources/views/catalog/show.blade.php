@@ -5,6 +5,37 @@
 @section('title', $product->name)
 @section('description', \Illuminate\Support\Str::limit(strip_tags((string) $product->description), 150))
 
+@section('og_type', 'product')
+@section('og_image', $product->main_image)
+
+@push('head')
+@php
+    $ld = [
+        '@context' => 'https://schema.org',
+        '@type' => 'Product',
+        'name' => $product->name,
+        'sku' => $product->sku,
+        'image' => $product->image_urls,
+        'description' => \Illuminate\Support\Str::limit(strip_tags((string) $product->description), 300),
+        'offers' => [
+            '@type' => 'Offer',
+            'url' => route('product', $product),
+            'priceCurrency' => 'UAH',
+            'price' => number_format((float) $product->price, 2, '.', ''),
+            'availability' => $product->in_stock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+        ],
+    ];
+    if ($reviews->isNotEmpty()) {
+        $ld['aggregateRating'] = [
+            '@type' => 'AggregateRating',
+            'ratingValue' => round($ratingAvg, 1),
+            'reviewCount' => $reviews->count(),
+        ];
+    }
+@endphp
+<script type="application/ld+json">{!! json_encode($ld, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG) !!}</script>
+@endpush
+
 @section('content')
 <nav class="crumbs">
     <a href="{{ route('home') }}">{{ \App\Models\Setting::siteName() }}</a> /

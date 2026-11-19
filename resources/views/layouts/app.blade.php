@@ -10,6 +10,14 @@
     @endphp
     <title>@yield('title', $siteName) — {{ $siteName }}</title>
     <meta name="description" content="@yield('description', $siteTagline)">
+    <link rel="canonical" href="{{ url()->current() }}">
+    <meta property="og:site_name" content="{{ $siteName }}">
+    <meta property="og:type" content="@yield('og_type', 'website')">
+    <meta property="og:title" content="@yield('title', $siteName)">
+    <meta property="og:description" content="@yield('description', $siteTagline)">
+    <meta property="og:url" content="{{ url()->current() }}">
+    @hasSection('og_image')<meta property="og:image" content="@yield('og_image')">@endif
+    @stack('head')
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
 </head>
 <body>

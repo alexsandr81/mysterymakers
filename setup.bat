@@ -15,7 +15,7 @@ where php >nul 2>nul || (echo PHP не найден. Установите Larago
 if exist shop (echo Папка "shop" уже существует. Удалите её или переименуйте. & pause & exit /b 1)
 
 REM Проверяем, что файлы магазина на месте, ДО скачивания Laravel
-for %%D in (app config database lang public resources routes) do (
+for %%D in (app config database lang public resources routes tests) do (
     if not exist "%%D" (echo Не найдена папка "%%D" рядом со скриптом. Распакуйте проект целиком. & pause & exit /b 1)
 )
 
@@ -23,7 +23,7 @@ echo [1/5] Скачиваю чистый Laravel...
 call composer create-project laravel/laravel shop || (echo Ошибка установки Laravel & pause & exit /b 1)
 
 echo [2/5] Копирую файлы магазина...
-for %%D in (app config database lang public resources routes) do (
+for %%D in (app config database lang public resources routes tests) do (
     xcopy /E /Y /I /Q "%%D" "shop\%%D" >nul || (echo Ошибка копирования %%D & pause & exit /b 1)
 )
 

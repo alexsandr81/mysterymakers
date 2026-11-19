@@ -11,6 +11,7 @@ use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NovaPoshtaController;
 use App\Http\Controllers\PasswordResetController;
+use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\PageController;
@@ -22,6 +23,7 @@ Route::middleware(SetLocale::class)->group(function () {
 
     Route::get('/', [HomeController::class, 'index'])->name('home');
     Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('google.callback');
+    Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
     Route::get('/lang/{locale}', [LocaleController::class, 'switch'])->name('locale');
 
     // Каталог и поиск

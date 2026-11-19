@@ -22,12 +22,12 @@ if not exist "%TARGET%\artisan" (
     exit /b 1
 )
 
-for %%D in (app config database lang public resources routes) do (
+for %%D in (app config database lang public resources routes tests) do (
     if not exist "%%D" (echo Не найдена папка "%%D" рядом со скриптом. & pause & exit /b 1)
 )
 
 echo [1/3] Копирую новые файлы в "%TARGET%"...
-for %%D in (app config database lang public resources routes) do (
+for %%D in (app config database lang public resources routes tests) do (
     xcopy /E /Y /I /Q "%%D" "%TARGET%\%%D" >nul || (echo Ошибка копирования %%D & pause & exit /b 1)
 )
 

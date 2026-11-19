@@ -1,0 +1,13 @@
+User-agent: *
+Disallow: /admin
+Disallow: /cart
+Disallow: /checkout
+Disallow: /account
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /np/
+
+# После переноса на домен добавьте строку (подставьте свой адрес):
+# Sitemap: https://ваш-домен/sitemap.xml
