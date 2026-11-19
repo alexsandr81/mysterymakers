@@ -31,7 +31,8 @@ class CheckoutController extends Controller
     public function store(Request $request, Cart $cart)
     {
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'first_name' => ['required', 'string', 'min:2', 'max:100', "regex:/^[\\p{L}'’\\- ]+$/u"],
+            'last_name' => ['required', 'string', 'min:2', 'max:100', "regex:/^[\\p{L}'’\\- ]+$/u"],
             'phone' => ['required', 'regex:/^\+?\d{10,12}$/'],
             'email' => ['nullable', 'email', 'max:255'],
             'delivery' => ['required', 'in:' . implode(',', Order::DELIVERY)],
@@ -46,6 +47,10 @@ class CheckoutController extends Controller
             'up_city' => ['required_if:delivery,ukrposhta', 'nullable', 'string', 'max:150'],
             'up_index' => ['required_if:delivery,ukrposhta', 'nullable', 'regex:/^\d{5}$/'],
         ]);
+
+        // В заказе хранится полное имя: «Имя Фамилия»
+        $data['name'] = trim($data['first_name']) . ' ' . trim($data['last_name']);
+        unset($data['first_name'], $data['last_name']);
 
         if ($data['delivery'] === 'nova_poshta') {
             $delivery = [

@@ -44,6 +44,8 @@ return [
     ],
     'required_if' => 'Поле «:attribute» обов’язкове для заповнення.',
     'attributes' => [
+        'first_name' => 'Ім’я',
+        'last_name' => 'Прізвище',
         'np_city' => 'Місто',
         'np_warehouse' => 'Відділення',
         'np_city_ref' => 'Місто',

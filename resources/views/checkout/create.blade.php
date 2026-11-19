@@ -14,10 +14,20 @@
         @csrf
         <h3>{{ __('shop.contact_data') }}</h3>
 
-        <label>{{ __('shop.name') }}
-            <input type="text" name="name" value="{{ old('name', $user?->name) }}" required>
-            @error('name')<span class="err">{{ $message }}</span>@enderror
-        </label>
+        @php
+            // Если клиент вошёл в аккаунт, подставляем имя из профиля (первое слово — имя, остальное — фамилия)
+            $parts = preg_split('/\s+/u', trim((string) $user?->name), 2);
+        @endphp
+        <div class="form__cols">
+            <label>{{ __('shop.last_name') }}
+                <input type="text" name="last_name" value="{{ old('last_name', $parts[1] ?? '') }}" required autocomplete="family-name">
+                @error('last_name')<span class="err">{{ $message }}</span>@enderror
+            </label>
+            <label>{{ __('shop.first_name') }}
+                <input type="text" name="first_name" value="{{ old('first_name', $parts[0] ?? '') }}" required autocomplete="given-name">
+                @error('first_name')<span class="err">{{ $message }}</span>@enderror
+            </label>
+        </div>
         <label>{{ __('shop.phone') }}
             <input type="tel" name="phone" value="{{ old('phone', $user?->phone) }}" placeholder="+380501234567" required>
             @error('phone')<span class="err">{{ $message }}</span>@enderror
