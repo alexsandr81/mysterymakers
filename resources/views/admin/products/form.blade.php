@@ -39,7 +39,8 @@
             </select>
         </label>
         <label>Артикул
-            <input type="text" name="sku" value="{{ old('sku', $product->sku) }}" required>
+            <input type="text" name="sku" value="{{ old('sku', $product->sku) }}" placeholder="Автоматически (по категории)">
+            <span class="muted">Оставьте пустым — присвоится следующий номер категории.</span>
         </label>
         <label>Цена, грн
             <input type="number" step="0.01" min="0.01" name="price" value="{{ old('price', $product->price) }}" required>

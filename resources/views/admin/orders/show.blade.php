@@ -64,12 +64,15 @@
             @elseif($order->np_city_ref && $order->np_warehouse_ref)
                 <form action="{{ route('admin.orders.ttn.store', $order) }}" method="POST" class="form" onsubmit="return confirm('Создать накладную в Новой Почте?')">
                     @csrf
+                    <details>
+                    <summary>Вес и габариты: {{ \App\Models\Setting::get('np_weight') }} кг, {{ \App\Models\Setting::get('np_length') }}×{{ \App\Models\Setting::get('np_width') }}×{{ \App\Models\Setting::get('np_height') }} см (изменить)</summary>
                     <div class="form__cols">
                         <label>Вес, кг <input type="number" step="0.1" min="0.1" name="weight" value="{{ old('weight', \App\Models\Setting::get('np_weight')) }}" required></label>
                         <label>Длина, см <input type="number" min="1" name="length" value="{{ old('length', \App\Models\Setting::get('np_length')) }}" required></label>
                         <label>Ширина, см <input type="number" min="1" name="width" value="{{ old('width', \App\Models\Setting::get('np_width')) }}" required></label>
                         <label>Высота, см <input type="number" min="1" name="height" value="{{ old('height', \App\Models\Setting::get('np_height')) }}" required></label>
                     </div>
+                    </details>
                     <label>Кто платит за доставку
                         <select name="payer">
                             <option value="Recipient">Получатель</option>

@@ -11,7 +11,24 @@ class Category extends Model
 {
     use Localized;
 
-    protected $fillable = ['parent_id', 'slug', 'name_uk', 'name_ru', 'sort'];
+    protected $fillable = ['parent_id', 'slug', 'name_uk', 'name_ru', 'sort', 'sku_start'];
+
+    /** Следующий свободный артикул категории: от sku_start и дальше +1 */
+    public function nextSku(): string
+    {
+        $start = (int) ($this->sku_start ?: 1000);
+        $used = Product::pluck('sku')->filter(fn ($s) => ctype_digit((string) $s))->map(fn ($s) => (int) $s)->flip();
+
+        $max = Product::where('category_id', $this->id)->pluck('sku')
+            ->filter(fn ($s) => ctype_digit((string) $s) && (int) $s >= $start)->map(fn ($s) => (int) $s)->max();
+
+        $n = $max ? $max + 1 : $start;
+        while (isset($used[$n])) {
+            $n++;
+        }
+
+        return (string) $n;
+    }
 
     public function getNameAttribute(): ?string
     {

@@ -28,6 +28,7 @@ class CategoryController extends Controller
     {
         $data = $this->validated($request);
         $data['slug'] = $this->uniqueSlug($data['name_uk']);
+        $data['sku_start'] = $data['sku_start'] ?? ((int) Category::max('sku_start') + 1000 ?: 1000);
         Category::create($data);
 
         return redirect()->route('admin.categories.index')->with('status', 'Категория создана');
@@ -65,6 +66,7 @@ class CategoryController extends Controller
             'name_ru' => ['required', 'string', 'max:255'],
             'parent_id' => ['nullable', 'exists:categories,id'],
             'sort' => ['required', 'integer', 'min:0'],
+            'sku_start' => ['nullable', 'integer', 'min:1', 'max:99999999'],
         ]);
     }
 

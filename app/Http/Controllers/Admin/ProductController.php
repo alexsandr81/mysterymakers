@@ -94,7 +94,7 @@ class ProductController extends Controller
     {
         $data = $request->validate([
             'category_id' => ['required', 'exists:categories,id'],
-            'sku' => ['required', 'string', 'max:50', Rule::unique('products', 'sku')->ignore($product)],
+            'sku' => ['nullable', 'string', 'max:50', Rule::unique('products', 'sku')->ignore($product)],
             'name_uk' => ['required', 'string', 'max:255'],
             'name_ru' => ['required', 'string', 'max:255'],
             'description_uk' => ['nullable', 'string'],
@@ -108,6 +108,10 @@ class ProductController extends Controller
         ]);
 
         unset($data['images'], $data['char']);
+        if (empty($data['sku'])) {
+            // Пустой артикул: для нового товара — следующий по категории, при редактировании остаётся прежний
+            $data['sku'] = $product?->sku ?: \App\Models\Category::findOrFail($data['category_id'])->nextSku();
+        }
         $data['is_active'] = $request->boolean('is_active');
 
         return $data;
