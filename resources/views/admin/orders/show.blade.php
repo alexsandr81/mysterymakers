@@ -73,6 +73,12 @@
                         <label>Высота, см <input type="number" min="1" name="height" value="{{ old('height', \App\Models\Setting::get('np_height')) }}" required></label>
                     </div>
                     </details>
+                    @php $np = preg_split('/\s+/u', trim($order->name), 2); @endphp
+                    <div class="form__cols">
+                        <label>Имя получателя <input type="text" name="first_name" value="{{ old('first_name', $np[0] ?? '') }}" required></label>
+                        <label>Фамилия получателя <input type="text" name="last_name" value="{{ old('last_name', $np[1] ?? '') }}" required></label>
+                    </div>
+                    <p class="muted">Новая Почта принимает имя и фамилию только кириллицей. Если клиент написал латиницей — впишите их кириллицей здесь.</p>
                     <label>Кто платит за доставку
                         <select name="payer">
                             <option value="Recipient">Получатель</option>

@@ -48,6 +48,15 @@ class CheckoutController extends Controller
             'up_index' => ['required_if:delivery,ukrposhta', 'nullable', 'regex:/^\d{5}$/'],
         ]);
 
+        // Новая Почта принимает имена только кириллицей — просим клиента сразу
+        if ($data['delivery'] === 'nova_poshta') {
+            foreach (['first_name', 'last_name'] as $f) {
+                if (!preg_match("/^[\p{Cyrillic}'’\- ]+$/u", $data[$f])) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([$f => __('shop.name_cyrillic')]);
+                }
+            }
+        }
+
         // В заказе хранится полное имя: «Имя Фамилия»
         $data['name'] = trim($data['first_name']) . ' ' . trim($data['last_name']);
         unset($data['first_name'], $data['last_name']);

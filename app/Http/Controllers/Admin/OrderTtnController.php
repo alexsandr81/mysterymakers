@@ -19,6 +19,11 @@ class OrderTtnController extends Controller
             'width' => ['required', 'numeric', 'min:1', 'max:300'],
             'height' => ['required', 'numeric', 'min:1', 'max:300'],
             'payer' => ['required', 'in:Recipient,Sender'],
+            'first_name' => ['required', 'string', 'max:60', "regex:/^[\p{Cyrillic}'’\- ]+$/u"],
+            'last_name' => ['required', 'string', 'max:60', "regex:/^[\p{Cyrillic}'’\- ]+$/u"],
+        ], [
+            'first_name.regex' => 'Новая Почта принимает имя получателя только кириллицей (укр./рус.). Впишите имя кириллицей в форме накладной.',
+            'last_name.regex' => 'Новая Почта принимает фамилию получателя только кириллицей (укр./рус.). Впишите фамилию кириллицей в форме накладной.',
         ]);
 
         if (!NovaPoshta::enabled()) {
@@ -36,11 +41,7 @@ class OrderTtnController extends Controller
             }
         }
 
-        $parts = preg_split('/\s+/u', trim($order->name), 2);
-        $first = $parts[0] ?? $order->name;
-        $last = $parts[1] ?? $parts[0];
-
-        $recipient = NovaPoshta::createRecipient($first, $last, $order->phone);
+        $recipient = NovaPoshta::createRecipient(trim($in['first_name']), trim($in['last_name']), $order->phone);
         if (isset($recipient['error'])) {
             return back()->withErrors(['ttn' => 'Получатель: ' . $recipient['error']]);
         }

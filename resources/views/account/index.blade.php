@@ -72,9 +72,12 @@
                 <ul class="order-items">
                     @foreach($order->items as $item)
                         <li>
-                            <img src="{{ $item->image_url }}" alt="">
+                            @if($item->product)<a href="{{ route('product', $item->product) }}"><img src="{{ $item->image_url }}" alt=""></a>@else<img src="{{ $item->image_url }}" alt="">@endif
                             <span>
-                                @if($item->product)<a href="{{ route('product', $item->product) }}">{{ $item->product->name }}</a>@else{{ $item->name }}@endif
+                                @if($item->product)
+                                    <small class="muted">{{ __('shop.sku') }}: <a href="{{ route('product', $item->product) }}">{{ $item->product->sku }}</a></small><br>
+                                    <a href="{{ route('product', $item->product) }}"><strong>{{ $item->product->name }}</strong></a>
+                                @else{{ $item->name }}@endif
                                 × {{ $item->quantity }} — {{ Money::format($item->price * $item->quantity) }}
                             </span>
                         </li>
