@@ -409,8 +409,8 @@ input[type="password"]::-ms-reveal, input[type="password"]::-ms-clear { display:
 .card__rating { font-size: .9rem; }
 .rating-link { display: inline-block; margin: 6px 0; color: var(--text); }
 .reviews { margin-top: 40px; }
-.reviews__layout { display: grid; grid-template-columns: 360px 1fr; gap: 32px; align-items: start; }
-.reviews__form { order: -1; } /* форма отзыва слева, отзывы справа */
+.reviews__layout { display: flex; flex-direction: column; gap: 24px; max-width: 720px; }
+.reviews__form { order: -1; } /* сначала форма отзыва, под ней — сами отзывы */
 .review { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 12px; }
 .review__head { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .review p { margin: 8px 0 0; }
@@ -419,7 +419,7 @@ input[type="password"]::-ms-reveal, input[type="password"]::-ms-clear { display:
 .rating-input label { font-size: 2rem; line-height: 1; color: #d9cbb8; cursor: pointer; font-weight: 400; display: inline; }
 .rating-input input:checked ~ label, .rating-input label:hover, .rating-input label:hover ~ label { color: #e0a02b; }
 .forgot-link { font-size: .92rem; }
-@media (max-width: 800px) { .reviews__layout { grid-template-columns: 1fr; } .reviews__form { order: 0; } }
+
 
 /* Модерация отзывов */
 .review-admin { margin-bottom: 14px; }
