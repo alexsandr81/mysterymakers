@@ -30,9 +30,16 @@ class Setting extends Model
 
         $value = self::$cache[$key] ?? null;
 
-        return ($value === null || $value === '') && $key !== 'address'
-            ? (self::DEFAULTS[$key] ?? '')
-            : (string) $value;
+        if (($value === null || $value === '') && $key !== 'address') {
+            // Пока email не задан в админке, берём адрес отправителя почты из .env (реальный), а не заглушку
+            if ($key === 'email' && config('mail.from.address') && config('mail.from.address') !== 'hello@example.com') {
+                return (string) config('mail.from.address');
+            }
+
+            return self::DEFAULTS[$key] ?? '';
+        }
+
+        return (string) $value;
     }
 
     public static function put(string $key, ?string $value): void

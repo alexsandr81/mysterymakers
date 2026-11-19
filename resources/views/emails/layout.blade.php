@@ -27,7 +27,7 @@
                     $shopEmail = \App\Models\Setting::get('email');
                 @endphp
                 {{ __('mail.questions') }}
-                @if($shopPhone) <strong style="color:#3a2a1c;">{{ $shopPhone }}</strong>@endif
+                @if($shopPhone) <a href="tel:{{ preg_replace('/[^\d+]/', '', $shopPhone) }}" style="color:#3a2a1c;font-weight:bold;text-decoration:none;">{{ $shopPhone }}</a>@endif
                 @if($shopEmail) · <a href="mailto:{{ $shopEmail }}" style="color:#8b5a2b;">{{ $shopEmail }}</a>@endif
                 <br><a href="{{ url('/') }}" style="color:#8b5a2b;">{{ parse_url(url('/'), PHP_URL_HOST) }}</a>
             </td>
