@@ -16,7 +16,7 @@ class Setting extends Model
     /** Значения по умолчанию, пока в админке ничего не сохранено */
     public const DEFAULTS = [
         'phone' => '+380 00 000 00 00',
-        'email' => '', // пусто: берётся адрес отправителя из .env (MAIL_FROM_ADDRESS)
+        'email' => '',
         'address' => '',
     ];
 
@@ -30,17 +30,8 @@ class Setting extends Model
 
         $value = self::$cache[$key] ?? null;
 
-        // Заглушка вида info@mysterymakers.local (могла сохраниться из формы настроек) считается незаполненной
-        if ($key === 'email' && is_string($value) && str_ends_with(strtolower(trim($value)), '.local')) {
-            $value = null;
-        }
-
-        if (($value === null || $value === '') && $key !== 'address') {
-            // Пока email не задан в админке, берём адрес отправителя почты из .env (реальный), а не заглушку
-            if ($key === 'email' && config('mail.from.address') && config('mail.from.address') !== 'hello@example.com') {
-                return (string) config('mail.from.address');
-            }
-
+        // Email и адрес показываются ровно такими, как введены в админке (пусто — не показываются)
+        if ($value === null || $value === '') {
             return self::DEFAULTS[$key] ?? '';
         }
 
