@@ -22,7 +22,9 @@ use Illuminate\Support\Facades\URL;
 
 // За туннелем (ngrok и т. п.) сайт открывается по https. Если APP_URL начинается с https://,
 // все ссылки, стили и картинки строятся с https, иначе браузер блокирует их как «смешанный контент».
-if (str_starts_with((string) config('app.url'), 'https://')) {
+// Локальные заходы (127.0.0.1 / localhost) остаются по http.
+if (str_starts_with((string) config('app.url'), 'https://')
+    && !in_array(request()->getHost(), ['127.0.0.1', 'localhost', '::1'], true)) {
     URL::forceScheme('https');
 }
 
