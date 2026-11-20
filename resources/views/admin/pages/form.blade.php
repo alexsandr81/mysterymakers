@@ -82,11 +82,23 @@
         var wrap = document.createElement('div');
         wrap.innerHTML = tpl.replace(/__INDEX__/g, next++);
         box.appendChild(wrap.firstElementChild);
+        renumber();
     });
+    // Нумерация разделов в порядке, в котором они будут показаны на сайте
+    function renumber() {
+        Array.prototype.forEach.call(box.querySelectorAll('.section-edit'), function (el, i) {
+            el.querySelector('.section-num').textContent = '№ ' + (i + 1);
+        });
+    }
     box.addEventListener('click', function (e) {
-        var btn = e.target.closest('[data-remove-section]');
-        if (btn) btn.closest('.section-edit').remove();
+        var row = e.target.closest('.section-edit');
+        if (!row) return;
+        if (e.target.closest('[data-remove-section]')) { row.remove(); }
+        else if (e.target.closest('[data-move-up]') && row.previousElementSibling) { box.insertBefore(row, row.previousElementSibling); }
+        else if (e.target.closest('[data-move-down]') && row.nextElementSibling) { box.insertBefore(row.nextElementSibling, row); }
+        renumber();
     });
+    renumber();
 })();
 </script>
 @endsection

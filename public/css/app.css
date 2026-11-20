@@ -493,3 +493,7 @@ a.stat:hover { border-color: var(--accent); }
 .rowline:last-child { border-bottom: 0; }
 
 .hero__text { max-width: 640px; margin: 0 auto 18px; opacity: .9; line-height: 1.55; }
+
+.section-edit__tools { display: inline-flex; gap: 8px; align-items: center; }
+.section-edit__head { display: flex; justify-content: space-between; align-items: center; }
+.btn--sm { padding: 2px 10px; font-size: .85rem; }

@@ -1,7 +1,11 @@
 <div class="section-edit">
     <div class="section-edit__head">
-        <strong>Раздел</strong>
-        <button type="button" class="link-btn link-btn--danger" data-remove-section>Удалить раздел</button>
+        <strong>Раздел <span class="section-num"></span></strong>
+        <span class="section-edit__tools">
+            <button type="button" class="btn btn--sm" data-move-up title="Поднять выше">▲</button>
+            <button type="button" class="btn btn--sm" data-move-down title="Опустить ниже">▼</button>
+            <button type="button" class="link-btn link-btn--danger" data-remove-section>Удалить раздел</button>
+        </span>
     </div>
     <div class="form__cols">
         <label>Заголовок (укр.)
