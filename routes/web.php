@@ -18,6 +18,13 @@ use App\Http\Controllers\PageController;
 use App\Http\Middleware\EnsureAdmin;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\URL;
+
+// За туннелем (ngrok и т. п.) сайт открывается по https. Если APP_URL начинается с https://,
+// все ссылки, стили и картинки строятся с https, иначе браузер блокирует их как «смешанный контент».
+if (str_starts_with((string) config('app.url'), 'https://')) {
+    URL::forceScheme('https');
+}
 
 Route::middleware(SetLocale::class)->group(function () {
 
