@@ -19,6 +19,19 @@ class OrderController extends Controller
         return view('admin.orders.index', compact('orders', 'status'));
     }
 
+    /** Для автообновления счётчика и звука: сколько новых заказов и какой заказ последний */
+    public function poll()
+    {
+        $last = Order::latest('id')->first(['id', 'number', 'total']);
+
+        return response()->json([
+            'new' => Order::where('status', 'new')->count(),
+            'last_id' => $last?->id ?? 0,
+            'number' => $last?->number,
+            'total' => $last ? \App\Support\Money::format($last->total) : null,
+        ]);
+    }
+
     public function show(Order $order)
     {
         return view('admin.orders.show', ['order' => $order->load('items.product')]);

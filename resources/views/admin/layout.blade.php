@@ -13,7 +13,7 @@
         <nav>
             <a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">📊 Дашборд</a>
             @php $newOrders = \App\Models\Order::where('status', 'new')->count(); @endphp
-            <a href="{{ route('admin.orders.index') }}" class="{{ request()->routeIs('admin.orders.*') ? 'active' : '' }}">🛒 Заказы@if($newOrders) <span class="badge">{{ $newOrders }}</span>@endif</a>
+            <a href="{{ route('admin.orders.index') }}" class="{{ request()->routeIs('admin.orders.*') ? 'active' : '' }}">🛒 Заказы <span class="badge" id="orders-badge" @if(!$newOrders) hidden @endif>{{ $newOrders }}</span></a>
             <a href="{{ route('admin.products.index') }}" class="{{ request()->routeIs('admin.products.*') ? 'active' : '' }}">📦 Товары</a>
             @php $pendingReviews = \App\Models\Review::where('status', 'pending')->count(); @endphp
             <a href="{{ route('admin.reviews.index') }}" class="{{ request()->routeIs('admin.reviews.*') ? 'active' : '' }}">💬 Отзывы@if($pendingReviews) <span class="badge">{{ $pendingReviews }}</span>@endif</a>
@@ -27,6 +27,7 @@
             <a href="{{ route('admin.backups.index') }}" class="{{ request()->routeIs('admin.backups.*') ? 'active' : '' }}">💾 Копии</a>
             <a href="{{ route('home') }}">↩ На сайт</a>
         </nav>
+        <button type="button" class="link-btn link-btn--light" id="sound-toggle" title="Звук при новом заказе">🔕 Звук выключен</button>
         <form action="{{ route('logout') }}" method="POST">
             @csrf
             <button type="submit" class="link-btn link-btn--light">Выйти</button>
@@ -39,5 +40,63 @@
     </div>
 </div>
 @include('partials.password-toggle')
+<div class="order-toast" id="order-toast" hidden></div>
+<script>
+(function () {
+    var badge = document.getElementById('orders-badge'), btn = document.getElementById('sound-toggle'), toast = document.getElementById('order-toast');
+    var lastId = {{ (int) \App\Models\Order::max('id') }}, baseTitle = document.title, ctx = null;
+    var soundOn = false;
+    try { soundOn = localStorage.getItem('mm_sound') === '1'; } catch (e) {}
+
+    function paintBtn() { btn.textContent = soundOn ? '🔔 Звук включён' : '🔕 Звук выключен'; }
+    function audio() {
+        if (!ctx) { var C = window.AudioContext || window.webkitAudioContext; if (C) ctx = new C(); }
+        if (ctx && ctx.state === 'suspended') ctx.resume();
+        return ctx;
+    }
+    function beep() {
+        var c = audio(); if (!c) return;
+        [[880, 0], [1175, 0.18], [1568, 0.36]].forEach(function (n) {
+            var o = c.createOscillator(), g = c.createGain();
+            o.type = 'sine'; o.frequency.value = n[0]; o.connect(g); g.connect(c.destination);
+            var t = c.currentTime + n[1];
+            g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.25, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.28);
+            o.start(t); o.stop(t + 0.3);
+        });
+    }
+    btn.addEventListener('click', function () {
+        soundOn = !soundOn;
+        try { localStorage.setItem('mm_sound', soundOn ? '1' : '0'); } catch (e) {}
+        paintBtn();
+        if (soundOn) { audio(); beep(); }
+    });
+    // Браузер разрешает звук только после действия на странице — «разблокируем» при первом клике
+    document.addEventListener('click', function () { if (soundOn) audio(); }, { once: true });
+    paintBtn();
+
+    function showCount(n) {
+        badge.textContent = n; badge.hidden = !n;
+        document.title = (n ? '(' + n + ') ' : '') + baseTitle;
+    }
+    showCount({{ (int) $newOrders }});
+
+    function poll() {
+        fetch(@json(route('admin.orders.poll')), { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (d) {
+                if (!d) return;
+                showCount(d.new);
+                if (d.last_id > lastId) {
+                    lastId = d.last_id;
+                    toast.textContent = '🛒 Новый заказ № ' + d.number + ' на ' + d.total + ' грн';
+                    toast.hidden = false;
+                    setTimeout(function () { toast.hidden = true; }, 12000);
+                    if (soundOn) beep();
+                }
+            }).catch(function () {});
+    }
+    setInterval(poll, 20000);
+})();
+</script>
 </body>
 </html>

@@ -497,3 +497,6 @@ a.stat:hover { border-color: var(--accent); }
 .section-edit__tools { display: inline-flex; gap: 8px; align-items: center; }
 .section-edit__head { display: flex; justify-content: space-between; align-items: center; }
 .btn--sm { padding: 2px 10px; font-size: .85rem; }
+
+.order-toast { position: fixed; right: 20px; bottom: 20px; z-index: 50; background: var(--brand-dark, #5a3a1c); color: #fff; padding: 14px 20px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.25); font-weight: 600; }
+.order-toast[hidden], #orders-badge[hidden] { display: none; }
