@@ -16,6 +16,17 @@ class NovaPoshtaController extends Controller
         return response()->json(NovaPoshta::cities($data['q']));
     }
 
+    public function streets(Request $request)
+    {
+        abort_unless(NovaPoshta::enabled(), 404);
+        $data = $request->validate([
+            'settlement' => ['required', 'regex:/^[0-9a-f-]{36}$/i'],
+            'q' => ['required', 'string', 'max:100'],
+        ]);
+
+        return response()->json(NovaPoshta::streets($data['settlement'], $data['q']));
+    }
+
     public function warehouses(Request $request)
     {
         abort_unless(NovaPoshta::enabled(), 404);

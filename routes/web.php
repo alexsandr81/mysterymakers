@@ -45,6 +45,7 @@ Route::middleware(SetLocale::class)->group(function () {
 
     // Подсказки Новой Почты (форма заказа)
     Route::get('/np/cities', [NovaPoshtaController::class, 'cities'])->middleware('throttle:60,1')->name('np.cities');
+    Route::get('/np/streets', [NovaPoshtaController::class, 'streets'])->middleware('throttle:90,1')->name('np.streets');
     Route::get('/np/warehouses', [NovaPoshtaController::class, 'warehouses'])->middleware('throttle:90,1')->name('np.warehouses');
 
     // Корзина

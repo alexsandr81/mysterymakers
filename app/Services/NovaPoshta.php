@@ -13,6 +13,9 @@ use Illuminate\Support\Facades\Log;
  */
 class NovaPoshta
 {
+    /** Идентификатор типа «Почтомат» в справочнике отделений Новой Почты */
+    private const POSTOMAT_TYPE = 'f9316480-5f2d-425d-bc2c-ac7cd29decf0';
+
     public static function enabled(): bool
     {
         return (bool) config('shop.novaposhta.api_key');
@@ -26,7 +29,7 @@ class NovaPoshta
             return [];
         }
 
-        return Cache::remember('np:cities:' . md5(mb_strtolower($query)), 3600, function () use ($query) {
+        return Cache::remember('np:cities2:' . md5(mb_strtolower($query)), 3600, function () use ($query) {
             $data = self::call('Address', 'searchSettlements', ['CityName' => $query, 'Limit' => 10, 'Page' => 1]);
 
             $out = [];
@@ -34,7 +37,7 @@ class NovaPoshta
                 if (empty($a['DeliveryCity']) || (int) ($a['Warehouses'] ?? 0) < 1) {
                     continue; // нет отделений — доставить Новой Почтой туда нельзя
                 }
-                $out[] = ['ref' => $a['DeliveryCity'], 'title' => $a['Present']];
+                $out[] = ['ref' => $a['DeliveryCity'], 'settlement' => $a['Ref'] ?? '', 'title' => $a['Present']];
             }
 
             return $out;
@@ -47,7 +50,7 @@ class NovaPoshta
         $query = trim($query);
         $lang = $locale === 'ru' ? 'RU' : 'UA';
 
-        return Cache::remember('np:wh:' . md5($cityRef . '|' . mb_strtolower($query) . '|' . $lang), 3600, function () use ($cityRef, $query, $lang) {
+        return Cache::remember('np:wh2:' . md5($cityRef . '|' . mb_strtolower($query) . '|' . $lang), 3600, function () use ($cityRef, $query, $lang) {
             $props = ['CityRef' => $cityRef, 'Limit' => 40, 'Page' => 1, 'Language' => $lang];
             if ($query !== '') {
                 $props['FindByString'] = $query;
@@ -56,11 +59,48 @@ class NovaPoshta
             $out = [];
             foreach (self::call('Address', 'getWarehouses', $props) as $w) {
                 $title = $lang === 'RU' ? ($w['DescriptionRu'] ?? $w['Description']) : $w['Description'];
-                $out[] = ['ref' => $w['Ref'], 'title' => $title];
+                $postomat = ($w['TypeOfWarehouse'] ?? '') === self::POSTOMAT_TYPE || mb_stripos($w['Description'] ?? '', 'омат') !== false;
+                $out[] = ['ref' => $w['Ref'], 'title' => $title, 'postomat' => $postomat];
             }
 
             return $out;
         });
+    }
+
+    /** Улицы населённого пункта (адресная доставка) */
+    public static function streets(string $settlementRef, string $query): array
+    {
+        $query = trim($query);
+        if (mb_strlen($query) < 2) {
+            return [];
+        }
+
+        return Cache::remember('np:streets:' . md5($settlementRef . '|' . mb_strtolower($query)), 3600, function () use ($settlementRef, $query) {
+            $data = self::call('Address', 'searchSettlementStreets', ['StreetName' => $query, 'SettlementRef' => $settlementRef, 'Limit' => 20]);
+
+            $out = [];
+            foreach ($data[0]['Addresses'] ?? [] as $a) {
+                if (!empty($a['SettlementStreetRef'])) {
+                    $out[] = ['ref' => $a['SettlementStreetRef'], 'title' => $a['Present']];
+                }
+            }
+
+            return $out;
+        });
+    }
+
+    /** Адрес получателя для адресной доставки; вернёт ['ref'] или ['error'] */
+    public static function createAddress(string $recipientRef, string $streetRef, string $building, ?string $flat): array
+    {
+        $r = self::request('Address', 'save', array_filter([
+            'CounterpartyRef' => $recipientRef,
+            'StreetRef' => $streetRef,
+            'BuildingNumber' => $building,
+            'Flat' => $flat,
+        ], fn ($v) => $v !== null && $v !== ''));
+        $ref = $r['data'][0]['Ref'] ?? null;
+
+        return ($r['ok'] && $ref) ? ['ref' => $ref] : ['error' => self::errorText($r)];
     }
 
     // ---------- Накладные (ТТН) ----------

@@ -41,6 +41,7 @@
         @php $deliv = old('delivery', 'nova_poshta'); @endphp
         <select name="delivery" id="delivery-select" class="select">
             @foreach(\App\Models\Order::DELIVERY as $key)
+                @continue($key === 'np_address' && !$npEnabled)
                 <option value="{{ $key }}" @selected($deliv === $key)>{{ __('shop.delivery_types.' . $key) }}</option>
             @endforeach
         </select>
@@ -67,7 +68,44 @@
                 @error('np_warehouse_ref')<span class="err">{{ __('shop.np_pick_from_list') }}</span>@enderror
             </label>
             <input type="hidden" name="np_warehouse_ref" id="np-wh-ref" value="{{ old('np_warehouse_ref') }}">
+            <input type="hidden" name="np_is_postomat" id="np-postomat" value="{{ old('np_is_postomat', 0) }}">
         </fieldset>
+
+        {{-- Новая Почта: адресная доставка --}}
+        @if($npEnabled)
+        <fieldset class="delivery-box" data-delivery="np_address">
+            <label>{{ __('shop.np_city') }}
+                <div class="ac">
+                    <input type="text" name="npa_city" id="npa-city" value="{{ old('npa_city') }}" autocomplete="off" placeholder="{{ __('shop.np_city_ph') }}">
+                    <ul class="ac__list" id="npa-city-list" hidden></ul>
+                </div>
+                @error('npa_city')<span class="err">{{ $message }}</span>@enderror
+                @error('npa_city_ref')<span class="err">{{ __('shop.np_pick_from_list') }}</span>@enderror
+            </label>
+            <input type="hidden" name="npa_city_ref" id="npa-city-ref" value="{{ old('npa_city_ref') }}">
+            <input type="hidden" id="npa-settlement" value="">
+
+            <label>{{ __('shop.np_street') }}
+                <div class="ac">
+                    <input type="text" name="npa_street" id="npa-street" value="{{ old('npa_street') }}" autocomplete="off" placeholder="{{ __('shop.np_street_ph') }}">
+                    <ul class="ac__list" id="npa-street-list" hidden></ul>
+                </div>
+                @error('npa_street')<span class="err">{{ $message }}</span>@enderror
+                @error('npa_street_ref')<span class="err">{{ __('shop.np_pick_street') }}</span>@enderror
+            </label>
+            <input type="hidden" name="npa_street_ref" id="npa-street-ref" value="{{ old('npa_street_ref') }}">
+
+            <div class="form__cols">
+                <label>{{ __('shop.np_building') }}
+                    <input type="text" name="npa_building" value="{{ old('npa_building') }}" maxlength="20">
+                    @error('npa_building')<span class="err">{{ $message }}</span>@enderror
+                </label>
+                <label>{{ __('shop.np_flat') }}
+                    <input type="text" name="npa_flat" class="optional" value="{{ old('npa_flat') }}" maxlength="20">
+                </label>
+            </div>
+        </fieldset>
+        @endif
 
         {{-- Укрпошта --}}
         <fieldset class="delivery-box" data-delivery="ukrposhta">
@@ -140,7 +178,8 @@
     // Выбор города и отделения Новой Почты из списка
     var cityInput = document.getElementById('np-city'), cityRef = document.getElementById('np-city-ref'), cityList = document.getElementById('np-city-list');
     var whInput = document.getElementById('np-wh'), whRef = document.getElementById('np-wh-ref'), whList = document.getElementById('np-wh-list');
-    var citiesUrl = @json(route('np.cities')), whUrl = @json(route('np.warehouses'));
+    var citiesUrl = @json(route('np.cities')), whUrl = @json(route('np.warehouses')), streetsUrl = @json(route('np.streets'));
+    var postomat = document.getElementById('np-postomat');
 
     function debounce(fn, ms) { var t; return function () { var a = arguments; clearTimeout(t); t = setTimeout(function () { fn.apply(null, a); }, ms); }; }
 
@@ -186,11 +225,46 @@
     function loadWh() {
         if (!cityRef.value) return;
         load(whUrl + '?city=' + encodeURIComponent(cityRef.value) + '&q=' + encodeURIComponent(whInput.value.trim()), function (items) {
-            render(whList, items, function (item) { whInput.value = item.title; whRef.value = item.ref; });
+            render(whList, items, function (item) { whInput.value = item.title; whRef.value = item.ref; postomat.value = item.postomat ? 1 : 0; });
         });
     }
     whInput.addEventListener('focus', loadWh);
-    whInput.addEventListener('input', debounce(function () { whRef.value = ''; loadWh(); }, 250));
+    whInput.addEventListener('input', debounce(function () { whRef.value = ''; postomat.value = 0; loadWh(); }, 250));
+
+    // ---- Адресная доставка: город → улица (дом и квартира вводятся вручную)
+    var aCity = document.getElementById('npa-city'), aCityRef = document.getElementById('npa-city-ref'), aCityList = document.getElementById('npa-city-list');
+    var aSettle = document.getElementById('npa-settlement');
+    var aStreet = document.getElementById('npa-street'), aStreetRef = document.getElementById('npa-street-ref'), aStreetList = document.getElementById('npa-street-list');
+    if (aCity) {
+        function searchACity() {
+            var q = aCity.value.trim();
+            if (q.length < 2) { aCityList.hidden = true; return; }
+            load(citiesUrl + '?q=' + encodeURIComponent(q), function (items) {
+                render(aCityList, items, function (item) {
+                    aCity.value = item.title; aCityRef.value = item.ref; aSettle.value = item.settlement; aStreet.focus();
+                });
+            });
+        }
+        aCity.addEventListener('input', debounce(function () { aCityRef.value = ''; aSettle.value = ''; aStreetRef.value = ''; aStreet.value = ''; searchACity(); }, 250));
+        aCity.addEventListener('focus', function () { if (!aCityRef.value) searchACity(); });
+        function searchStreet() {
+            var q = aStreet.value.trim();
+            if (!aSettle.value || q.length < 2) { aStreetList.hidden = true; return; }
+            load(streetsUrl + '?settlement=' + encodeURIComponent(aSettle.value) + '&q=' + encodeURIComponent(q), function (items) {
+                render(aStreetList, items, function (item) { aStreet.value = item.title; aStreetRef.value = item.ref; });
+            });
+        }
+        aStreet.addEventListener('input', debounce(function () { aStreetRef.value = ''; searchStreet(); }, 250));
+        aStreet.addEventListener('focus', function () { if (!aStreetRef.value) searchStreet(); });
+        [[aCity, aCityList], [aStreet, aStreetList]].forEach(function (p) {
+            p[0].addEventListener('keydown', function (e) { if (e.key === 'Escape') p[1].hidden = true; });
+        });
+        document.addEventListener('mousedown', function (e) {
+            [[aCity, aCityList], [aStreet, aStreetList]].forEach(function (p) {
+                if (e.target !== p[0] && !p[1].contains(e.target)) p[1].hidden = true;
+            });
+        });
+    }
 
     // Список остаётся открытым, пока не выбран пункт. Закрывается по Esc или клику вне поля и списка.
     [[cityInput, cityList], [whInput, whList]].forEach(function (p) {
@@ -205,6 +279,10 @@
     // Не даём отправить форму, если город/отделение набраны вручную, а не выбраны из списка
     document.querySelector('.checkout form').addEventListener('submit', function (e) {
         if (deliverySelect.value === 'nova_poshta' && (!cityRef.value || !whRef.value)) {
+            e.preventDefault();
+            alert(@json(__('shop.np_pick_from_list')));
+        }
+        if (deliverySelect.value === 'np_address' && aCity && (!aCityRef.value || !aStreetRef.value)) {
             e.preventDefault();
             alert(@json(__('shop.np_pick_from_list')));
         }

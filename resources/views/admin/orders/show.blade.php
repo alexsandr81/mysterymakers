@@ -30,7 +30,7 @@
         <p>{{ $order->phone }}</p>
         @if($order->email)<p>{{ $order->email }}</p>@endif
         <h3>Доставка и оплата</h3>
-        <p>{{ __('shop.delivery_types.' . $order->delivery, [], 'ru') }}@if($order->address): {{ $order->address }}@endif</p>
+        <p>{{ __('shop.delivery_types.' . $order->delivery, [], 'ru') }}@if($order->np_is_postomat) <strong>(почтомат — до 20 кг)</strong>@endif @if($order->address): {{ $order->address }}@endif</p>
         <p>{{ __('shop.payment_types.' . $order->payment, [], 'ru') }}</p>
         @if($order->comment)
             <h3>Комментарий</h3>
@@ -51,7 +51,7 @@
         </form>
         <p class="muted">Отмена заказа возвращает товары на склад.</p>
 
-        @if($order->delivery === 'nova_poshta')
+        @if(in_array($order->delivery, ['nova_poshta', 'np_address'], true))
             <h3>Накладная Новой Почты</h3>
             @if($order->np_ttn)
                 <p><strong>{{ $order->np_ttn }}</strong></p>
@@ -61,7 +61,7 @@
                     <form action="{{ route('admin.orders.ttn.refresh', $order) }}" method="POST">@csrf<button class="btn">↻ Статус</button></form>
                     <form action="{{ route('admin.orders.ttn.destroy', $order) }}" method="POST" onsubmit="return confirm('Удалить накладную {{ $order->np_ttn }}?')">@csrf @method('DELETE')<button class="btn btn--danger">Удалить ТТН</button></form>
                 </div>
-            @elseif($order->np_city_ref && $order->np_warehouse_ref)
+            @elseif($order->np_city_ref && ($order->np_warehouse_ref || $order->np_street_ref))
                 <form action="{{ route('admin.orders.ttn.store', $order) }}" method="POST" class="form" onsubmit="return confirm('Создать накладную в Новой Почте?')">
                     @csrf
                     <details>

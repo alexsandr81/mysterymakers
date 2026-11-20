@@ -32,8 +32,15 @@ class OrderTtnController extends Controller
         if ($order->np_ttn) {
             return back()->withErrors(['ttn' => 'Накладная уже создана.']);
         }
-        if ($order->delivery !== 'nova_poshta' || !$order->np_city_ref || !$order->np_warehouse_ref) {
-            return back()->withErrors(['ttn' => 'Накладную можно создать только для заказа Новой Почтой с городом и отделением, выбранными из списка.']);
+        $toDoor = $order->delivery === 'np_address';
+        $ready = $toDoor
+            ? ($order->np_city_ref && $order->np_street_ref && $order->np_building)
+            : ($order->delivery === 'nova_poshta' && $order->np_city_ref && $order->np_warehouse_ref);
+        if (!$ready) {
+            return back()->withErrors(['ttn' => 'Накладную можно создать только для заказа Новой Почтой, где город и отделение (или улица) выбраны из списка.']);
+        }
+        if ($order->np_is_postomat && (float) $in['weight'] > 20) {
+            return back()->withErrors(['ttn' => 'В почтомат Новой Почты нельзя отправить больше 20 кг — уменьшите вес или выберите отделение.'])->withInput();
         }
         foreach (['np_sender_ref', 'np_contact_ref', 'np_sender_phone', 'np_city_ref', 'np_wh_ref'] as $k) {
             if (!Setting::get($k)) {
@@ -46,6 +53,16 @@ class OrderTtnController extends Controller
             return back()->withErrors(['ttn' => 'Получатель: ' . $recipient['error']]);
         }
 
+        // Адресная доставка: создаём адрес получателя (улица, дом, квартира)
+        $addressRef = $order->np_warehouse_ref;
+        if ($toDoor) {
+            $addr = NovaPoshta::createAddress($recipient['ref'], $order->np_street_ref, (string) $order->np_building, $order->np_flat);
+            if (isset($addr['error'])) {
+                return back()->withErrors(['ttn' => 'Адрес получателя: ' . $addr['error']]);
+            }
+            $addressRef = $addr['ref'];
+        }
+
         $total = (float) $order->total;
         $props = [
             'PayerType' => $in['payer'],
@@ -53,7 +70,7 @@ class OrderTtnController extends Controller
             'DateTime' => now('Europe/Kyiv')->format('d.m.Y'), // дата по Киеву, а не по часовому поясу сервера
             'CargoType' => 'Cargo',
             'Weight' => (string) $in['weight'],
-            'ServiceType' => 'WarehouseWarehouse',
+            'ServiceType' => $toDoor ? 'WarehouseDoors' : 'WarehouseWarehouse',
             'SeatsAmount' => '1',
             'OptionsSeat' => [[
                 'volumetricLength' => (string) $in['length'],
@@ -70,7 +87,7 @@ class OrderTtnController extends Controller
             'SendersPhone' => NovaPoshta::phone(Setting::get('np_sender_phone')),
             'CityRecipient' => $order->np_city_ref,
             'Recipient' => $recipient['ref'],
-            'RecipientAddress' => $order->np_warehouse_ref,
+            'RecipientAddress' => $addressRef,
             'ContactRecipient' => $recipient['contact'],
             'RecipientsPhone' => NovaPoshta::phone($order->phone),
         ];

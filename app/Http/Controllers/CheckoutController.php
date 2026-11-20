@@ -43,13 +43,21 @@ class CheckoutController extends Controller
             'np_warehouse' => ['required_if:delivery,nova_poshta', 'nullable', 'string', 'max:255'],
             'np_city_ref' => [Rule::requiredIf(fn () => $request->input('delivery') === 'nova_poshta' && NovaPoshta::enabled()), 'nullable', 'regex:/^[0-9a-f-]{36}$/i'],
             'np_warehouse_ref' => [Rule::requiredIf(fn () => $request->input('delivery') === 'nova_poshta' && NovaPoshta::enabled()), 'nullable', 'regex:/^[0-9a-f-]{36}$/i'],
+            'np_is_postomat' => ['nullable', 'boolean'],
+            // Новая Почта, адресная доставка (только из списков НП)
+            'npa_city' => ['required_if:delivery,np_address', 'nullable', 'string', 'max:150'],
+            'npa_city_ref' => ['required_if:delivery,np_address', 'nullable', 'regex:/^[0-9a-f-]{36}$/i'],
+            'npa_street' => ['required_if:delivery,np_address', 'nullable', 'string', 'max:255'],
+            'npa_street_ref' => ['required_if:delivery,np_address', 'nullable', 'regex:/^[0-9a-f-]{36}$/i'],
+            'npa_building' => ['required_if:delivery,np_address', 'nullable', 'string', 'max:20'],
+            'npa_flat' => ['nullable', 'string', 'max:20'],
             // Укрпошта: город и индекс отделения
             'up_city' => ['required_if:delivery,ukrposhta', 'nullable', 'string', 'max:150'],
             'up_index' => ['required_if:delivery,ukrposhta', 'nullable', 'regex:/^\d{5}$/'],
         ]);
 
         // Новая Почта принимает имена только кириллицей — просим клиента сразу
-        if ($data['delivery'] === 'nova_poshta') {
+        if (in_array($data['delivery'], ['nova_poshta', 'np_address'], true)) {
             foreach (['first_name', 'last_name'] as $f) {
                 if (!preg_match("/^[\p{Cyrillic}'’\- ]+$/u", $data[$f])) {
                     throw \Illuminate\Validation\ValidationException::withMessages([$f => __('shop.name_cyrillic')]);
@@ -67,6 +75,18 @@ class CheckoutController extends Controller
                 'branch' => $data['np_warehouse'],
                 'np_city_ref' => $data['np_city_ref'] ?? null,
                 'np_warehouse_ref' => $data['np_warehouse_ref'] ?? null,
+                'np_is_postomat' => !empty($data['np_is_postomat']),
+            ];
+        } elseif ($data['delivery'] === 'np_address') {
+            $flat = trim((string) ($data['npa_flat'] ?? ''));
+            $delivery = [
+                'city' => $data['npa_city'],
+                'branch' => $data['npa_street'] . ', ' . $data['npa_building'] . ($flat !== '' ? ', кв. ' . $flat : ''),
+                'np_city_ref' => $data['npa_city_ref'],
+                'np_street_ref' => $data['npa_street_ref'],
+                'np_street' => $data['npa_street'],
+                'np_building' => $data['npa_building'],
+                'np_flat' => $flat !== '' ? $flat : null,
             ];
         } else {
             $delivery = [
@@ -76,7 +96,7 @@ class CheckoutController extends Controller
         }
         $delivery['address'] = $delivery['city'] . ', ' . ($data['delivery'] === 'ukrposhta' ? 'індекс ' : '') . $delivery['branch'];
 
-        $data = array_diff_key($data, array_flip(['np_city', 'np_warehouse', 'np_city_ref', 'np_warehouse_ref', 'up_city', 'up_index'])) + $delivery;
+        $data = array_diff_key($data, array_flip(['np_city', 'np_warehouse', 'np_city_ref', 'np_warehouse_ref', 'np_is_postomat', 'npa_city', 'npa_city_ref', 'npa_street', 'npa_street_ref', 'npa_building', 'npa_flat', 'up_city', 'up_index'])) + $delivery;
 
         $raw = $cart->raw();
         if (!$raw) {
