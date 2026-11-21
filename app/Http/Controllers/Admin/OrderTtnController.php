@@ -39,6 +39,9 @@ class OrderTtnController extends Controller
         if (!$ready) {
             return back()->withErrors(['ttn' => 'Накладную можно создать только для заказа Новой Почтой, где город и отделение (или улица) выбраны из списка.']);
         }
+        if ($order->np_is_postomat && in_array($order->payment, \App\Models\Order::NO_POSTOMAT_PAYMENT, true)) {
+            return back()->withErrors(['ttn' => 'В почтомат нельзя отправить с наложенным платежом. Свяжитесь с клиентом и предложите отделение (или предоплату), а в заказе обновите данные доставки.']);
+        }
         if ($order->np_is_postomat && (float) $in['weight'] > 20) {
             return back()->withErrors(['ttn' => 'В почтомат Новой Почты нельзя отправить больше 20 кг — уменьшите вес или выберите отделение.'])->withInput();
         }

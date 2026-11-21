@@ -32,7 +32,11 @@
     <div class="container topbar__inner">
         <span>{{ $siteTagline }}</span>
         <div class="topbar__right">
-            <a href="{{ route('locale', $otherLocale) }}" class="lang">{{ strtoupper($otherLocale) }}</a>
+            <div class="langs">
+                @foreach(['uk' => 'UA', 'ru' => 'RU'] as $code => $label)
+                    <a href="{{ route('locale', $code) }}" class="langflag langflag--{{ $code }} {{ app()->getLocale() === $code ? 'is-active' : '' }}" title="{{ $code === 'uk' ? 'Українська' : 'Русский' }}" @if(app()->getLocale() === $code) aria-current="true" @endif><span>{{ $label }}</span></a>
+                @endforeach
+            </div>
         </div>
     </div>
 </div>

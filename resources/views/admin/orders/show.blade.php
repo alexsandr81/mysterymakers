@@ -54,13 +54,15 @@
         @if(in_array($order->delivery, ['nova_poshta', 'np_address'], true))
             <h3>Накладная Новой Почты</h3>
             @if($order->np_ttn)
-                <p><strong>{{ $order->np_ttn }}</strong></p>
+                <p><strong>{{ $order->np_ttn }}</strong> · <a href="https://novaposhta.ua/tracking/?cargo_number={{ $order->np_ttn }}" target="_blank" rel="noopener">отследить</a></p>
                 <p class="muted">{{ $order->np_status }}</p>
                 <div class="inline-form">
                     <a class="btn" href="{{ route('admin.orders.ttn.print', $order) }}" target="_blank">🖨 Печать</a>
                     <form action="{{ route('admin.orders.ttn.refresh', $order) }}" method="POST">@csrf<button class="btn">↻ Статус</button></form>
                     <form action="{{ route('admin.orders.ttn.destroy', $order) }}" method="POST" onsubmit="return confirm('Удалить накладную {{ $order->np_ttn }}?')">@csrf @method('DELETE')<button class="btn btn--danger">Удалить ТТН</button></form>
                 </div>
+            @elseif($order->np_is_postomat && in_array($order->payment, \App\Models\Order::NO_POSTOMAT_PAYMENT, true))
+                <p class="flash flash--err" style="margin:0 0 8px;">В почтомат нельзя отправить с наложенным платежом. Свяжитесь с клиентом: нужно выбрать отделение или предоплату.</p>
             @elseif($order->np_city_ref && ($order->np_warehouse_ref || $order->np_street_ref))
                 <form action="{{ route('admin.orders.ttn.store', $order) }}" method="POST" class="form" onsubmit="return confirm('Создать накладную в Новой Почте?')">
                     @csrf

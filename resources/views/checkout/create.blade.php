@@ -64,6 +64,9 @@
                     <input type="text" name="np_warehouse" id="np-wh" value="{{ old('np_warehouse') }}" autocomplete="off" placeholder="{{ $npEnabled ? __('shop.np_wh_ph') : __('shop.np_wh_manual') }}">
                     <ul class="ac__list" id="np-wh-list" hidden></ul>
                 </div>
+                @if(in_array(old('payment', 'cod'), \App\Models\Order::NO_POSTOMAT_PAYMENT, true))
+                    <span class="muted">{{ __('shop.np_no_postomat_cod') }}</span>
+                @endif
                 @error('np_warehouse')<span class="err">{{ $message }}</span>@enderror
                 @error('np_warehouse_ref')<span class="err">{{ __('shop.np_pick_from_list') }}</span>@enderror
             </label>
@@ -180,6 +183,11 @@
     var whInput = document.getElementById('np-wh'), whRef = document.getElementById('np-wh-ref'), whList = document.getElementById('np-wh-list');
     var citiesUrl = @json(route('np.cities')), whUrl = @json(route('np.warehouses')), streetsUrl = @json(route('np.streets'));
     var postomat = document.getElementById('np-postomat');
+    var noPostomatPay = @json(\App\Models\Order::NO_POSTOMAT_PAYMENT);
+    function postomatBlocked() {
+        var p = document.querySelector('input[name=payment]:checked');
+        return !!p && noPostomatPay.indexOf(p.value) !== -1;
+    }
 
     function debounce(fn, ms) { var t; return function () { var a = arguments; clearTimeout(t); t = setTimeout(function () { fn.apply(null, a); }, ms); }; }
 
@@ -225,6 +233,7 @@
     function loadWh() {
         if (!cityRef.value) return;
         load(whUrl + '?city=' + encodeURIComponent(cityRef.value) + '&q=' + encodeURIComponent(whInput.value.trim()), function (items) {
+            if (postomatBlocked()) { items = items.filter(function (i) { return !i.postomat; }); }
             render(whList, items, function (item) { whInput.value = item.title; whRef.value = item.ref; postomat.value = item.postomat ? 1 : 0; });
         });
     }

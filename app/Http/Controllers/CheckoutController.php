@@ -65,6 +65,11 @@ class CheckoutController extends Controller
             }
         }
 
+        // В почтомат нельзя отправить с наложенным платежом
+        if ($data['delivery'] === 'nova_poshta' && !empty($data['np_is_postomat']) && in_array($data['payment'], Order::NO_POSTOMAT_PAYMENT, true)) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['np_warehouse' => __('shop.np_no_postomat_cod')]);
+        }
+
         // В заказе хранится полное имя: «Имя Фамилия»
         $data['name'] = trim($data['first_name']) . ' ' . trim($data['last_name']);
         unset($data['first_name'], $data['last_name']);
