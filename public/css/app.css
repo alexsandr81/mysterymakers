@@ -502,10 +502,10 @@ a.stat:hover { border-color: var(--accent); }
 .order-toast[hidden], #orders-badge[hidden] { display: none; }
 
 /* ---------- Переключатель языка: флаги с буквами внутри ---------- */
-.langs { display: flex; gap: 8px; align-items: center; }
-.langflag { display: inline-flex; align-items: center; justify-content: center; width: 46px; height: 28px; border-radius: 6px; border: 2px solid transparent; opacity: .6; transition: opacity .15s, transform .15s; }
-.langflag span { background: rgba(0,0,0,.5); color: #fff; font-weight: 800; font-size: .78rem; line-height: 1; padding: 3px 6px; border-radius: 4px; letter-spacing: .03em; }
+.langs { display: flex; gap: 5px; align-items: center; }
+.langflag { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 17px; border-radius: 4px; border: 1px solid transparent; opacity: .6; transition: opacity .15s, transform .15s; }
+.langflag span { background: rgba(0,0,0,.5); color: #fff; font-weight: 800; font-size: .58rem; line-height: 1; padding: 1px 3px; border-radius: 3px; letter-spacing: .02em; }
 .langflag--uk { background: linear-gradient(#0057b7 50%, #ffd700 50%); }
 .langflag--ru { background: linear-gradient(#ffffff 33.3%, #0039a6 33.3% 66.6%, #d52b1e 66.6%); }
 .langflag:hover { opacity: 1; text-decoration: none; transform: translateY(-1px); }
-.langflag.is-active { opacity: 1; border-color: #fff; box-shadow: 0 0 0 2px rgba(255,255,255,.35); }
+.langflag.is-active { opacity: 1; border-color: #fff; box-shadow: 0 0 0 1px rgba(255,255,255,.35); }
