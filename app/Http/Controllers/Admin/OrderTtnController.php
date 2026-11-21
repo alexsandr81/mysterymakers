@@ -32,6 +32,10 @@ class OrderTtnController extends Controller
         if ($order->np_ttn) {
             return back()->withErrors(['ttn' => 'Накладная уже создана.']);
         }
+        if ($order->payment === 'card' && !$order->paid_at) {
+            return back()->withErrors(['ttn' => 'Заказ с оплатой на карту ещё не оплачен. Сначала получите оплату и нажмите «Отметить оплаченным».']);
+        }
+
         $toDoor = $order->delivery === 'np_address';
         $ready = $toDoor
             ? ($order->np_city_ref && $order->np_street_ref && $order->np_building)

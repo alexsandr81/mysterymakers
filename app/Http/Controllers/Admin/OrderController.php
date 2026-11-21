@@ -32,6 +32,14 @@ class OrderController extends Controller
         ]);
     }
 
+    /** Отметить заказ оплаченным (для «Оплата на карту») или снять отметку */
+    public function togglePaid(Order $order)
+    {
+        $order->update(['paid_at' => $order->paid_at ? null : now()]);
+
+        return back()->with('status', $order->paid_at ? 'Заказ отмечен оплаченным.' : 'Отметка об оплате снята.');
+    }
+
     public function show(Order $order)
     {
         return view('admin.orders.show', ['order' => $order->load('items.product')]);

@@ -64,9 +64,7 @@
                     <input type="text" name="np_warehouse" id="np-wh" value="{{ old('np_warehouse') }}" autocomplete="off" placeholder="{{ $npEnabled ? __('shop.np_wh_ph') : __('shop.np_wh_manual') }}">
                     <ul class="ac__list" id="np-wh-list" hidden></ul>
                 </div>
-                @if(in_array(old('payment', 'cod'), \App\Models\Order::NO_POSTOMAT_PAYMENT, true))
-                    <span class="muted">{{ __('shop.np_no_postomat_cod') }}</span>
-                @endif
+                <span class="muted" id="np-no-postomat" @if(!in_array(old('payment', 'cod'), \App\Models\Order::NO_POSTOMAT_PAYMENT, true)) hidden @endif>{{ __('shop.np_no_postomat_cod') }}</span>
                 @error('np_warehouse')<span class="err">{{ $message }}</span>@enderror
                 @error('np_warehouse_ref')<span class="err">{{ __('shop.np_pick_from_list') }}</span>@enderror
             </label>
@@ -238,6 +236,14 @@
         });
     }
     whInput.addEventListener('focus', loadWh);
+    // Сменили способ оплаты: если выбран почтомат, а он при этой оплате недоступен — очищаем выбор
+    document.querySelectorAll('input[name=payment]').forEach(function (r) {
+        r.addEventListener('change', function () {
+            var hint = document.getElementById('np-no-postomat');
+            if (hint) hint.hidden = !postomatBlocked();
+            if (postomatBlocked() && postomat.value === '1') { whInput.value = ''; whRef.value = ''; postomat.value = 0; }
+        });
+    });
     whInput.addEventListener('input', debounce(function () { whRef.value = ''; postomat.value = 0; loadWh(); }, 250));
 
     // ---- Адресная доставка: город → улица (дом и квартира вводятся вручную)

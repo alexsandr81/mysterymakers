@@ -11,15 +11,20 @@ class Order extends Model
     public const STATUSES = ['new', 'processing', 'shipped', 'done', 'canceled'];
     public const DELIVERY = ['nova_poshta', 'np_address', 'ukrposhta'];
     // Оплата картой будет добавлена позже (онлайн-эквайринг); 'card' оставлен в названиях для совместимости
-    public const PAYMENT = ['cod'];
+    public const PAYMENT = ['card', 'cod'];
 
     /** Способы оплаты, при которых нельзя отправлять в почтомат (в почтомат Новой Почты — только по предоплате) */
     public const NO_POSTOMAT_PAYMENT = ['cod'];
 
     protected $fillable = [
         'number', 'user_id', 'name', 'phone', 'email', 'delivery',
-        'address', 'city', 'branch', 'np_city_ref', 'np_warehouse_ref', 'payment', 'comment', 'total', 'status', 'locale', 'np_ttn', 'np_ttn_ref', 'np_status', 'np_is_postomat', 'np_street_ref', 'np_street', 'np_building', 'np_flat',
+        'address', 'city', 'branch', 'np_city_ref', 'np_warehouse_ref', 'payment', 'comment', 'total', 'status', 'locale', 'np_ttn', 'np_ttn_ref', 'np_status', 'np_is_postomat', 'np_street_ref', 'np_street', 'np_building', 'np_flat', 'paid_at',
     ];
+
+    protected function casts(): array
+    {
+        return ['paid_at' => 'datetime'];
+    }
 
     public function user(): BelongsTo
     {

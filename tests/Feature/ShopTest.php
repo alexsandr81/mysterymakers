@@ -66,6 +66,26 @@ class ShopTest extends TestCase
         Mail::assertSent(NewOrderAdmin::class);
     }
 
+    public function test_card_payment_order_can_be_marked_paid(): void
+    {
+        Mail::fake();
+        config(['shop.novaposhta.api_key' => null]);
+        $p = $this->product(5);
+
+        $this->withSession(['cart' => [$p->id => 1]])->post('/checkout', [
+            'first_name' => 'Иван', 'last_name' => 'Петров', 'phone' => '0501234567',
+            'delivery' => 'ukrposhta', 'payment' => 'card', 'up_city' => 'Киев', 'up_index' => '01001',
+        ])->assertRedirect();
+
+        $order = Order::first();
+        $this->assertSame('card', $order->payment);
+        $this->assertNull($order->paid_at);
+
+        $admin = User::factory()->create(['is_admin' => true]);
+        $this->actingAs($admin)->post(route('admin.orders.paid', $order))->assertRedirect();
+        $this->assertNotNull($order->fresh()->paid_at);
+    }
+
     public function test_review_is_pending_until_approved(): void
     {
         $p = $this->product();

@@ -32,6 +32,19 @@
         <h3>Доставка и оплата</h3>
         <p>{{ __('shop.delivery_types.' . $order->delivery, [], 'ru') }}@if($order->np_is_postomat) <strong>(почтомат — до 20 кг)</strong>@endif @if($order->address): {{ $order->address }}@endif</p>
         <p>{{ __('shop.payment_types.' . $order->payment, [], 'ru') }}</p>
+        @if($order->payment === 'card')
+            <div class="inline-form">
+                @if($order->paid_at)
+                    <span class="badge" style="background:#2e7d32">✅ Оплачен {{ $order->paid_at->format('d.m.Y H:i') }}</span>
+                @else
+                    <span class="badge" style="background:#c62828">⏳ Ожидает оплаты</span>
+                @endif
+                <form action="{{ route('admin.orders.paid', $order) }}" method="POST">
+                    @csrf
+                    <button class="btn">{{ $order->paid_at ? 'Снять отметку' : 'Отметить оплаченным' }}</button>
+                </form>
+            </div>
+        @endif
         @if($order->comment)
             <h3>Комментарий</h3>
             <p>{{ $order->comment }}</p>
@@ -92,7 +105,7 @@
                 @if($order->payment === 'cod')
                     <p class="muted">Наложенный платёж: получатель заплатит {{ \App\Support\Money::format($order->total) }} грн при получении.</p>
                 @else
-                    <p class="muted">Заказ оплачен заранее — деньги с получателя не берутся, обратная доставка не добавляется.</p>
+                    <p class="muted">Предоплата на карту — деньги с получателя не берутся, обратная доставка не добавляется.</p>
                 @endif
             @else
                 <p class="muted">Город и отделение не выбраны из списка Новой Почты — накладную можно оформить вручную в кабинете my.novaposhta.ua.</p>
