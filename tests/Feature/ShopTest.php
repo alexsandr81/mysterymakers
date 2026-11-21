@@ -86,6 +86,16 @@ class ShopTest extends TestCase
         $this->assertNotNull($order->fresh()->paid_at);
     }
 
+    public function test_deleted_product_disappears_from_cart_counter(): void
+    {
+        $p = $this->product(5);
+        $session = ['cart' => [$p->id => 2, 9999 => 1]]; // 9999 — товара уже нет
+
+        $cart = $this->withSession($session)->app->make(\App\Services\Cart::class);
+        $this->assertSame(2, $cart->count());
+        $this->assertArrayNotHasKey(9999, $cart->raw());
+    }
+
     public function test_review_is_pending_until_approved(): void
     {
         $p = $this->product();

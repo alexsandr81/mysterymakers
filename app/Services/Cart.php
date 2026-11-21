@@ -14,9 +14,28 @@ class Cart
     private const KEY = 'cart';
     private const MAX_QTY = 99;
 
+    /** true, если корзина уже очищена от удалённых/скрытых товаров в этом запросе */
+    private bool $pruned = false;
+
+    /**
+     * Содержимое корзины. Товары, которых больше нет (удалены или скрыты),
+     * сразу убираются из корзины — иначе значок «🛒 1» остаётся висеть без товара.
+     */
     public function raw(): array
     {
-        return session(self::KEY, []);
+        $cart = session(self::KEY, []);
+
+        if ($cart && !$this->pruned) {
+            $this->pruned = true;
+            $alive = Product::active()->whereIn('id', array_keys($cart))->pluck('id')->all();
+            $clean = array_intersect_key($cart, array_flip($alive));
+            if (count($clean) !== count($cart)) {
+                session([self::KEY => $clean]);
+                $cart = $clean;
+            }
+        }
+
+        return $cart;
     }
 
     public function add(Product $product, int $qty = 1): void
@@ -24,6 +43,7 @@ class Cart
         $cart = $this->raw();
         $cart[$product->id] = $this->clamp(($cart[$product->id] ?? 0) + $qty, $product);
         session([self::KEY => $cart]);
+        $this->pruned = false;
     }
 
     public function set(Product $product, int $qty): void
@@ -35,6 +55,7 @@ class Cart
         $cart = $this->raw();
         $cart[$product->id] = $this->clamp($qty, $product);
         session([self::KEY => $cart]);
+        $this->pruned = false;
     }
 
     public function remove(int $productId): void
@@ -42,11 +63,13 @@ class Cart
         $cart = $this->raw();
         unset($cart[$productId]);
         session([self::KEY => $cart]);
+        $this->pruned = false;
     }
 
     public function clear(): void
     {
         session()->forget(self::KEY);
+        $this->pruned = false;
     }
 
     public function count(): int
