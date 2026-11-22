@@ -34,6 +34,7 @@ class ShopTest extends TestCase
         $p = $this->product();
         $this->get('/')->assertOk();
         $this->get('/catalog')->assertOk();
+        $this->get('/')->assertSee('theme-toggle', false);
         $this->get(route('product', $p))->assertOk()->assertSee('application/ld+json', false);
         $this->get('/sitemap.xml')->assertOk()->assertSee('test-product');
         // robots.txt отдаёт веб-сервер из public, а не Laravel — проверяем, что файл на месте

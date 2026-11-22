@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title', 'Админка') — MysteryMakers</title>
+    @include('partials.theme-head')
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
 </head>
 <body class="admin">
@@ -27,6 +28,7 @@
             <a href="{{ route('admin.backups.index') }}" class="{{ request()->routeIs('admin.backups.*') ? 'active' : '' }}">💾 Копии</a>
             <a href="{{ route('home') }}">↩ На сайт</a>
         </nav>
+        @include('partials.theme-button', ['class' => 'link-btn link-btn--light', 'title' => 'Тема'])
         <button type="button" class="link-btn link-btn--light" id="sound-toggle" title="Звук при новом заказе">🔕 Звук выключен</button>
         <form action="{{ route('logout') }}" method="POST">
             @csrf

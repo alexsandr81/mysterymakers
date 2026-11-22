@@ -18,6 +18,7 @@
     <meta property="og:url" content="{{ url()->current() }}">
     @hasSection('og_image')<meta property="og:image" content="@yield('og_image')">@endif
     @stack('head')
+    @include('partials.theme-head')
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
 </head>
 <body>
@@ -37,6 +38,7 @@
                     <a href="{{ route('locale', $code) }}" class="langflag langflag--{{ $code }} {{ app()->getLocale() === $code ? 'is-active' : '' }}" title="{{ $code === 'uk' ? 'Українська' : 'Русский' }}" @if(app()->getLocale() === $code) aria-current="true" @endif><span>{{ $label }}</span></a>
                 @endforeach
             </div>
+            @include('partials.theme-button', ['title' => __('shop.theme')])
         </div>
     </div>
 </div>
