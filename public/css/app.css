@@ -278,7 +278,7 @@ body.admin { background: var(--bg-admin); }
 .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 24px; }
 .stat { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; display: flex; flex-direction: column; gap: 4px; }
 .stat span { color: var(--muted); font-size: .9rem; }
-.stat strong { font-size: 1.5rem; color: var(--brand-dark); }
+.stat strong { font-size: 1.5rem; color: var(--link); }
 
 .filters-inline { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
 .filters-inline a { padding: 6px 14px; border: 1px solid var(--line); border-radius: 18px; background: var(--surface); color: var(--text); }
