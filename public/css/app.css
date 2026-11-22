@@ -567,3 +567,4 @@ a.stat:hover { border-color: var(--accent); }
 .theme-btn { background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.35); color: #fff; border-radius: 6px; height: 19px; width: 28px; padding: 0; font-size: .75rem; line-height: 1; cursor: pointer; }
 .theme-btn:hover { background: rgba(255,255,255,.25); }
 .topbar__right { display: flex; gap: 8px; align-items: center; }
+:root[data-theme="dark"] .hero h1, :root[data-theme="dark"] .pw-change summary:hover { color: var(--link); }
