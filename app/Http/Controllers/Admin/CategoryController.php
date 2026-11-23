@@ -9,11 +9,40 @@ use Illuminate\Support\Str;
 
 class CategoryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return view('admin.categories.index', [
-            'categories' => $this->tree(),
-        ]);
+        $keys = ['name', 'name_uk', 'parent', 'products', 'sku', 'sort'];
+        $sort = in_array($request->query('sort'), $keys, true) ? $request->query('sort') : null;
+        $dir = $request->query('dir') === 'desc' ? 'desc' : 'asc';
+
+        // Без сортировки — «дерево» с кнопками ▲▼; с сортировкой по колонке — плоский список
+        if (! $sort) {
+            return view('admin.categories.index', ['categories' => $this->tree(), 'sort' => null, 'dir' => $dir]);
+        }
+
+        $query = Category::with('parent')->withCount('products');
+        switch ($sort) {
+            case 'name':
+                $query->orderBy('name_ru', $dir);
+                break;
+            case 'name_uk':
+                $query->orderBy('name_uk', $dir);
+                break;
+            case 'parent':
+                $query->orderBy(Category::from('categories as c2')->select('c2.name_ru')->whereColumn('c2.id', 'categories.parent_id'), $dir);
+                break;
+            case 'products':
+                $query->orderBy('products_count', $dir);
+                break;
+            case 'sku':
+                $query->orderBy('sku_start', $dir);
+                break;
+            default:
+                $query->orderBy('sort', $dir);
+        }
+        $categories = $query->orderBy('id')->get();
+
+        return view('admin.categories.index', compact('categories', 'sort', 'dir'));
     }
 
     /** Список «дерево»: родитель, затем его подкатегории; внутри уровня — по порядку сортировки */

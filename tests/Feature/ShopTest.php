@@ -168,4 +168,16 @@ class ShopTest extends TestCase
         $this->assertSame('11001', $sub1->fresh()->nextSku());
         $this->assertSame('12000', $sub2->nextSku());
     }
+
+    public function test_admin_categories_sorting(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $top = Category::create(['slug' => 'z', 'name_uk' => 'Я', 'name_ru' => 'Я', 'sort' => 1, 'sku_start' => 10000]);
+        Category::create(['parent_id' => $top->id, 'slug' => 'a', 'name_uk' => 'А', 'name_ru' => 'А', 'sort' => 2, 'sku_start' => 11000]);
+
+        $this->actingAs($admin)->get(route('admin.categories.index'))->assertOk();
+        foreach (['name', 'name_uk', 'parent', 'products', 'sku', 'sort'] as $col) {
+            $this->actingAs($admin)->get(route('admin.categories.index', ['sort' => $col, 'dir' => 'desc']))->assertOk();
+        }
+    }
 }
