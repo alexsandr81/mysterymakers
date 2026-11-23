@@ -81,8 +81,9 @@ class ProductController extends Controller
 
         $product = Product::create($data);
         $product->characteristicValues()->sync($this->selectedValueIds($request));
+        $note = \App\Services\DriveSync::note(\App\Services\DriveSync::product($product));
 
-        return redirect()->route('admin.products.index')->with('status', 'Товар создан');
+        return redirect()->route('admin.products.index')->with('status', 'Товар создан.' . $note);
     }
 
     public function edit(Product $product)
@@ -110,8 +111,9 @@ class ProductController extends Controller
         $data['images'] = $images;
         $product->update($data);
         $product->characteristicValues()->sync($this->selectedValueIds($request));
+        $note = \App\Services\DriveSync::note(\App\Services\DriveSync::product($product->fresh()));
 
-        return redirect()->route('admin.products.index')->with('status', 'Товар сохранён');
+        return redirect()->route('admin.products.index')->with('status', 'Товар сохранён.' . $note);
     }
 
     public function destroy(Product $product)

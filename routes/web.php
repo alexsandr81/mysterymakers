@@ -86,6 +86,8 @@ Route::middleware(SetLocale::class)->group(function () {
     // Админка: только для пользователей с is_admin = 1
     Route::prefix('admin')->name('admin.')->middleware(['auth', EnsureAdmin::class])->group(function () {
         Route::get('/', [Admin\DashboardController::class, 'index'])->name('dashboard');
+        Route::post('products/{product}/drive', [Admin\DriveController::class, 'product'])->name('products.drive');
+        Route::post('categories/{category}/drive', [Admin\DriveController::class, 'category'])->name('categories.drive');
         Route::resource('products', Admin\ProductController::class)->except('show');
         Route::post('categories/{category}/move/{direction}', [Admin\CategoryController::class, 'move'])->name('categories.move');
         Route::resource('categories', Admin\CategoryController::class)->except('show');

@@ -180,4 +180,37 @@ class ShopTest extends TestCase
             $this->actingAs($admin)->get(route('admin.categories.index', ['sort' => $col, 'dir' => 'desc']))->assertOk();
         }
     }
+
+    public function test_drive_folders_are_optional_and_created_when_configured(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $row = ['name_uk' => 'Коробки', 'name_ru' => 'Коробки', 'sort' => 1];
+
+        // Диск не настроен — категория всё равно создаётся
+        config(['shop.drive.root_id' => null]);
+        $this->actingAs($admin)->post(route('admin.categories.store'), $row)->assertRedirect();
+        $this->assertNull(Category::first()->drive_folder_id);
+
+        // Диск настроен (токен подставлен в кэш, запросы к Google подменены)
+        $key = tempnam(sys_get_temp_dir(), 'gd');
+        file_put_contents($key, '{}');
+        config(['shop.drive.root_id' => 'ROOT', 'shop.drive.key_file' => $key]);
+        \Illuminate\Support\Facades\Cache::put('gdrive_token', 'test-token', 600);
+        $n = 0;
+        \Illuminate\Support\Facades\Http::fake([
+            'www.googleapis.com/*' => function ($request) use (&$n) {
+                return \Illuminate\Support\Facades\Http::response($request->method() === 'POST' ? ['id' => 'folder-' . ++$n] : ['files' => []]);
+            },
+        ]);
+
+        $this->actingAs($admin)->post(route('admin.categories.store'), ['name_uk' => 'Круглі', 'name_ru' => 'Круглые', 'sort' => 1, 'parent_id' => Category::first()->id])->assertRedirect();
+        $sub = Category::where('name_ru', 'Круглые')->first();
+        $this->assertNotNull($sub->drive_folder_id);
+
+        $p = Product::create(['category_id' => $sub->id, 'sku' => '11000', 'slug' => 'k1', 'name_uk' => 'К', 'name_ru' => 'К', 'price' => 1, 'stock' => 1, 'is_active' => true]);
+        $this->assertNotNull(\App\Services\DriveSync::product($p));
+        $this->assertNotNull($p->fresh()->drive_folder_id);
+
+        @unlink($key);
+    }
 }

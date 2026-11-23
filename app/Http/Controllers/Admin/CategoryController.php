@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Services\DriveSync;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -103,9 +104,10 @@ class CategoryController extends Controller
         if ($data['sku_start'] === null) {
             return back()->withInput()->withErrors(['parent_id' => 'В диапазоне артикулов родительской категории больше нет места (максимум 9 подкатегорий). Укажите начало артикулов вручную.']);
         }
-        Category::create($data);
+        $category = Category::create($data);
+        $note = DriveSync::note(DriveSync::category($category));
 
-        return redirect()->route('admin.categories.index')->with('status', 'Категория создана');
+        return redirect()->route('admin.categories.index')->with('status', 'Категория создана.' . $note);
     }
 
     public function edit(Category $category)
@@ -125,8 +127,9 @@ class CategoryController extends Controller
             $data['sku_start'] = Category::nextSkuStart($data['parent_id'] ?? null) ?? $category->sku_start;
         }
         $category->update($data);
+        $note = DriveSync::note(DriveSync::category($category));
 
-        return redirect()->route('admin.categories.index')->with('status', 'Категория сохранена');
+        return redirect()->route('admin.categories.index')->with('status', 'Категория сохранена.' . $note);
     }
 
     public function destroy(Category $category)

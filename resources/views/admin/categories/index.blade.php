@@ -49,6 +49,11 @@
                 @endif
             </td>
             <td class="actions">
+                @if($c->drive_folder_id)
+                    <a href="{{ \App\Services\GoogleDrive::url($c->drive_folder_id) }}" target="_blank" title="Папка на Google Диске">📁</a>
+                @elseif(\App\Services\GoogleDrive::enabled())
+                    <form action="{{ route('admin.categories.drive', $c) }}" method="POST">@csrf<button class="link-btn" title="Создать папку на Google Диске">📁+</button></form>
+                @endif
                 <a href="{{ route('admin.categories.edit', $c) }}">Изменить</a>
                 <form action="{{ route('admin.categories.destroy', $c) }}" method="POST" onsubmit="return confirm('Удалить категорию?')">
                     @csrf @method('DELETE')

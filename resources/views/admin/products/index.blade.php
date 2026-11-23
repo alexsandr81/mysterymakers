@@ -41,6 +41,11 @@
             <td>{{ $p->is_active ? '✓' : '—' }}</td>
             <td class="muted">{{ $p->created_at?->format('d.m.Y') }}</td>
             <td class="actions">
+                @if($p->drive_folder_id)
+                    <a href="{{ \App\Services\GoogleDrive::url($p->drive_folder_id) }}" target="_blank" title="Папка на Google Диске">📁</a>
+                @elseif(\App\Services\GoogleDrive::enabled())
+                    <form action="{{ route('admin.products.drive', $p) }}" method="POST">@csrf<button class="link-btn" title="Создать папку на Google Диске">📁+</button></form>
+                @endif
                 <a href="{{ route('admin.products.edit', $p) }}">Изменить</a>
                 <form action="{{ route('admin.products.destroy', $p) }}" method="POST" onsubmit="return confirm('Удалить товар?')">
                     @csrf @method('DELETE')
