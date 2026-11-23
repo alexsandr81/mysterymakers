@@ -1,5 +1,5 @@
 @unless(\App\Services\GoogleDrive::enabled())
-    <div class="flash">
+    <div class="flash flash--info">
         📁 Google Диск не подключён, поэтому папки не создаются.
         @if(!config('shop.drive.root_id'))
             Не задан <code>GOOGLE_DRIVE_ROOT_ID</code> в файле <code>.env</code>.

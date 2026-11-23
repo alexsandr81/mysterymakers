@@ -118,6 +118,8 @@ h3 { font-size: 1.05rem; margin: 1.2rem 0 .6rem; }
 .flash { padding: 12px 16px; border-radius: var(--radius); margin-bottom: 16px; }
 .flash--ok { background: #eaf3e3; color: var(--ok); border: 1px solid #cfe2c3; }
 .flash--err { background: #fbe9e6; color: var(--warn); border: 1px solid #f0c9c3; }
+.flash--info { background: #fbf3e2; color: var(--text, #3b2a1a); border: 1px solid #ecd9b0; }
+:root[data-theme="dark"] .flash--info { background: #2c2518; border-color: #4a3d22; color: inherit; }
 
 /* ---------- Главная ---------- */
 .hero {
