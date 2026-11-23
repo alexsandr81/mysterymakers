@@ -63,6 +63,14 @@ class DriveSync
         }
         try {
             return $fn();
+        } catch (\Illuminate\Http\Client\RequestException $e) {
+            if ($e->response->status() === 404) {
+                Log::warning('Google Диск: папка не найдена или к ней нет доступа. Проверьте GOOGLE_DRIVE_ROOT_ID и что папка MysteryMakers открыта (роль «Редактор») для ' . (GoogleDrive::serviceEmail() ?: 'сервисного аккаунта'));
+            } else {
+                Log::warning('Google Диск: ' . $e->getMessage());
+            }
+
+            return null;
         } catch (Throwable $e) {
             Log::warning('Google Диск: ' . $e->getMessage());
 

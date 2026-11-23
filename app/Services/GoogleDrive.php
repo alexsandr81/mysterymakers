@@ -26,6 +26,14 @@ class GoogleDrive
         return (string) config('shop.drive.root_id');
     }
 
+    /** Email сервисного аккаунта из файла ключа (для подсказок в ошибках) */
+    public static function serviceEmail(): ?string
+    {
+        $key = json_decode((string) @file_get_contents((string) config('shop.drive.key_file')), true);
+
+        return is_array($key) ? ($key['client_email'] ?? null) : null;
+    }
+
     public static function url(string $folderId): string
     {
         return 'https://drive.google.com/drive/folders/' . $folderId;
