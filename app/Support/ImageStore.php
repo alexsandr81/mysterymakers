@@ -12,6 +12,16 @@ use Illuminate\Support\Str;
  */
 class ImageStore
 {
+    /**
+     * Адрес загруженного файла. Строится от адреса, по которому сейчас открыт сайт
+     * (локально, через туннель или на домене), а не от APP_URL — иначе при другом адресе
+     * в APP_URL фото перестают открываться.
+     */
+    public static function url(string $path): string
+    {
+        return url('storage/' . ltrim($path, '/'));
+    }
+
     public static function store(UploadedFile $file, string $dir, int $maxSide = 1600, int $quality = 82): string
     {
         if (!function_exists('imagecreatefromstring')) {

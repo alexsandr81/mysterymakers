@@ -78,7 +78,7 @@ class Product extends Model
     public function getImageUrlsAttribute(): array
     {
         $urls = collect($this->images ?? [])
-            ->map(fn ($path) => Storage::disk('public')->url($path))
+            ->map(fn ($path) => \App\Support\ImageStore::url($path))
             ->all();
 
         return $urls ?: [asset('img/placeholder.svg')];

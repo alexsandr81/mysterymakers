@@ -97,7 +97,7 @@
             <div class="thumbs-edit">
                 @foreach($product->images as $path)
                     <label class="thumbs-edit__item">
-                        <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($path) }}" alt="">
+                        <img src="{{ \App\Support\ImageStore::url($path) }}" alt="">
                         <span><input type="checkbox" name="remove_images[]" value="{{ $path }}"> удалить</span>
                     </label>
                 @endforeach

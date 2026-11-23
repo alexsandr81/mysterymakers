@@ -32,6 +32,6 @@ class Banner extends Model
 
     public function getImageUrlAttribute(): string
     {
-        return Storage::disk('public')->url($this->image);
+        return \App\Support\ImageStore::url($this->image);
     }
 }

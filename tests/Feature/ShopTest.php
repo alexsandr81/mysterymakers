@@ -97,6 +97,14 @@ class ShopTest extends TestCase
         $this->assertArrayNotHasKey(9999, $cart->raw());
     }
 
+    public function test_image_urls_follow_current_host_not_app_url(): void
+    {
+        config(['app.url' => 'https://other.example']);
+
+        $this->assertSame(url('storage/products/a.webp'), \App\Support\ImageStore::url('products/a.webp'));
+        $this->assertStringNotContainsString('other.example', \App\Support\ImageStore::url('products/a.webp'));
+    }
+
     public function test_review_is_pending_until_approved(): void
     {
         $p = $this->product();

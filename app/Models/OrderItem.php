@@ -19,7 +19,7 @@ class OrderItem extends Model
     public function getImageUrlAttribute(): string
     {
         if ($this->image) {
-            return Storage::disk('public')->url($this->image);
+            return \App\Support\ImageStore::url($this->image);
         }
 
         return $this->product?->main_image ?? asset('img/placeholder.svg');
