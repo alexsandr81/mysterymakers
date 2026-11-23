@@ -12,13 +12,20 @@
             <li><a href="{{ route('catalog') }}" class="{{ !$category ? 'active' : '' }}">{{ __('shop.all_products') }}</a></li>
             @foreach($topCategories as $c)
                 <li>
-                    <a href="{{ route('catalog.category', $c) }}" class="{{ $category?->id === $c->id ? 'active' : '' }}">{{ $c->name }}</a>
                     @if($c->children->isNotEmpty())
-                        <ul>
-                            @foreach($c->children as $child)
-                                <li><a href="{{ route('catalog.category', $child) }}" class="{{ $category?->id === $child->id ? 'active' : '' }}">{{ $child->name }}</a></li>
-                            @endforeach
-                        </ul>
+                        {{-- Категория с подкатегориями: раскрывающийся список (открыт, если выбрана она или её подкатегория) --}}
+                        <details class="tree__group" @if($category && ($category->id === $c->id || $category->parent_id === $c->id)) open @endif>
+                            <summary>
+                                <a href="{{ route('catalog.category', $c) }}" class="{{ $category?->id === $c->id ? 'active' : '' }}">{{ $c->name }}</a>
+                            </summary>
+                            <ul>
+                                @foreach($c->children as $child)
+                                    <li><a href="{{ route('catalog.category', $child) }}" class="{{ $category?->id === $child->id ? 'active' : '' }}">{{ $child->name }}</a></li>
+                                @endforeach
+                            </ul>
+                        </details>
+                    @else
+                        <a href="{{ route('catalog.category', $c) }}" class="{{ $category?->id === $c->id ? 'active' : '' }}">{{ $c->name }}</a>
                     @endif
                 </li>
             @endforeach

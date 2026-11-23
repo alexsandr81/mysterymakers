@@ -87,6 +87,7 @@ Route::middleware(SetLocale::class)->group(function () {
     Route::prefix('admin')->name('admin.')->middleware(['auth', EnsureAdmin::class])->group(function () {
         Route::get('/', [Admin\DashboardController::class, 'index'])->name('dashboard');
         Route::resource('products', Admin\ProductController::class)->except('show');
+        Route::post('categories/{category}/move/{direction}', [Admin\CategoryController::class, 'move'])->name('categories.move');
         Route::resource('categories', Admin\CategoryController::class)->except('show');
         Route::get('/backups', [Admin\BackupController::class, 'index'])->name('backups.index');
         Route::post('/backups', [Admin\BackupController::class, 'store'])->name('backups.store');

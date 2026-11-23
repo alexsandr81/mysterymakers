@@ -16,6 +16,9 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         $q = trim((string) $request->query('q', ''));
+        $sort = (string) $request->query('sort', 'created');
+        $sort = in_array($sort, ['created', 'name', 'sku', 'category', 'price', 'stock', 'active'], true) ? $sort : 'created';
+        $dir = $request->query('dir') === 'asc' ? 'asc' : 'desc';
 
         $products = Product::with('category')
             ->when($q !== '', function ($query) use ($q) {
@@ -24,9 +27,40 @@ class ProductController extends Controller
                     ->orWhere('name_ru', 'like', $like)
                     ->orWhere('sku', 'like', $like));
             })
-            ->latest()->paginate(20)->withQueryString();
+            ->when(true, fn ($query) => $this->applySort($query, $sort, $dir))
+            ->paginate(20)->withQueryString();
 
-        return view('admin.products.index', compact('products', 'q'));
+        return view('admin.products.index', compact('products', 'q', 'sort', 'dir'));
+    }
+
+    /** Сортировка списка товаров по клику на заголовок колонки (только из разрешённых полей) */
+    private function applySort($query, string $sort, string $dir)
+    {
+        switch ($sort) {
+            case 'name':
+                $query->orderBy('name_ru', $dir);
+                break;
+            case 'sku':
+                // «999» раньше «1000»: сначала по длине, затем по значению
+                $query->orderByRaw('length(sku) ' . $dir)->orderBy('sku', $dir);
+                break;
+            case 'category':
+                $query->orderBy(Category::select('name_ru')->whereColumn('categories.id', 'products.category_id'), $dir);
+                break;
+            case 'price':
+                $query->orderBy('price', $dir);
+                break;
+            case 'stock':
+                $query->orderBy('stock', $dir);
+                break;
+            case 'active':
+                $query->orderBy('is_active', $dir);
+                break;
+            default:
+                $query->orderBy('id', $dir);
+        }
+
+        return $query->orderBy('id', 'desc');
     }
 
     public function create()

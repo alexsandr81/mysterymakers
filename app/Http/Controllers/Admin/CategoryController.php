@@ -12,8 +12,50 @@ class CategoryController extends Controller
     public function index()
     {
         return view('admin.categories.index', [
-            'categories' => Category::with('parent')->withCount('products')->orderBy('sort')->get(),
+            'categories' => $this->tree(),
         ]);
+    }
+
+    /** Список «дерево»: родитель, затем его подкатегории; внутри уровня — по порядку сортировки */
+    private function tree()
+    {
+        $all = Category::with('parent')->withCount('products')->orderBy('sort')->orderBy('id')->get();
+        $out = collect();
+        foreach ($all->whereNull('parent_id') as $parent) {
+            $out->push($parent);
+            foreach ($all->where('parent_id', $parent->id) as $child) {
+                $out->push($child);
+            }
+        }
+        // На случай подкатегорий без существующего родителя
+        foreach ($all->whereNotIn('id', $out->pluck('id')) as $orphan) {
+            $out->push($orphan);
+        }
+
+        return $out;
+    }
+
+    /** Поднять/опустить категорию среди «соседей» (того же родителя) */
+    public function move(Category $category, string $direction)
+    {
+        abort_unless(in_array($direction, ['up', 'down'], true), 404);
+
+        $siblings = Category::where('parent_id', $category->parent_id)->orderBy('sort')->orderBy('id')->get()->values();
+        $i = $siblings->search(fn ($s) => $s->id === $category->id);
+        $j = $direction === 'up' ? $i - 1 : $i + 1;
+
+        if ($i !== false && isset($siblings[$j])) {
+            $order = $siblings->all();
+            [$order[$i], $order[$j]] = [$order[$j], $order[$i]];
+            // Перенумеровываем весь уровень, чтобы порядок был однозначным
+            foreach ($order as $n => $cat) {
+                if ((int) $cat->sort !== $n) {
+                    $cat->update(['sort' => $n]);
+                }
+            }
+        }
+
+        return back();
     }
 
     public function create()

@@ -105,6 +105,31 @@ class ShopTest extends TestCase
         $this->assertStringNotContainsString('other.example', \App\Support\ImageStore::url('products/a.webp'));
     }
 
+    public function test_admin_product_list_sorting_and_category_move(): void
+    {
+        $p = $this->product();
+        $admin = User::factory()->create(['is_admin' => true]);
+
+        foreach (['name', 'sku', 'category', 'price', 'stock', 'active', 'created'] as $col) {
+            $this->actingAs($admin)->get(route('admin.products.index', ['sort' => $col, 'dir' => 'asc']))->assertOk();
+        }
+        $this->actingAs($admin)->get(route('admin.products.index', ['sort' => 'hack; drop table', 'dir' => 'x']))->assertOk();
+
+        $a = Category::first();
+        $b = Category::create(['slug' => 'second', 'name_uk' => 'Друга', 'name_ru' => 'Вторая', 'sort' => 5]);
+        $this->actingAs($admin)->post(route('admin.categories.move', [$b, 'up']))->assertRedirect();
+        $this->assertLessThan($a->fresh()->sort, $b->fresh()->sort);
+        $this->actingAs($admin)->get(route('admin.categories.index'))->assertOk();
+    }
+
+    public function test_catalog_shows_subcategories_in_dropdown(): void
+    {
+        $parent = Category::create(['slug' => 'parent', 'name_uk' => 'Батько', 'name_ru' => 'Родитель', 'sort' => 1]);
+        Category::create(['slug' => 'child', 'name_uk' => 'Дитина', 'name_ru' => 'Ребёнок', 'parent_id' => $parent->id, 'sort' => 1]);
+
+        $this->get('/catalog')->assertOk()->assertSee('tree__group', false);
+    }
+
     public function test_review_is_pending_until_approved(): void
     {
         $p = $this->product();

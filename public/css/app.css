@@ -568,3 +568,22 @@ a.stat:hover { border-color: var(--accent); }
 .theme-btn:hover { background: rgba(255,255,255,.25); }
 .topbar__right { display: flex; gap: 8px; align-items: center; }
 :root[data-theme="dark"] .hero h1, :root[data-theme="dark"] .pw-change summary:hover { color: var(--link); }
+
+/* ---------- Выпадающие подкатегории в каталоге ---------- */
+.tree__group > summary { display: flex; align-items: center; cursor: pointer; list-style: none; }
+.tree__group > summary::-webkit-details-marker { display: none; }
+.tree__group > summary a { flex: 1; }
+.tree__group > summary::after { content: "▾"; color: var(--muted); font-size: .9rem; padding: 4px 6px; transition: transform .15s; transform: rotate(-90deg); }
+.tree__group[open] > summary::after { transform: rotate(0); }
+.tree__group > ul { border-left: 2px solid var(--line); margin-left: 4px; }
+
+/* ---------- Сортировка таблиц в админке ---------- */
+.table th a.sort { color: inherit; white-space: nowrap; text-decoration: none; }
+.table th a.sort:hover { color: var(--link); }
+.table th a.sort.is-active { color: var(--link); }
+.table th a.sort small { opacity: .75; }
+.move-btns { display: inline-flex; gap: 4px; margin-right: 6px; }
+.move-btns form { display: inline; }
+.move-btns button { background: none; border: 1px solid var(--line); border-radius: 6px; cursor: pointer; padding: 0 7px; color: var(--text); font-size: .8rem; line-height: 1.5; }
+.move-btns button:hover:not(:disabled) { background: var(--tint); }
+.move-btns button:disabled { opacity: .3; cursor: default; }

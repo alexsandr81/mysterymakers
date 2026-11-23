@@ -15,8 +15,20 @@
     <button class="btn btn--brand">Найти</button>
 </form>
 
+@php
+    // Ссылка-заголовок: повторный клик меняет направление; поиск сохраняется
+    $th = function (string $key, string $label) use ($sort, $dir, $q) {
+        $active = $sort === $key;
+        $next = ($active && $dir === 'asc') ? 'desc' : 'asc';
+        $arrow = $active ? ($dir === 'asc' ? '▲' : '▼') : '↕';
+        $url = route('admin.products.index', array_filter(['q' => $q, 'sort' => $key, 'dir' => $next], fn ($v) => $v !== ''));
+
+        return new \Illuminate\Support\HtmlString('<a class="sort ' . ($active ? 'is-active' : '') . '" href="' . e($url) . '">' . e($label) . ' <small>' . $arrow . '</small></a>');
+    };
+@endphp
+
 <table class="table">
-    <thead><tr><th></th><th>Название</th><th>Артикул</th><th>Категория</th><th>Цена</th><th>Остаток</th><th>Активен</th><th></th></tr></thead>
+    <thead><tr><th></th><th>{{ $th('name', 'Название') }}</th><th>{{ $th('sku', 'Артикул') }}</th><th>{{ $th('category', 'Категория') }}</th><th>{{ $th('price', 'Цена') }}</th><th>{{ $th('stock', 'Остаток') }}</th><th>{{ $th('active', 'Активен') }}</th><th>{{ $th('created', 'Добавлен') }}</th><th></th></tr></thead>
     <tbody>
     @foreach($products as $p)
         <tr>
@@ -27,6 +39,7 @@
             <td>{{ Money::format($p->price) }}</td>
             <td class="{{ $p->stock < 5 ? 'text-warn' : '' }}">{{ $p->stock }}</td>
             <td>{{ $p->is_active ? '✓' : '—' }}</td>
+            <td class="muted">{{ $p->created_at?->format('d.m.Y') }}</td>
             <td class="actions">
                 <a href="{{ route('admin.products.edit', $p) }}">Изменить</a>
                 <form action="{{ route('admin.products.destroy', $p) }}" method="POST" onsubmit="return confirm('Удалить товар?')">
