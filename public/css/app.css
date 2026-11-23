@@ -209,7 +209,9 @@ h3 { font-size: 1.05rem; margin: 1.2rem 0 .6rem; }
 .table tr:last-child td { border-bottom: 0; }
 .table .thumb { width: 72px; }
 .table .thumb img { width: 56px; height: 56px; object-fit: cover; border-radius: 8px; }
-.table .actions { display: flex; gap: 12px; align-items: center; white-space: nowrap; }
+.table td.actions { white-space: nowrap; } /* ячейка остаётся ячейкой таблицы, иначе линии строк «съезжают» */
+.table td.actions > * { display: inline-block; vertical-align: middle; margin: 0 12px 0 0; }
+.table td.actions > :last-child { margin-right: 0; }
 .text-warn { color: var(--warn); font-weight: 700; }
 .qty-form { margin: 0; }
 
