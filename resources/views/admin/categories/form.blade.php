@@ -26,8 +26,8 @@
         </select>
     </label>
     <label>Артикулы начинаются с
-        <input type="number" min="1" name="sku_start" value="{{ old('sku_start', $category->sku_start) }}" placeholder="Автоматически: 1000, 2000, 3000…">
-        <span class="muted">Новые товары этой категории получают артикулы по порядку: 1000, 1001, 1002… Если пусто при создании — подберётся следующая тысяча.</span>
+        <input type="number" min="1" name="sku_start" value="{{ old('sku_start', $category->sku_start) }}" placeholder="Автоматически">
+        <span class="muted">Обычно оставьте пустым. Категория верхнего уровня получает блок 10000–19999, 20000–29999…; её товары — первые 1000 номеров блока (10000–10999), а подкатегории — следующие тысячи внутри блока (11000–11999, 12000–12999…). Новые товары получают артикулы по порядку, уже созданные не меняются.</span>
     </label>
     <label>Порядок сортировки
         <input type="number" min="0" name="sort" value="{{ old('sort', $category->sort) }}" required>

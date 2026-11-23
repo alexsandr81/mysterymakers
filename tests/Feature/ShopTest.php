@@ -152,4 +152,20 @@ class ShopTest extends TestCase
         $this->actingAs($user)->post(route('favorites.toggle', $p));
         $this->assertCount(0, $user->favorites()->get());
     }
+
+    public function test_sku_ranges_nest_inside_category_block(): void
+    {
+        $top = Category::create(['slug' => 'a', 'name_uk' => 'А', 'name_ru' => 'А', 'sort' => 1, 'sku_start' => Category::nextSkuStart(null)]);
+        $sub1 = Category::create(['parent_id' => $top->id, 'slug' => 'a1', 'name_uk' => 'А1', 'name_ru' => 'А1', 'sort' => 1, 'sku_start' => Category::nextSkuStart($top->id)]);
+        $sub2 = Category::create(['parent_id' => $top->id, 'slug' => 'a2', 'name_uk' => 'А2', 'name_ru' => 'А2', 'sort' => 2, 'sku_start' => Category::nextSkuStart($top->id)]);
+        $top2 = Category::create(['slug' => 'b', 'name_uk' => 'Б', 'name_ru' => 'Б', 'sort' => 2, 'sku_start' => Category::nextSkuStart(null)]);
+
+        $this->assertSame([10000, 11000, 12000, 20000], [$top->sku_start, $sub1->sku_start, $sub2->sku_start, $top2->sku_start]);
+        $this->assertSame('10000', $top->nextSku());
+        $this->assertSame('11000', $sub1->nextSku());
+
+        Product::create(['category_id' => $sub1->id, 'sku' => '11000', 'slug' => 'p1', 'name_uk' => 'P', 'name_ru' => 'P', 'price' => 1, 'stock' => 1, 'is_active' => true]);
+        $this->assertSame('11001', $sub1->fresh()->nextSku());
+        $this->assertSame('12000', $sub2->nextSku());
+    }
 }

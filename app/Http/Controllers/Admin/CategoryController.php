@@ -70,7 +70,10 @@ class CategoryController extends Controller
     {
         $data = $this->validated($request);
         $data['slug'] = $this->uniqueSlug($data['name_uk']);
-        $data['sku_start'] = $data['sku_start'] ?? ((int) Category::max('sku_start') + 1000 ?: 1000);
+        $data['sku_start'] = $data['sku_start'] ?? Category::nextSkuStart($data['parent_id'] ?? null);
+        if ($data['sku_start'] === null) {
+            return back()->withInput()->withErrors(['parent_id' => 'В диапазоне артикулов родительской категории больше нет места (максимум 9 подкатегорий). Укажите начало артикулов вручную.']);
+        }
         Category::create($data);
 
         return redirect()->route('admin.categories.index')->with('status', 'Категория создана');
@@ -86,7 +89,13 @@ class CategoryController extends Controller
 
     public function update(Request $request, Category $category)
     {
-        $category->update($this->validated($request));
+        $data = $this->validated($request);
+        $parentChanged = (int) ($data['parent_id'] ?? 0) !== (int) $category->parent_id;
+        // Пусто или родитель сменился, а число не трогали — подбираем блок заново (артикулы уже созданных товаров не меняются)
+        if (empty($data['sku_start']) || ($parentChanged && (int) $data['sku_start'] === (int) $category->sku_start)) {
+            $data['sku_start'] = Category::nextSkuStart($data['parent_id'] ?? null) ?? $category->sku_start;
+        }
+        $category->update($data);
 
         return redirect()->route('admin.categories.index')->with('status', 'Категория сохранена');
     }
