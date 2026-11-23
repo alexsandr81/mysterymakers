@@ -141,7 +141,7 @@ class ProductController extends Controller
             'size_length' => ['nullable', 'integer', 'min:1', 'max:100000'],
             'size_width' => ['nullable', 'integer', 'min:1', 'max:100000'],
             'size_height' => ['nullable', 'integer', 'min:1', 'max:100000'],
-            'images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+            'images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:20480'],
             'char' => ['nullable', 'array'],
             'char.*' => ['nullable', 'integer', 'exists:characteristic_values,id'],
         ]);

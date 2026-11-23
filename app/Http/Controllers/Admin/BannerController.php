@@ -26,7 +26,7 @@ class BannerController extends Controller
         // Можно загрузить сразу до 5 картинок: каждая станет отдельным слайдом
         $request->validate([
             'images' => ['required', 'array', 'min:1', 'max:5'],
-            'images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:20480'],
         ]);
 
         foreach (array_values($request->file('images')) as $i => $file) {
@@ -78,7 +78,7 @@ class BannerController extends Controller
             // только http(s):// или путь внутри сайта — чтобы нельзя было подставить javascript:
             'url' => ['nullable', 'string', 'max:255', 'regex:#^(https?://|/)#i'],
             'sort' => ['required', 'integer', 'min:0'],
-            'image' => [$imageRequired ? 'prohibited' : 'nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'image' => [$imageRequired ? 'prohibited' : 'nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:20480'],
         ]);
 
         unset($data['image']);

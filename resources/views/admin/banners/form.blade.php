@@ -20,13 +20,13 @@
     @endunless
 
     @if($isNew)
-        <label>Картинки: можно выбрать сразу до 5 файлов (JPG/PNG/WebP, до 5 МБ каждая, лучше 1600×500)
+        <label>Картинки: можно выбрать сразу до 5 файлов (JPG/PNG/WebP, до 20 МБ каждая, лучше 1600×500)
             <input type="file" name="images[]" id="banner-files" multiple required accept="image/jpeg,image/png,image/webp">
         </label>
         <div id="banner-previews" class="preview-row"></div>
         <p class="muted">Каждая картинка станет отдельным слайдом, они будут прокручиваться по кругу. Заголовок и ссылка (если заполнены ниже) применятся ко всем; потом их можно изменить у каждого баннера отдельно.</p>
     @else
-        <label>Заменить картинку (JPG/PNG/WebP, до 5 МБ, лучше 1600×500)
+        <label>Заменить картинку (JPG/PNG/WebP, до 20 МБ, лучше 1600×500)
             <input type="file" name="image" id="banner-file" accept="image/jpeg,image/png,image/webp">
         </label>
     @endif

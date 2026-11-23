@@ -105,7 +105,7 @@
         </div>
     @endif
 
-    <label>Новые фото (до 5, JPG/PNG/WebP, до 4 МБ)
+    <label>Новые фото (до 5, JPG/PNG/WebP, до 20 МБ)
         <input type="file" name="images[]" id="product-files" multiple accept="image/jpeg,image/png,image/webp">
     </label>
 
