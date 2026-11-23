@@ -77,7 +77,8 @@ class ProductController extends Controller
     {
         $data = $this->validated($request);
         $data['slug'] = $this->uniqueSlug($data['name_uk']);
-        $data['images'] = $this->storeImages($request);
+        $new = $this->storeImages($request);
+        $data['images'] = $this->arrangeImages($new, $new, (string) $request->input('main_choice', ''));
 
         $product = Product::create($data);
         $product->characteristicValues()->sync($this->selectedValueIds($request));
@@ -106,9 +107,9 @@ class ProductController extends Controller
         foreach ($images->intersect($remove) as $path) {
             Storage::disk('public')->delete($path);
         }
-        $images = $images->diff($remove)->values()->merge($this->storeImages($request))->take(5)->all();
-
-        $data['images'] = $images;
+        $new = $this->storeImages($request);
+        $kept = $images->diff($remove)->values()->all();
+        $data['images'] = $this->arrangeImages(array_merge($kept, $new), $new, (string) $request->input('main_choice', ''));
         $product->update($data);
         $product->characteristicValues()->sync($this->selectedValueIds($request));
         $note = \App\Services\DriveSync::note(\App\Services\DriveSync::product($product->fresh()));
@@ -141,6 +142,7 @@ class ProductController extends Controller
             'size_length' => ['nullable', 'integer', 'min:1', 'max:100000'],
             'size_width' => ['nullable', 'integer', 'min:1', 'max:100000'],
             'size_height' => ['nullable', 'integer', 'min:1', 'max:100000'],
+            'main_choice' => ['nullable', 'string', 'max:255'],
             'images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:20480'],
             'char' => ['nullable', 'array'],
             'char.*' => ['nullable', 'integer', 'exists:characteristic_values,id'],
@@ -163,6 +165,23 @@ class ProductController extends Controller
             ->filter(fn ($id) => is_numeric($id) && (int) $id > 0)
             ->map(fn ($id) => (int) $id)
             ->unique()->values()->all();
+    }
+
+    /**
+     * Ставит выбранное «главное» фото первым (первое фото — обложка в каталоге и на карточке) и оставляет до 5 штук.
+     * $choice: путь уже загруженного фото или «new:N» — N-е из только что загруженных.
+     *
+     * @param  array<int, string>  $all  все фото товара по порядку
+     * @param  array<int, string>  $new  только что загруженные
+     */
+    private function arrangeImages(array $all, array $new, string $choice): array
+    {
+        $main = str_starts_with($choice, 'new:') ? ($new[(int) substr($choice, 4)] ?? null) : $choice;
+        if ($main && in_array($main, $all, true)) {
+            $all = array_merge([$main], array_values(array_diff($all, [$main])));
+        }
+
+        return array_slice(array_values($all), 0, 5);
     }
 
     /** @return array<int, string> */

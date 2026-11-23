@@ -93,13 +93,14 @@
 
     @if(!$isNew && !empty($product->images))
         <div>
-            <strong>Текущие фото</strong> (отметьте, чтобы удалить)
+            <strong>Текущие фото</strong> (выберите главное — оно будет первым в каталоге и на карточке; отметьте, чтобы удалить)
             <div class="thumbs-edit">
                 @foreach($product->images as $path)
-                    <label class="thumbs-edit__item">
+                    <div class="thumbs-edit__item">
                         <img src="{{ \App\Support\ImageStore::url($path) }}" alt="">
-                        <span><input type="checkbox" name="remove_images[]" value="{{ $path }}"> удалить</span>
-                    </label>
+                        <label><input type="radio" name="main_choice" value="{{ $path }}" @checked(old('main_choice', $product->images[0]) === $path)> главное</label>
+                        <label><input type="checkbox" name="remove_images[]" value="{{ $path }}"> удалить</label>
+                    </div>
                 @endforeach
             </div>
         </div>
@@ -108,6 +109,7 @@
     <label>Новые фото (до 5, JPG/PNG/WebP, до 20 МБ)
         <input type="file" name="images[]" id="product-files" multiple accept="image/jpeg,image/png,image/webp">
     </label>
+    <p class="muted" id="main-hint">Главное фото (обложка) выбирается под превью: по умолчанию первое из загруженных. Оно показывается в каталоге и первым на карточке товара.</p>
 
     <div>
         <button type="submit" class="btn btn--accent btn--lg">Сохранить</button>
@@ -123,11 +125,22 @@
     input.closest('label').after(box);
     input.addEventListener('change', function () {
         box.innerHTML = '';
-        Array.prototype.forEach.call(input.files, function (f) {
+        var hasExisting = !!document.querySelector('input[name="main_choice"]:not([value^="new:"])');
+        Array.prototype.forEach.call(input.files, function (f, i) {
+            var item = document.createElement('label');
+            item.className = 'preview-item';
             var im = document.createElement('img');
             im.src = URL.createObjectURL(f);
             im.className = 'preview-thumb';
-            box.appendChild(im);
+            var r = document.createElement('input');
+            r.type = 'radio';
+            r.name = 'main_choice';
+            r.value = 'new:' + i;
+            r.checked = !hasExisting && i === 0;
+            item.appendChild(im);
+            item.appendChild(r);
+            item.appendChild(document.createTextNode(' главное'));
+            box.appendChild(item);
         });
     });
 })();
