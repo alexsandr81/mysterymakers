@@ -10,6 +10,8 @@
     <a href="{{ route('admin.products.create') }}" class="btn btn--accent">+ Добавить товар</a>
 </div>
 
+@include('admin.partials.drive-hint')
+
 <form method="GET" class="search search--admin">
     <input type="search" name="q" value="{{ $q }}" placeholder="Название или артикул">
     <button class="btn btn--brand">Найти</button>

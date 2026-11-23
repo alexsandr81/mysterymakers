@@ -8,6 +8,8 @@
     <a href="{{ route('admin.categories.create') }}" class="btn btn--accent">+ Добавить категорию</a>
 </div>
 
+@include('admin.partials.drive-hint')
+
 @php
     // Ссылка-заголовок: повторный клик меняет направление (так же, как в товарах)
     $th = function (string $key, string $label) use ($sort, $dir) {
