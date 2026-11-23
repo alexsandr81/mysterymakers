@@ -113,6 +113,18 @@ h3 { font-size: 1.05rem; margin: 1.2rem 0 .6rem; }
 .catnav__inner { display: flex; gap: 4px; overflow-x: auto; }
 .catnav a { color: #fff; padding: 10px 16px; white-space: nowrap; font-weight: 500; }
 .catnav a:hover { background: var(--brand-dark); text-decoration: none; color: #fff; }
+.catnav__item { position: relative; }
+.catnav__item > a { display: block; }
+.catnav__caret { opacity: .8; font-size: .7em; }
+.catnav__sub { display: none; }
+/* Выпадающие подкатегории: на широких экранах с мышью (на телефоне — обычная прокручиваемая полоса) */
+@media (min-width: 761px) and (hover: hover) {
+    .catnav__inner { overflow: visible; flex-wrap: wrap; }
+    .catnav__sub { position: absolute; top: 100%; left: 0; z-index: 50; min-width: 220px; padding: 6px 0; background: var(--brand-dark); border-radius: 0 0 var(--radius) var(--radius); box-shadow: 0 8px 20px rgba(0,0,0,.25); }
+    .catnav__item:hover > .catnav__sub, .catnav__item:focus-within > .catnav__sub { display: block; }
+    .catnav__sub a { display: block; padding: 9px 18px; }
+    .catnav__sub a:hover { background: rgba(255,255,255,.12); }
+}
 
 /* ---------- Сообщения ---------- */
 .flash { padding: 12px 16px; border-radius: var(--radius); margin-bottom: 16px; }

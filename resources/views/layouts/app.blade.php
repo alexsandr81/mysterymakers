@@ -24,7 +24,7 @@
 <body>
 @php
     $cartCount = app(\App\Services\Cart::class)->count();
-    $menuCategories = \App\Models\Category::whereNull('parent_id')->orderBy('sort')->get();
+    $menuCategories = \App\Models\Category::whereNull('parent_id')->with('children')->orderBy('sort')->get();
     $otherLocale = app()->getLocale() === 'uk' ? 'ru' : 'uk';
     $footerPages = \App\Models\Page::where('is_published', true)->where('show_in_footer', true)->orderBy('sort')->orderBy('id')->get();
 @endphp
@@ -77,7 +77,16 @@
 <nav class="catnav">
     <div class="container catnav__inner">
         @foreach($menuCategories as $c)
-            <a href="{{ route('catalog.category', $c) }}">{{ $c->name }}</a>
+            <div class="catnav__item">
+                <a href="{{ route('catalog.category', $c) }}">{{ $c->name }}@if($c->children->isNotEmpty()) <small class="catnav__caret">▾</small>@endif</a>
+                @if($c->children->isNotEmpty())
+                    <div class="catnav__sub">
+                        @foreach($c->children as $child)
+                            <a href="{{ route('catalog.category', $child) }}">{{ $child->name }}</a>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
         @endforeach
     </div>
 </nav>
