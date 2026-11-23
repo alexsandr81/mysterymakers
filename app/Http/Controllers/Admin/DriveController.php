@@ -29,6 +29,6 @@ class DriveController extends Controller
 
         return $id
             ? back()->with('status', 'Папка на Google Диске готова')
-            : back()->withErrors(['drive' => trim(DriveSync::note($id))]);
+            : back()->withErrors(['drive' => 'Папку на Google Диске создать не удалось (подробности: storage/logs/laravel.log).']);
     }
 }
