@@ -14,7 +14,7 @@ use Throwable;
  */
 class DriveSync
 {
-    public const PRODUCT_SUBFOLDERS = ['Фото', 'Модели', 'Чертежи'];
+    public const PRODUCT_SUBFOLDERS = ['Фото', 'Чертежи'];
 
     /** Создать/обновить папку категории. Возвращает id папки или null (выключено/ошибка). */
     public static function category(Category $category): ?string
