@@ -248,4 +248,31 @@ class ShopTest extends TestCase
         $this->get('/catalog')->assertOk()->assertSee('⌀ 120')->assertSee('⌀ 150');
         $this->get('/catalog?dia[]=120')->assertOk()->assertSee('Коробка a')->assertDontSee('Коробка b');
     }
+
+    public function test_admin_bulk_price_change(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $cat = Category::create(['slug' => 'b', 'name_uk' => 'Б', 'name_ru' => 'Б', 'sort' => 1, 'sku_start' => 10000]);
+        $mk = fn ($sku, $price, $old = null) => Product::create(['category_id' => $cat->id, 'sku' => $sku, 'slug' => 'p' . $sku, 'name_uk' => 'Т', 'name_ru' => 'Т', 'price' => $price, 'old_price' => $old, 'stock' => 1, 'is_active' => true]);
+        $a = $mk('1', 100);
+        $b = $mk('2', 100, 110);
+        $c = $mk('3', 100);
+
+        $this->actingAs($admin)->get(route('admin.products.index'))->assertOk()->assertSee('Массовое изменение цены');
+
+        // +20% двум выбранным: третий не трогаем; у товара со старой ценой 110 новая цена 120 — скидка снимается
+        $this->actingAs($admin)->post(route('admin.products.bulk-price'), ['mode' => 'percent_up', 'value' => 20, 'round' => 1, 'ids' => [$a->id, $b->id]])->assertRedirect();
+        $this->assertEquals(120, $a->fresh()->price);
+        $this->assertEquals(120, $b->fresh()->price);
+        $this->assertNull($b->fresh()->old_price);
+        $this->assertEquals(100, $c->fresh()->price);
+
+        // без выбранных товаров — ошибка, цены не меняются
+        $this->actingAs($admin)->post(route('admin.products.bulk-price'), ['mode' => 'set', 'value' => 5, 'round' => 0])->assertSessionHasErrors('bulk');
+        $this->assertEquals(100, $c->fresh()->price);
+
+        // всем: установить цену 250
+        $this->actingAs($admin)->post(route('admin.products.bulk-price'), ['mode' => 'set', 'value' => 250, 'round' => 0, 'scope_all' => 1])->assertRedirect();
+        $this->assertEquals(250, $c->fresh()->price);
+    }
 }

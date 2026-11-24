@@ -63,6 +63,74 @@ class ProductController extends Controller
         return $query->orderBy('id', 'desc');
     }
 
+    /** Массовое изменение цены у выбранных товаров (или у всех из результатов поиска) */
+    public function bulkPrice(Request $request)
+    {
+        $data = $request->validate([
+            'mode' => ['required', 'in:percent_up,percent_down,amount_up,amount_down,set'],
+            'value' => ['required', 'numeric', 'gt:0', 'max:99999999'],
+            'round' => ['required', 'in:0,1,5,10'],
+            'ids' => ['nullable', 'array', 'max:2000'],
+            'ids.*' => ['integer'],
+            'scope_all' => ['nullable', 'boolean'],
+            'q' => ['nullable', 'string', 'max:100'],
+        ], [
+            'value.required' => 'Введите значение для изменения цены.',
+            'value.gt' => 'Значение должно быть больше нуля.',
+        ]);
+
+        if ($request->boolean('scope_all')) {
+            $q = trim((string) ($data['q'] ?? ''));
+            $query = Product::query()->when($q !== '', function ($query) use ($q) {
+                $like = '%' . str_replace(['%', '_'], ['\%', '\_'], $q) . '%';
+                $query->where(fn ($w) => $w->where('name_uk', 'like', $like)->orWhere('name_ru', 'like', $like)->orWhere('sku', 'like', $like));
+            });
+        } else {
+            if (empty($data['ids'])) {
+                return back()->withErrors(['bulk' => 'Отметьте товары галочками слева, у которых нужно изменить цену.']);
+            }
+            $query = Product::whereIn('id', $data['ids']);
+        }
+
+        $value = (float) $data['value'];
+        $step = (int) $data['round'];
+        $changed = $skipped = 0;
+
+        foreach ($query->get() as $product) {
+            $price = (float) $product->price;
+            $new = match ($data['mode']) {
+                'percent_up' => $price * (1 + $value / 100),
+                'percent_down' => $price * (1 - $value / 100),
+                'amount_up' => $price + $value,
+                'amount_down' => $price - $value,
+                default => $value,
+            };
+            if ($step > 0) {
+                $new = round($new / $step) * $step;
+            }
+            $new = round($new, 2);
+            if ($new < 0.01) {
+                $skipped++;
+
+                continue;
+            }
+            $fields = ['price' => $new];
+            // Старая цена (для скидки) должна быть выше новой, иначе скидка теряет смысл — убираем её
+            if ($product->old_price !== null && (float) $product->old_price <= $new) {
+                $fields['old_price'] = null;
+            }
+            $product->update($fields);
+            $changed++;
+        }
+
+        $msg = "Цена изменена у товаров: {$changed}.";
+        if ($skipped) {
+            $msg .= " Пропущено (цена вышла бы ниже 0,01): {$skipped}.";
+        }
+
+        return back()->with('status', $msg);
+    }
+
     public function create()
     {
         return view('admin.products.form', [

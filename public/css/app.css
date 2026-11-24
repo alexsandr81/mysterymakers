@@ -635,3 +635,10 @@ a.stat:hover { border-color: var(--accent); }
 .seg__item:has(input:checked) { background: var(--brand); color: #fff; }
 .form__cols label.is-off { opacity: .4; }
 .form__cols label.is-off input { background: var(--tint); cursor: not-allowed; }
+
+/* Массовое изменение цены (админка, товары) */
+.bulk { display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: end; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 16px; margin-bottom: 16px; }
+.bulk label { display: flex; flex-direction: column; gap: 4px; font-size: .9rem; font-weight: 500; }
+.bulk input[type=number], .bulk select { padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--text); font: inherit; width: auto; }
+.bulk .bulk__all { flex-direction: row; align-items: center; gap: 6px; font-weight: 400; }
+.bulk .bulk__all input { width: auto; }
