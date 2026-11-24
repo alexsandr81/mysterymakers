@@ -51,12 +51,33 @@
     </div>
 
     <h3>Размер изделия, мм</h3>
-    <div class="form__cols form__cols--4">
-        <label>Длина <input type="number" min="1" name="size_length" value="{{ old('size_length', $product->size_length) }}" placeholder="мм"></label>
-        <label>Ширина <input type="number" min="1" name="size_width" value="{{ old('size_width', $product->size_width) }}" placeholder="мм"></label>
+    @php $shape = old('size_shape', $product->size_diameter ? 'round' : 'rect'); @endphp
+    <div class="seg" id="shape-tabs" role="radiogroup" aria-label="Форма изделия">
+        <label class="seg__item"><input type="radio" name="size_shape" value="rect" @checked($shape === 'rect')> ▭ Длина × ширина</label>
+        <label class="seg__item"><input type="radio" name="size_shape" value="round" @checked($shape === 'round')> ◯ Диаметр</label>
+    </div>
+    <div class="form__cols form__cols--4" id="size-fields">
+        <label data-for="rect">Длина <input type="number" min="1" name="size_length" value="{{ old('size_length', $product->size_length) }}" placeholder="мм"></label>
+        <label data-for="rect">Ширина <input type="number" min="1" name="size_width" value="{{ old('size_width', $product->size_width) }}" placeholder="мм"></label>
+        <label data-for="round">Диаметр <input type="number" min="1" name="size_diameter" value="{{ old('size_diameter', $product->size_diameter) }}" placeholder="мм"></label>
         <label>Высота <input type="number" min="1" name="size_height" value="{{ old('size_height', $product->size_height) }}" placeholder="мм"></label>
     </div>
-    <p class="muted">Только цифры — «мм» подставится автоматически. Можно заполнить не все поля (например, только диаметр в «Длине»).</p>
+    <p class="muted">Только цифры — «мм» подставится автоматически. Для круглых изделий выберите «Диаметр»: длина и ширина отключатся, на сайте будет «⌀ 120 мм, высота 50 мм».</p>
+    <script>
+    (function () {
+        var box = document.getElementById('size-fields');
+        function apply() {
+            var shape = document.querySelector('#shape-tabs input:checked').value;
+            box.querySelectorAll('label[data-for]').forEach(function (l) {
+                var off = l.dataset.for !== shape;
+                l.classList.toggle('is-off', off);
+                l.querySelector('input').disabled = off;
+            });
+        }
+        document.querySelectorAll('#shape-tabs input').forEach(function (r) { r.addEventListener('change', apply); });
+        apply();
+    })();
+    </script>
 
     <div class="form__cols form__cols--4">
         <label>Остаток

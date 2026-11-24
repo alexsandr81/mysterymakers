@@ -24,6 +24,7 @@ return [
     'in_stock' => 'В наявності',
     'out_of_stock' => 'Немає в наявності',
     'sku' => 'Артикул',
+    'height_word' => 'висота',
     'size' => 'Розмір',
     'mm' => 'мм',
     'description' => 'Опис',

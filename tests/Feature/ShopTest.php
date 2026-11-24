@@ -229,4 +229,12 @@ class ShopTest extends TestCase
         $this->assertEquals(900, $m->fresh()->sheet_price);
         $this->assertNotNull($m->fresh()->price_date); // цена изменилась — дата проверки обновилась
     }
+
+    public function test_round_product_size_text(): void
+    {
+        $cat = Category::create(['slug' => 'r', 'name_uk' => 'Р', 'name_ru' => 'Р', 'sort' => 1, 'sku_start' => 10000]);
+        $p = Product::create(['category_id' => $cat->id, 'sku' => '10000', 'slug' => 'round', 'name_uk' => 'К', 'name_ru' => 'К', 'price' => 1, 'stock' => 1, 'is_active' => true, 'size_diameter' => 120, 'size_height' => 50]);
+        app()->setLocale('ru');
+        $this->assertSame('⌀ 120 мм, высота 50 мм', $p->size_text);
+    }
 }

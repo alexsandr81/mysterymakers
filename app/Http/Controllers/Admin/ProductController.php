@@ -142,6 +142,8 @@ class ProductController extends Controller
             'size_length' => ['nullable', 'integer', 'min:1', 'max:100000'],
             'size_width' => ['nullable', 'integer', 'min:1', 'max:100000'],
             'size_height' => ['nullable', 'integer', 'min:1', 'max:100000'],
+            'size_diameter' => ['nullable', 'integer', 'min:1', 'max:100000'],
+            'size_shape' => ['nullable', 'in:rect,round'],
             'main_choice' => ['nullable', 'string', 'max:255'],
             'images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:20480'],
             'char' => ['nullable', 'array'],
@@ -149,6 +151,14 @@ class ProductController extends Controller
         ]);
 
         unset($data['images'], $data['char']);
+
+        // Форма изделия: круглое — только диаметр (длина и ширина обнуляются), прямоугольное — диаметр обнуляется
+        if (($data['size_shape'] ?? 'rect') === 'round') {
+            $data['size_length'] = $data['size_width'] = null;
+        } else {
+            $data['size_diameter'] = null;
+        }
+        unset($data['size_shape']);
         if (empty($data['sku'])) {
             // Пустой артикул: для нового товара — следующий по категории, при редактировании остаётся прежний
             $data['sku'] = $product?->sku ?: \App\Models\Category::findOrFail($data['category_id'])->nextSku();

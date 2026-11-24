@@ -17,7 +17,7 @@ class Product extends Model
     protected $fillable = [
         'category_id', 'sku', 'slug', 'name_uk', 'name_ru',
         'description_uk', 'description_ru', 'price', 'old_price',
-        'stock', 'is_active', 'images', 'size_length', 'size_width', 'size_height',
+        'stock', 'is_active', 'images', 'size_length', 'size_width', 'size_height', 'size_diameter',
     ];
 
     protected function casts(): array
@@ -87,6 +87,13 @@ class Product extends Model
     /** «120 × 80 × 50 мм» — размеры в миллиметрах, только заполненные; пусто, если ничего не указано */
     public function getSizeTextAttribute(): string
     {
+        // Круглое изделие: «⌀ 120 мм, висота 50 мм»
+        if ($this->size_diameter) {
+            $text = '⌀ ' . $this->size_diameter . ' ' . __('shop.mm');
+
+            return $this->size_height ? $text . ', ' . __('shop.height_word') . ' ' . $this->size_height . ' ' . __('shop.mm') : $text;
+        }
+
         $parts = array_filter([$this->size_length, $this->size_width, $this->size_height]);
 
         return $parts ? implode(' × ', $parts) . ' ' . __('shop.mm') : '';

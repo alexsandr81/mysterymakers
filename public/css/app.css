@@ -626,3 +626,12 @@ a.stat:hover { border-color: var(--accent); }
 .calc .check-line { flex-direction: row !important; align-items: center; gap: 8px; align-self: end; font-weight: 400 !important; }
 .calc .check-line input { width: auto; }
 .calc [hidden] { display: none !important; }
+
+/* Переключатель формы изделия (вкладки) */
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; margin-bottom: 10px; align-self: flex-start; }
+.seg__item { display: flex !important; flex-direction: row !important; align-items: center; gap: 6px; padding: 8px 16px; cursor: pointer; font-weight: 500; background: var(--surface); }
+.seg__item + .seg__item { border-left: 1px solid var(--line); }
+.seg__item input { display: none; }
+.seg__item:has(input:checked) { background: var(--brand); color: #fff; }
+.form__cols label.is-off { opacity: .4; }
+.form__cols label.is-off input { background: var(--tint); cursor: not-allowed; }
