@@ -623,3 +623,6 @@ a.stat:hover { border-color: var(--accent); }
 .calc__materials .nowrap { white-space: nowrap; }
 .calc__materials td:last-child { text-align: center; }
 .calc__materials input[type=checkbox] { width: auto; }
+.calc .check-line { flex-direction: row !important; align-items: center; gap: 8px; align-self: end; font-weight: 400 !important; }
+.calc .check-line input { width: auto; }
+.calc [hidden] { display: none !important; }

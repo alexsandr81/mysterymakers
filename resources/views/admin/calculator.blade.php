@@ -25,14 +25,22 @@
                     @endforeach
                 </select>
             </label>
-            <label>Ширина изделия, мм <input type="number" id="c-w" min="0" step="any" value="100"></label>
-            <label>Высота изделия, мм <input type="number" id="c-h" min="0" step="any" value="100"></label>
+            <label>Как задать размер
+                <select id="c-mode">
+                    <option value="area" selected>Площадь из раскладки, см²</option>
+                    <option value="size">Габариты: ширина × высота, мм</option>
+                </select>
+            </label>
+            <label class="js-area">Площадь изделия в раскладке, см² <input type="number" id="c-area" min="0" step="any" value="100"></label>
+            <label class="js-size" hidden>Ширина изделия, мм <input type="number" id="c-w" min="0" step="any" value="100"></label>
+            <label class="js-size" hidden>Высота изделия, мм <input type="number" id="c-h" min="0" step="any" value="100"></label>
+            <label class="check-line"><input type="checkbox" id="c-waste"> Добавить обрезки листа (использование {{ $fmt($p['calc_waste']) }}%)</label>
             <label>Длина реза, мм <input type="number" id="c-cut" min="0" step="any" value="400"></label>
             <label>Площадь гравировки, см² <input type="number" id="c-engr" min="0" step="any" value="0"></label>
             <label>Прочее на изделие, грн <small class="muted">упаковка, фурнитура, покраска</small> <input type="number" id="c-extra" min="0" step="any" value="0"></label>
             <label>Количество, шт <input type="number" id="c-qty" min="1" step="1" value="1"></label>
         </div>
-        <p class="muted">Длина реза и размеры берутся из макета (в программе лазера или в SOLIDWORKS: периметр всех контуров). Размер изделия — габаритный прямоугольник.</p>
+        <p class="muted">Площадь, длину реза и площадь гравировки берите из раскладки. «Площадь из раскладки» — сколько см² листа занимает изделие вместе с зазорами между деталями; тогда галочку «обрезки» обычно не нужно ставить, они уже учтены. Для режима «габариты» галочка включается сама.</p>
 
         <table class="table calc__result">
             <tbody>
@@ -107,8 +115,9 @@
     function calc() {
         var m = M.find(function (x) { return String(x.id) === $('c-material').value; });
         if (!m) { $('r-warn').textContent = 'Добавьте хотя бы один материал.'; return; }
-        var usable = m.sw * m.sh * (P.calc_waste / 100);
-        var material = usable > 0 ? (n('c-w') * n('c-h')) / usable * m.price : 0;
+        var areaMm2 = $('c-mode').value === 'area' ? n('c-area') * 100 : n('c-w') * n('c-h');
+        var usable = m.sw * m.sh * ($('c-waste').checked ? P.calc_waste / 100 : 1);
+        var material = usable > 0 ? areaMm2 / usable * m.price : 0;
         var cut = n('c-cut') / 1000 * m.cut;
         var engr = n('c-engr') * P.calc_engr_rate;
         var extra = n('c-extra');
@@ -128,10 +137,16 @@
         $('r-profit').textContent = money(price - over);
         $('r-qty').textContent = qty;
         $('r-total').textContent = money(price * qty);
-        var area = n('c-w') * n('c-h');
-        $('r-warn').textContent = (area > m.sw * m.sh) ? '⚠ Изделие больше листа выбранного материала.' : '';
+        $('r-warn').textContent = (areaMm2 > m.sw * m.sh) ? '⚠ Изделие больше листа выбранного материала.' : '';
     }
-    ['c-material','c-w','c-h','c-cut','c-engr','c-extra','c-qty'].forEach(function (id) { $(id).addEventListener('input', calc); });
+    ['c-material','c-area','c-w','c-h','c-cut','c-engr','c-extra','c-qty','c-waste'].forEach(function (id) { $(id).addEventListener('input', calc); });
+    $('c-mode').addEventListener('change', function () {
+        var area = this.value === 'area';
+        document.querySelectorAll('.js-area').forEach(function (e) { e.hidden = !area; });
+        document.querySelectorAll('.js-size').forEach(function (e) { e.hidden = area; });
+        $('c-waste').checked = !area; // габариты — прибавляем обрезки, раскладка — уже учтены
+        calc();
+    });
     calc();
 
     // Добавление строки материала
