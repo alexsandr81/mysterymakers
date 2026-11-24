@@ -237,4 +237,15 @@ class ShopTest extends TestCase
         app()->setLocale('ru');
         $this->assertSame('⌀ 120 мм, высота 50 мм', $p->size_text);
     }
+
+    public function test_catalog_diameter_filter(): void
+    {
+        $cat = Category::create(['slug' => 'd', 'name_uk' => 'Д', 'name_ru' => 'Д', 'sort' => 1, 'sku_start' => 10000]);
+        foreach ([[120, 'a'], [150, 'b']] as [$d, $slug]) {
+            Product::create(['category_id' => $cat->id, 'sku' => (string) (20000 + $d), 'slug' => $slug, 'name_uk' => 'Коробка ' . $slug, 'name_ru' => 'Коробка ' . $slug, 'price' => 1, 'stock' => 1, 'is_active' => true, 'size_diameter' => $d]);
+        }
+
+        $this->get('/catalog')->assertOk()->assertSee('⌀ 120')->assertSee('⌀ 150');
+        $this->get('/catalog?dia[]=120')->assertOk()->assertSee('Коробка a')->assertDontSee('Коробка b');
+    }
 }

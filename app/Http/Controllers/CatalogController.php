@@ -51,6 +51,12 @@ class CatalogController extends Controller
             $query->whereHas('characteristicValues', fn ($w) => $w->whereIn('characteristic_values.id', $valueIds));
         }
 
+        // Фильтр по диаметру: ?dia[]=120&dia[]=150 (значения объединяются по «ИЛИ»)
+        $diameters = $this->selectedDiameters($request->query('dia'));
+        if ($diameters) {
+            $query->whereIn('size_diameter', $diameters);
+        }
+
         $sort = $request->query('sort', 'new');
         [$column, $direction] = self::SORTS[$sort] ?? self::SORTS['new'];
         $query->orderBy($column, $direction);
@@ -62,6 +68,8 @@ class CatalogController extends Controller
             'sort' => $sort,
             'filters' => $this->availableFilters($category),
             'selectedValues' => collect($selected)->flatten()->all(),
+            'diameters' => $this->availableDiameters($category),
+            'selectedDiameters' => $diameters,
         ]);
     }
 
@@ -106,6 +114,27 @@ class CatalogController extends Controller
             ->get()
             ->filter(fn ($c) => $c->values->isNotEmpty())
             ->values();
+    }
+
+    /** Диаметры (мм), которые есть у активных товаров текущей категории, по возрастанию */
+    private function availableDiameters(?Category $category): array
+    {
+        $query = Product::active()->whereNotNull('size_diameter');
+        if ($category) {
+            $query->whereIn('category_id', $category->selfAndChildrenIds());
+        }
+
+        return $query->distinct()->orderBy('size_diameter')->pluck('size_diameter')->map(fn ($d) => (int) $d)->all();
+    }
+
+    /** ?dia из адресной строки → список целых чисел; мусор игнорируется */
+    private function selectedDiameters(mixed $raw): array
+    {
+        if (! is_array($raw)) {
+            return [];
+        }
+
+        return array_values(array_unique(array_map('intval', array_filter($raw, fn ($v) => is_numeric($v) && (int) $v > 0))));
     }
 
     /**

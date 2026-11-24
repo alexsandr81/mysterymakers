@@ -42,6 +42,18 @@
             </div>
             <label class="check"><input type="checkbox" name="in_stock" value="1" @checked(request()->boolean('in_stock'))> {{ __('shop.only_in_stock') }}</label>
 
+            @if($diameters)
+                <div class="filter-group">
+                    <strong>{{ __('shop.diameter') }}</strong>
+                    @foreach($diameters as $d)
+                        <label class="check">
+                            <input type="checkbox" name="dia[]" value="{{ $d }}" @checked(in_array($d, $selectedDiameters, true))>
+                            ⌀ {{ $d }} {{ __('shop.mm') }}
+                        </label>
+                    @endforeach
+                </div>
+            @endif
+
             @foreach($filters as $characteristic)
                 <div class="filter-group">
                     <strong>{{ $characteristic->name }}</strong>
@@ -57,7 +69,7 @@
 
             <input type="hidden" name="sort" value="{{ $sort }}">
             <button type="submit" class="btn btn--brand btn--block">{{ __('shop.apply') }}</button>
-            @if(request()->hasAny(['min', 'max', 'in_stock', 'attr']))
+            @if(request()->hasAny(['min', 'max', 'in_stock', 'attr', 'dia']))
                 <a href="{{ $category ? route('catalog.category', $category) : route('catalog') }}" class="reset-link">{{ __('shop.reset') }}</a>
             @endif
         </form>
