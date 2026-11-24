@@ -213,4 +213,20 @@ class ShopTest extends TestCase
 
         @unlink($key);
     }
+
+    public function test_admin_calculator_page_and_save(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $this->actingAs($admin)->get(route('admin.calculator.index'))->assertOk()->assertSee('Калькулятор цены');
+
+        $m = \App\Models\CalcMaterial::first();
+        $this->actingAs($admin)->put(route('admin.calculator.update'), [
+            'calc_waste' => 80, 'calc_engr_rate' => 0.5, 'calc_overhead' => 10, 'calc_margin' => 40, 'calc_min_price' => 0, 'calc_round' => 5,
+            'materials' => [['id' => $m->id, 'name' => 'Фанера', 'thickness' => 3, 'sheet_w' => 1525, 'sheet_h' => 1525, 'sheet_price' => 900, 'cut_rate' => 6, 'link' => '']],
+        ])->assertRedirect();
+
+        $this->assertSame('80', Setting::get('calc_waste'));
+        $this->assertEquals(900, $m->fresh()->sheet_price);
+        $this->assertNotNull($m->fresh()->price_date); // цена изменилась — дата проверки обновилась
+    }
 }

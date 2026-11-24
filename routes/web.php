@@ -95,6 +95,8 @@ Route::middleware(SetLocale::class)->group(function () {
         Route::post('/backups', [Admin\BackupController::class, 'store'])->name('backups.store');
         Route::get('/backups/{file}', [Admin\BackupController::class, 'download'])->name('backups.download');
         Route::delete('/backups/{file}', [Admin\BackupController::class, 'destroy'])->name('backups.destroy');
+        Route::get('/calculator', [Admin\CalculatorController::class, 'index'])->name('calculator.index');
+        Route::put('/calculator', [Admin\CalculatorController::class, 'update'])->name('calculator.update');
         Route::get('/novaposhta', [Admin\NovaPoshtaController::class, 'edit'])->name('novaposhta.edit');
         Route::put('/novaposhta', [Admin\NovaPoshtaController::class, 'update'])->name('novaposhta.update');
         Route::post('/orders/{order}/ttn', [Admin\OrderTtnController::class, 'store'])->name('orders.ttn.store');
