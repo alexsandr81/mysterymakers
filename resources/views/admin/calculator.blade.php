@@ -34,7 +34,7 @@
             <label class="js-area">Площадь изделия в раскладке, см² <input type="number" id="c-area" min="0" step="any" value="100"></label>
             <label class="js-size" hidden>Ширина изделия, мм <input type="number" id="c-w" min="0" step="any" value="100"></label>
             <label class="js-size" hidden>Высота изделия, мм <input type="number" id="c-h" min="0" step="any" value="100"></label>
-            <label class="check-line"><input type="checkbox" id="c-waste"> Добавить обрезки листа (использование {{ $fmt($p['calc_waste']) }}%)</label>
+            <label class="check-line"><input type="checkbox" id="c-waste"> Добавить обрезки листа (использование <span id="c-waste-pct">{{ $fmt($p['calc_waste']) }}</span>%)</label>
             <label>Длина реза, мм <input type="number" id="c-cut" min="0" step="any" value="400"></label>
             <label>Площадь гравировки, см² <input type="number" id="c-engr" min="0" step="any" value="0"></label>
             <label>Прочее на изделие, грн <small class="muted">упаковка, фурнитура, покраска</small> <input type="number" id="c-extra" min="0" step="any" value="0"></label>
@@ -107,12 +107,35 @@
 
 <script>
 (function () {
-    var M = @json($js), P = @json($p);
     var $ = function (id) { return document.getElementById(id); };
-    var n = function (id) { return parseFloat($(id).value) || 0; };
+    var tbody = document.querySelector('#mat-table tbody');
+    var PARAMS = ['calc_waste', 'calc_engr_rate', 'calc_overhead', 'calc_margin', 'calc_min_price', 'calc_round'];
+    var P = {}, M = [];
+    var num = function (el) { return parseFloat(String(el && el.value).replace(',', '.')) || 0; };
+
+    // Параметры и материалы читаются прямо из полей формы, поэтому пересчёт идёт «на лету», до сохранения
+    function readForm() {
+        PARAMS.forEach(function (k) { P[k] = num(document.querySelector('[name="' + k + '"]')); });
+        M = [];
+        Array.prototype.forEach.call(tbody.rows, function (tr, idx) {
+            var f = function (name) { return tr.querySelector('[name$="[' + name + ']"]'); };
+            if (f('delete') && f('delete').checked) return;
+            var t = f('thickness').value;
+            M.push({ id: String(idx), label: (f('name').value || 'Материал') + (t ? ' ' + t + ' мм' : ''),
+                sw: num(f('sheet_w')), sh: num(f('sheet_h')), price: num(f('sheet_price')), cut: num(f('cut_rate')) });
+        });
+        // Список материалов в расчёте — по таблице, выбранный сохраняется
+        var sel = $('c-material'), cur = sel.value;
+        var html = M.map(function (m) { return '<option value="' + m.id + '">' + m.label.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</option>'; }).join('');
+        if (sel.innerHTML !== html) { sel.innerHTML = html; }
+        if (M.some(function (m) { return m.id === cur; })) sel.value = cur;
+        $('c-waste-pct').textContent = P.calc_waste;
+    }
+    var n = function (id) { return parseFloat(String($(id).value).replace(',', '.')) || 0; };
     var money = function (v) { return v.toLocaleString('ru-RU', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' грн'; };
 
     function calc() {
+        readForm();
         var m = M.find(function (x) { return String(x.id) === $('c-material').value; });
         if (!m) { $('r-warn').textContent = 'Добавьте хотя бы один материал.'; return; }
         var areaMm2 = $('c-mode').value === 'area' ? n('c-area') * 100 : n('c-w') * n('c-h');
@@ -147,10 +170,12 @@
         $('c-waste').checked = !area; // габариты — прибавляем обрезки, раскладка — уже учтены
         calc();
     });
+    // Любое изменение в параметрах и таблице материалов сразу пересчитывает цену
+    document.querySelector('form.calc__box').addEventListener('input', calc);
+    document.querySelector('form.calc__box').addEventListener('change', calc);
     calc();
 
     // Добавление строки материала
-    var tbody = document.querySelector('#mat-table tbody');
     $('mat-add').addEventListener('click', function () {
         var i = tbody.rows.length + 1000 + Math.floor(Math.random() * 1000);
         var tr = document.createElement('tr');
@@ -162,6 +187,7 @@
             '<td><input type="number" step="any" name="materials[' + i + '][cut_rate]" required class="w-sm"></td>' +
             '<td><input type="text" name="materials[' + i + '][link]"></td><td class="muted">сегодня</td><td></td>';
         tbody.appendChild(tr);
+        calc();
     });
 })();
 </script>
