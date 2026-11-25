@@ -70,7 +70,7 @@
 </form>
 
 <table class="table">
-    <thead><tr><th><input type="checkbox" id="bulk-toggle" title="Отметить всё на странице"></th><th></th><th>{{ $th('name', 'Название') }}</th><th>{{ $th('sku', 'Артикул') }}</th><th>{{ $th('category', 'Категория') }}</th><th>{{ $th('price', 'Цена') }}</th><th>{{ $th('stock', 'Остаток') }}</th><th>{{ $th('active', 'Активен') }}</th><th>{{ $th('created', 'Добавлен') }}</th><th></th></tr></thead>
+    <thead><tr><th><input type="checkbox" id="bulk-toggle" title="Отметить всё на странице"></th><th></th><th>{{ $th('name', 'Название') }}</th><th>{{ $th('sku', 'Артикул') }}</th><th>{{ $th('category', 'Категория') }}</th><th>{{ $th('sub', 'Подкатегория') }}</th><th>{{ $th('price', 'Цена') }}</th><th>{{ $th('stock', 'Остаток') }}</th><th>{{ $th('active', 'Активен') }}</th><th>{{ $th('created', 'Добавлен') }}</th><th></th></tr></thead>
     <tbody>
     @foreach($products as $p)
         <tr>
@@ -78,7 +78,10 @@
             <td class="thumb"><img src="{{ $p->main_image }}" alt=""></td>
             <td><a href="{{ route('product', $p) }}" target="_blank" title="Открыть страницу товара на сайте">{{ $p->name_ru }}</a></td>
             <td><a href="{{ route('product', $p) }}" target="_blank" title="Открыть страницу товара на сайте">{{ $p->sku }}</a></td>
-            <td>{{ $p->category->name_ru }}</td>
+            @php($cat = $p->category)
+            @php($top = $cat->parent ?? $cat)
+            <td><span class="badge badge--top">{{ $top->name_ru }}</span></td>
+            <td>@if($cat->parent_id)<span class="badge badge--sub">{{ $cat->name_ru }}</span>@else<span class="muted" title="Товар лежит прямо в категории, без подкатегории">—</span>@endif</td>
             <td>{{ Money::format($p->price) }}</td>
             <td class="{{ $p->stock < 5 ? 'text-warn' : '' }}">{{ $p->stock }}</td>
             <td>{{ $p->is_active ? '✓' : '—' }}</td>

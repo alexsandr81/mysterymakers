@@ -110,7 +110,7 @@ class ShopTest extends TestCase
         $p = $this->product();
         $admin = User::factory()->create(['is_admin' => true]);
 
-        foreach (['name', 'sku', 'category', 'price', 'stock', 'active', 'created'] as $col) {
+        foreach (['name', 'sku', 'category', 'sub', 'price', 'stock', 'active', 'created'] as $col) {
             $this->actingAs($admin)->get(route('admin.products.index', ['sort' => $col, 'dir' => 'asc']))->assertOk();
         }
         $this->actingAs($admin)->get(route('admin.products.index', ['sort' => 'hack; drop table', 'dir' => 'x']))->assertOk();
@@ -284,6 +284,18 @@ class ShopTest extends TestCase
 
         $this->actingAs($admin)->get(route('admin.products.create'))
             ->assertOk()->assertSee('Подкатегория')->assertSee('Круглые')->assertSee('Подарочные коробки');
+    }
+
+    public function test_admin_product_list_shows_category_and_subcategory_separately(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $top = Category::create(['slug' => 'gift', 'name_uk' => 'Коробки', 'name_ru' => 'Подарочные коробки', 'sort' => 1, 'sku_start' => 10000]);
+        $sub = Category::create(['parent_id' => $top->id, 'slug' => 'round', 'name_uk' => 'Круглі', 'name_ru' => 'Круглые', 'sort' => 1, 'sku_start' => 11000]);
+        Product::create(['category_id' => $sub->id, 'slug' => 'p1', 'sku' => '11001', 'name_uk' => 'Т1', 'name_ru' => 'Т1', 'price' => 10, 'stock' => 1, 'is_active' => true]);
+
+        $this->actingAs($admin)->get(route('admin.products.index'))
+            ->assertOk()->assertSee('Подкатегория')->assertSee('badge--top', false)->assertSee('badge--sub', false)
+            ->assertSee('Подарочные коробки')->assertSee('Круглые');
     }
 
     public function test_product_creates_new_category_and_subcategory_inline(): void

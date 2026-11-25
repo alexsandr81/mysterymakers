@@ -18,10 +18,10 @@ class ProductController extends Controller
     {
         $q = trim((string) $request->query('q', ''));
         $sort = (string) $request->query('sort', 'created');
-        $sort = in_array($sort, ['created', 'name', 'sku', 'category', 'price', 'stock', 'active'], true) ? $sort : 'created';
+        $sort = in_array($sort, ['created', 'name', 'sku', 'category', 'sub', 'price', 'stock', 'active'], true) ? $sort : 'created';
         $dir = $request->query('dir') === 'asc' ? 'asc' : 'desc';
 
-        $products = Product::with('category')
+        $products = Product::with('category.parent')
             ->when($q !== '', function ($query) use ($q) {
                 $like = '%' . str_replace(['%', '_'], ['\%', '\_'], $q) . '%';
                 $query->where(fn ($w) => $w->where('name_uk', 'like', $like)
@@ -46,7 +46,11 @@ class ProductController extends Controller
                 $query->orderByRaw('length(sku) ' . $dir)->orderBy('sku', $dir);
                 break;
             case 'category':
-                $query->orderBy(Category::select('name_ru')->whereColumn('categories.id', 'products.category_id'), $dir);
+                // Категория верхнего уровня: у товара в подкатегории это название родителя
+                $query->orderByRaw('(select coalesce(p.name_ru, c.name_ru) from categories c left join categories p on p.id = c.parent_id where c.id = products.category_id) ' . $dir);
+                break;
+            case 'sub':
+                $query->orderByRaw("(select case when c.parent_id is null then '' else c.name_ru end from categories c where c.id = products.category_id) " . $dir);
                 break;
             case 'price':
                 $query->orderBy('price', $dir);
