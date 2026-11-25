@@ -198,7 +198,13 @@ class ProductController extends Controller
     private function validated(Request $request, ?Product $product = null): array
     {
         $data = $request->validate([
-            'category_id' => ['required', 'exists:categories,id'],
+            // Категория: id, «new» (создать новую); подкатегория (category_id): id, «self» (прямо в категории) или «new»
+            'category_top' => ['nullable', 'string', 'max:20'],
+            'category_id' => ['required', 'string', 'max:20'],
+            'new_cat_uk' => ['nullable', 'string', 'max:255', 'required_if:category_top,new'],
+            'new_cat_ru' => ['nullable', 'string', 'max:255', 'required_if:category_top,new'],
+            'new_sub_uk' => ['nullable', 'string', 'max:255', 'required_if:category_id,new'],
+            'new_sub_ru' => ['nullable', 'string', 'max:255', 'required_if:category_id,new'],
             'sku' => ['nullable', 'string', 'max:50', Rule::unique('products', 'sku')->ignore($product)],
             'name_uk' => ['required', 'string', 'max:255'],
             'name_ru' => ['required', 'string', 'max:255'],
@@ -220,6 +226,9 @@ class ProductController extends Controller
 
         unset($data['images'], $data['char']);
 
+        $data['category_id'] = $this->resolveCategory($request, $data);
+        unset($data['category_top'], $data['new_cat_uk'], $data['new_cat_ru'], $data['new_sub_uk'], $data['new_sub_ru']);
+
         // Форма изделия: круглое — только диаметр (длина и ширина обнуляются), прямоугольное — диаметр обнуляется
         if (($data['size_shape'] ?? 'rect') === 'round') {
             $data['size_length'] = $data['size_width'] = null;
@@ -234,6 +243,58 @@ class ProductController extends Controller
         $data['is_active'] = $request->boolean('is_active');
 
         return $data;
+    }
+
+    /**
+     * Определяет категорию товара по полям формы и при необходимости создаёт новую категорию и/или подкатегорию.
+     * Вызывается после проверки остальных полей, чтобы при ошибке в форме пустые категории не создавались.
+     */
+    private function resolveCategory(Request $request, array $data): int
+    {
+        $top = $data['category_top'] ?? null;
+        $sub = $data['category_id'];
+
+        if ($top === 'new') {
+            $parent = $this->createCategory($data['new_cat_uk'], $data['new_cat_ru'], null);
+        } elseif ($top !== null && $top !== '' && ctype_digit($top)) {
+            $parent = Category::findOrFail((int) $top);
+        } elseif (ctype_digit($sub)) {
+            // Старый вариант формы: пришла только категория
+            return Category::findOrFail((int) $sub)->id;
+        } else {
+            throw \Illuminate\Validation\ValidationException::withMessages(['category_top' => 'Выберите категорию.']);
+        }
+
+        if ($sub === 'new') {
+            return $this->createCategory($data['new_sub_uk'], $data['new_sub_ru'], $parent)->id;
+        }
+        if ($sub === 'self' || (int) $sub === $parent->id) {
+            return $parent->id;
+        }
+        // Подкатегория должна принадлежать выбранной категории
+        $child = Category::where('id', (int) $sub)->where('parent_id', $parent->id)->first();
+        if (! $child) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['category_id' => 'Выберите подкатегорию из списка выбранной категории.']);
+        }
+
+        return $child->id;
+    }
+
+    private function createCategory(string $uk, string $ru, ?Category $parent): Category
+    {
+        $start = Category::nextSkuStart($parent?->id);
+        if ($start === null) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['new_sub_ru' => 'В диапазоне артикулов категории «' . $parent->name_ru . '» больше нет места (максимум 9 подкатегорий).']);
+        }
+
+        return Category::create([
+            'parent_id' => $parent?->id,
+            'slug' => Category::makeSlug($uk),
+            'name_uk' => $uk,
+            'name_ru' => $ru,
+            'sort' => (int) Category::where('parent_id', $parent?->id)->max('sort') + 1,
+            'sku_start' => $start,
+        ]);
     }
 
     /** id выбранных значений характеристик (пустые «— не выбрано —» отбрасываются) */

@@ -70,6 +70,19 @@ class Category extends Model
         return $this->localized('name');
     }
 
+    /** Уникальный slug из названия (для категорий, созданных «на лету» из формы товара) */
+    public static function makeSlug(string $name): string
+    {
+        $base = \Illuminate\Support\Str::slug($name, '-', 'uk') ?: 'category';
+        $slug = $base;
+        $i = 2;
+        while (static::where('slug', $slug)->exists()) {
+            $slug = $base . '-' . $i++;
+        }
+
+        return $slug;
+    }
+
     public function parent(): BelongsTo
     {
         return $this->belongsTo(Category::class, 'parent_id');

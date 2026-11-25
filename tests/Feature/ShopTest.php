@@ -285,4 +285,33 @@ class ShopTest extends TestCase
         $this->actingAs($admin)->get(route('admin.products.create'))
             ->assertOk()->assertSee('Подкатегория')->assertSee('Круглые')->assertSee('Подарочные коробки');
     }
+
+    public function test_product_creates_new_category_and_subcategory_inline(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $base = ['name_uk' => 'Т', 'name_ru' => 'Т', 'price' => 50, 'stock' => 1, 'is_active' => 1];
+
+        // Новая категория + новая подкатегория прямо из формы товара
+        $this->actingAs($admin)->post(route('admin.products.store'), $base + [
+            'category_top' => 'new', 'category_id' => 'new',
+            'new_cat_uk' => 'Подарунки', 'new_cat_ru' => 'Подарки', 'new_sub_uk' => 'Малі', 'new_sub_ru' => 'Малые',
+        ])->assertRedirect();
+
+        $top = Category::where('name_ru', 'Подарки')->first();
+        $sub = Category::where('name_ru', 'Малые')->first();
+        $this->assertNotNull($top);
+        $this->assertSame($top->id, $sub->parent_id);
+        $product = Product::first();
+        $this->assertSame($sub->id, $product->category_id);
+        $this->assertStringStartsWith('11', $product->sku); // 10000-й блок категории, подкатегория — 11000…
+
+        // Товар прямо в существующей категории
+        $this->actingAs($admin)->post(route('admin.products.store'), $base + ['category_top' => $top->id, 'category_id' => 'self'])->assertRedirect();
+        $this->assertSame($top->id, Product::latest('id')->first()->category_id);
+
+        // Ошибка формы (нет названия новой категории) — ничего не создаётся
+        $before = Category::count();
+        $this->actingAs($admin)->post(route('admin.products.store'), $base + ['category_top' => 'new', 'category_id' => 'self'])->assertSessionHasErrors('new_cat_uk');
+        $this->assertSame($before, Category::count());
+    }
 }

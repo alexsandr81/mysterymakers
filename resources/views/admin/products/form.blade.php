@@ -31,51 +31,70 @@
     </div>
 
     @php
-        // Категория и подкатегория выбираются отдельно; товару назначается подкатегория, а если её нет — сама категория
+        // Категория и подкатегория выбираются отдельно. Значения: id | new (создать новую) | self (товар прямо в категории)
         $tops = $categories->whereNull('parent_id')->values();
         $kids = $categories->whereNotNull('parent_id')->groupBy('parent_id');
         $curId = (int) old('category_id', $product->category_id);
         $cur = $categories->firstWhere('id', $curId);
-        $topId = $cur ? ($cur->parent_id ?: $cur->id) : ($tops->first()->id ?? 0);
+        $topSel = old('category_top', $cur ? ($cur->parent_id ?: $cur->id) : ($tops->first()->id ?? 'new'));
+        $subRaw = old('category_id');
+        $subSel = in_array($subRaw, ['self', 'new'], true) ? $subRaw : (($cur && $cur->parent_id) ? (string) $cur->id : 'self');
         $kidsJs = $kids->map(fn ($g) => $g->map(fn ($c) => ['id' => $c->id, 'name' => $c->name_ru])->values())->all();
     @endphp
     <div class="form__cols">
         <label>Категория
-            <select id="cat-top" required>
+            <select name="category_top" id="cat-top" required>
                 @foreach($tops as $c)
-                    <option value="{{ $c->id }}" @selected($topId === $c->id)>{{ $c->name_ru }}</option>
+                    <option value="{{ $c->id }}" @selected((string) $topSel === (string) $c->id)>{{ $c->name_ru }}</option>
                 @endforeach
+                <option value="new" @selected($topSel === 'new')>＋ Новая категория…</option>
             </select>
         </label>
-        <label id="cat-sub-wrap">Подкатегория
+        <label id="cat-sub-wrap">Подкатегория <span class="muted">(необязательно)</span>
             <select name="category_id" id="cat-sub" required>
-                <option value="{{ $topId }}">— без подкатегории (товар прямо в категории) —</option>
-                @foreach($kids[$topId] ?? [] as $c)
-                    <option value="{{ $c->id }}" @selected($curId === $c->id)>{{ $c->name_ru }}</option>
+                <option value="self" @selected($subSel === 'self')>— без подкатегории (товар прямо в категории) —</option>
+                @foreach(($topSel === 'new' ? collect() : ($kids[(int) $topSel] ?? collect())) as $c)
+                    <option value="{{ $c->id }}" @selected($subSel === (string) $c->id)>{{ $c->name_ru }}</option>
                 @endforeach
+                <option value="new" @selected($subSel === 'new')>＋ Новая подкатегория…</option>
             </select>
         </label>
     </div>
+    <div class="form__cols" id="new-cat" hidden>
+        <label>Новая категория (укр.) <input type="text" name="new_cat_uk" value="{{ old('new_cat_uk') }}" maxlength="255"></label>
+        <label>Новая категория (рус.) <input type="text" name="new_cat_ru" value="{{ old('new_cat_ru') }}" maxlength="255"></label>
+    </div>
+    <div class="form__cols" id="new-sub" hidden>
+        <label>Новая подкатегория (укр.) <input type="text" name="new_sub_uk" value="{{ old('new_sub_uk') }}" maxlength="255"></label>
+        <label>Новая подкатегория (рус.) <input type="text" name="new_sub_ru" value="{{ old('new_sub_ru') }}" maxlength="255"></label>
+    </div>
+    @if($errors->hasAny(['category_top', 'category_id', 'new_cat_uk', 'new_cat_ru', 'new_sub_uk', 'new_sub_ru']))
+        <p class="text-warn">{{ $errors->first('category_top') ?: ($errors->first('new_cat_uk') ?: ($errors->first('new_cat_ru') ?: ($errors->first('new_sub_uk') ?: ($errors->first('new_sub_ru') ?: $errors->first('category_id'))))) }}</p>
+    @endif
     <script>
     (function () {
-        var kids = @json($kidsJs), top = document.getElementById('cat-top'), sub = document.getElementById('cat-sub'), wrap = document.getElementById('cat-sub-wrap');
-        function fill(keep) {
-            var list = kids[top.value] || [], cur = keep ? sub.value : '';
-            sub.innerHTML = '';
-            var first = document.createElement('option');
-            first.value = top.value;
-            first.textContent = '— без подкатегории (товар прямо в категории) —';
-            sub.appendChild(first);
-            list.forEach(function (c) {
-                var o = document.createElement('option');
-                o.value = c.id; o.textContent = c.name;
-                if (String(c.id) === String(cur)) o.selected = true;
-                sub.appendChild(o);
-            });
-            wrap.hidden = list.length === 0; // нет подкатегорий — выбирать нечего
+        var kids = @json($kidsJs), top = document.getElementById('cat-top'), sub = document.getElementById('cat-sub');
+        var newCat = document.getElementById('new-cat'), newSub = document.getElementById('new-sub');
+        function opt(value, text) { var o = document.createElement('option'); o.value = value; o.textContent = text; return o; }
+        function toggleBox(box, on) {
+            box.hidden = !on;
+            box.querySelectorAll('input').forEach(function (i) { i.disabled = !on; i.required = on; });
         }
-        top.addEventListener('change', function () { fill(false); });
-        wrap.hidden = (kids[top.value] || []).length === 0;
+        function sync() {
+            toggleBox(newCat, top.value === 'new');
+            toggleBox(newSub, sub.value === 'new');
+        }
+        function fill() {
+            var list = top.value === 'new' ? [] : (kids[top.value] || []);
+            sub.innerHTML = '';
+            sub.appendChild(opt('self', '— без подкатегории (товар прямо в категории) —'));
+            list.forEach(function (c) { sub.appendChild(opt(c.id, c.name)); });
+            sub.appendChild(opt('new', '＋ Новая подкатегория…'));
+            sync();
+        }
+        top.addEventListener('change', fill);
+        sub.addEventListener('change', sync);
+        sync();
     })();
     </script>
 

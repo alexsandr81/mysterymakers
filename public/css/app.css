@@ -643,3 +643,4 @@ a.stat:hover { border-color: var(--accent); }
 .bulk .bulk__all { flex-direction: row; align-items: center; gap: 6px; font-weight: 400; }
 .bulk .bulk__all input { width: auto; }
 .form label[hidden] { display: none; }
+.form__cols[hidden] { display: none; }
