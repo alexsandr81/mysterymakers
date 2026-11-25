@@ -227,13 +227,24 @@ class ShopTest extends TestCase
         $this->actingAs($admin)->get(route('admin.calculator.index'))->assertOk()->assertSee('Калькулятор цены');
 
         $m = \App\Models\CalcMaterial::first();
+        $pla = \App\Models\CalcFilament::where('name', 'PLA')->first();
         $this->actingAs($admin)->put(route('admin.calculator.update'), [
-            'calc_waste' => 80, 'calc_engr_rate' => 0.5, 'calc_filament_price' => 0.9, 'calc_overhead' => 10, 'calc_margin' => 40, 'calc_min_price' => 0, 'calc_round' => 5,
+            'calc_waste' => 80, 'calc_engr_rate' => 0.5, 'calc_overhead' => 10, 'calc_margin' => 40, 'calc_min_price' => 0, 'calc_round' => 5,
             'materials' => [['id' => $m->id, 'name' => 'Фанера', 'thickness' => 3, 'sheet_w' => 1525, 'sheet_h' => 1525, 'sheet_price' => 900, 'cut_rate' => 6, 'link' => '']],
+            'filaments' => [
+                ['id' => $pla->id, 'name' => 'PLA', 'spool_price' => 800, 'spool_g' => 1000, 'link' => ''],
+                ['id' => '', 'name' => 'TPU', 'spool_price' => 1200, 'spool_g' => 500, 'link' => ''],
+            ],
         ])->assertRedirect();
 
         $this->assertSame('80', Setting::get('calc_waste'));
-        $this->assertSame('0.9', Setting::get('calc_filament_price'));
+        $this->assertEquals(800, $pla->fresh()->spool_price);
+        $this->assertNotNull($pla->fresh()->price_date);
+        $this->assertEqualsWithDelta(0.8, $pla->fresh()->pricePerGram(), 0.0001);
+        $tpu = \App\Models\CalcFilament::where('name', 'TPU')->first();
+        $this->assertNotNull($tpu);
+        $this->assertEqualsWithDelta(2.4, $tpu->pricePerGram(), 0.0001);
+        $this->actingAs($admin)->get(route('admin.calculator.index'))->assertOk()->assertSee('Филамент (3D-печать)')->assertSee('TPU');
         $this->assertEquals(900, $m->fresh()->sheet_price);
         $this->assertNotNull($m->fresh()->price_date); // цена изменилась — дата проверки обновилась
     }

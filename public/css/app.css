@@ -729,3 +729,7 @@ h1, h2, h3, h4, .hero h1 { font-family: var(--font-heading, inherit); }
 .calc__sub { grid-column: 1 / -1; margin: 10px 0 0; padding-top: 8px; border-top: 1px solid var(--line); font-size: 1rem; color: var(--brand-dark); }
 .calc__grid > .calc__sub:first-child { border-top: 0; margin-top: 0; padding-top: 0; }
 .calc__note { grid-column: 1 / -1; margin: 0; }
+
+/* Подписи сверху, поля ввода снизу: ряд не «съезжает», если у одного поля есть строка-подсказка */
+.calc__grid label { justify-content: space-between; }
+.calc .check-line { justify-content: flex-start; }
