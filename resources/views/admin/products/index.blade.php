@@ -30,10 +30,11 @@
 @endphp
 
 @php $prices = $products->getCollection()->pluck('price')->map(fn ($v) => (float) $v)->unique()->sort()->values(); @endphp
+<details class="bulk-wrap" @if($errors->has('bulk')) open @endif>
+<summary>💰 Массовое изменение цены</summary>
 <form action="{{ route('admin.products.bulk-price') }}" method="POST" id="bulk-form" class="bulk">
     @csrf
     <input type="hidden" name="q" value="{{ $q }}">
-    <strong>Массовое изменение цены</strong>
     <span class="muted">Выбрано: <b id="bulk-count">0</b></span>
     @if($prices->count() > 1)
         <label>Отметить с ценой
@@ -68,34 +69,47 @@
     <span class="muted" id="bulk-preview"></span>
     @error('bulk')<span class="text-warn">{{ $message }}</span>@enderror
 </form>
+</details>
 
-<table class="table">
-    <thead><tr><th><input type="checkbox" id="bulk-toggle" title="Отметить всё на странице"></th><th></th><th>{{ $th('name', 'Название') }}</th><th>{{ $th('sku', 'Артикул') }}</th><th>{{ $th('category', 'Категория') }}</th><th>{{ $th('sub', 'Подкатегория') }}</th><th>{{ $th('price', 'Цена') }}</th><th>{{ $th('stock', 'Остаток') }}</th><th>{{ $th('active', 'Активен') }}</th><th>{{ $th('created', 'Добавлен') }}</th><th></th></tr></thead>
+<div class="colpick">
+    <details>
+        <summary>⚙ Столбцы</summary>
+        <div class="colpick__list">
+            @foreach(['photo' => 'Фото', 'sku' => 'Артикул', 'category' => 'Категория', 'sub' => 'Подкатегория', 'price' => 'Цена', 'stock' => 'Остаток', 'active' => 'Активен', 'created' => 'Добавлен'] as $key => $label)
+                <label><input type="checkbox" data-colpick="{{ $key }}" checked> {{ $label }}</label>
+            @endforeach
+            <button type="button" class="link-btn" id="colpick-reset">Сбросить</button>
+        </div>
+    </details>
+</div>
+
+<table class="table table--compact" id="products-table">
+    <thead><tr><th><input type="checkbox" id="bulk-toggle" title="Отметить всё на странице"></th><th data-col="photo"></th><th>{{ $th('name', 'Название') }}</th><th data-col="sku">{{ $th('sku', 'Артикул') }}</th><th data-col="category">{{ $th('category', 'Категория') }}</th><th data-col="sub">{{ $th('sub', 'Подкатегория') }}</th><th data-col="price">{{ $th('price', 'Цена') }}</th><th data-col="stock">{{ $th('stock', 'Остаток') }}</th><th data-col="active">{{ $th('active', 'Актив.') }}</th><th data-col="created">{{ $th('created', 'Добавлен') }}</th><th></th></tr></thead>
     <tbody>
     @foreach($products as $p)
         <tr>
             <td><input type="checkbox" name="ids[]" form="bulk-form" value="{{ $p->id }}" data-price="{{ (float) $p->price }}"></td>
-            <td class="thumb"><img src="{{ $p->main_image }}" alt=""></td>
+            <td class="thumb" data-col="photo"><img src="{{ $p->main_image }}" alt=""></td>
             <td><a href="{{ route('product', $p) }}" target="_blank" title="Открыть страницу товара на сайте">{{ $p->name_ru }}</a></td>
-            <td><a href="{{ route('product', $p) }}" target="_blank" title="Открыть страницу товара на сайте">{{ $p->sku }}</a></td>
+            <td data-col="sku"><a href="{{ route('product', $p) }}" target="_blank" title="Открыть страницу товара на сайте">{{ $p->sku }}</a></td>
             @php($cat = $p->category)
             @php($top = $cat->parent ?? $cat)
-            <td><span class="badge badge--top">{{ $top->name_ru }}</span></td>
-            <td>@if($cat->parent_id)<span class="badge badge--sub">{{ $cat->name_ru }}</span>@else<span class="muted" title="Товар лежит прямо в категории, без подкатегории">—</span>@endif</td>
-            <td>{{ Money::format($p->price) }}</td>
-            <td class="{{ $p->stock < 5 ? 'text-warn' : '' }}">{{ $p->stock }}</td>
-            <td>{{ $p->is_active ? '✓' : '—' }}</td>
-            <td class="muted">{{ $p->created_at?->format('d.m.Y') }}</td>
+            <td data-col="category"><span class="badge badge--sm badge--top">{{ $top->name_ru }}</span></td>
+            <td data-col="sub">@if($cat->parent_id)<span class="badge badge--sm badge--sub">{{ $cat->name_ru }}</span>@else<span class="muted" title="Товар лежит прямо в категории, без подкатегории">—</span>@endif</td>
+            <td data-col="price" class="nowrap">{{ Money::format($p->price) }}</td>
+            <td data-col="stock" class="{{ $p->stock < 5 ? 'text-warn' : '' }}">{{ $p->stock }}</td>
+            <td data-col="active">{{ $p->is_active ? '✓' : '—' }}</td>
+            <td data-col="created" class="muted nowrap">{{ $p->created_at?->format('d.m.Y') }}</td>
             <td class="actions">
                 @if($p->drive_folder_id)
                     <a href="{{ \App\Services\GoogleDrive::url($p->drive_folder_id) }}" target="_blank" title="Папка на Google Диске">📁</a>
                 @elseif(\App\Services\GoogleDrive::enabled())
                     <form action="{{ route('admin.products.drive', $p) }}" method="POST">@csrf<button class="link-btn" title="Создать папку на Google Диске">📁+</button></form>
                 @endif
-                <a href="{{ route('admin.products.edit', $p) }}">Изменить</a>
+                <a href="{{ route('admin.products.edit', $p) }}" title="Изменить">✎</a>
                 <form action="{{ route('admin.products.destroy', $p) }}" method="POST" onsubmit="return confirm('Удалить товар?')">
                     @csrf @method('DELETE')
-                    <button class="link-btn link-btn--danger">Удалить</button>
+                    <button class="link-btn link-btn--danger" title="Удалить">✕</button>
                 </form>
             </td>
         </tr>
@@ -137,6 +151,32 @@
         if (!confirm(all ? 'Изменить цену у ВСЕХ товаров списка?' : 'Изменить цену у выбранных товаров (' + n + ')?')) e.preventDefault();
     });
     refresh();
+})();
+
+// Выбор видимых столбцов: запоминается в браузере (отдельно у каждого пользователя)
+(function () {
+    var KEY = 'mm_products_cols', DEFAULT_HIDDEN = ['created'];
+    var table = document.getElementById('products-table');
+    var picks = Array.prototype.slice.call(document.querySelectorAll('[data-colpick]'));
+    function load() {
+        try { var v = JSON.parse(localStorage.getItem(KEY)); if (Array.isArray(v)) return v; } catch (e) {}
+        return DEFAULT_HIDDEN.slice();
+    }
+    function save(hidden) { try { localStorage.setItem(KEY, JSON.stringify(hidden)); } catch (e) {} }
+    function apply(hidden) {
+        picks.forEach(function (c) { c.checked = hidden.indexOf(c.dataset.colpick) === -1; });
+        Array.prototype.forEach.call(table.querySelectorAll('[data-col]'), function (el) {
+            el.hidden = hidden.indexOf(el.dataset.col) !== -1;
+        });
+    }
+    picks.forEach(function (c) {
+        c.addEventListener('change', function () {
+            var hidden = picks.filter(function (x) { return !x.checked; }).map(function (x) { return x.dataset.colpick; });
+            save(hidden); apply(hidden);
+        });
+    });
+    document.getElementById('colpick-reset').addEventListener('click', function () { save(DEFAULT_HIDDEN.slice()); apply(DEFAULT_HIDDEN.slice()); });
+    apply(load());
 })();
 </script>
 <div class="pager">{{ $products->links('partials.pagination') }}</div>

@@ -666,3 +666,27 @@ a.stat:hover { border-color: var(--accent); }
 .form__cols--narrow { grid-template-columns: repeat(2, minmax(0, 250px)); }
 .form__cols--3 { grid-template-columns: repeat(3, minmax(0, 160px)); }
 @media (max-width: 760px) { .form__cols--narrow, .form__cols--3 { grid-template-columns: 1fr; } }
+
+/* Товары: компактная таблица, выбор столбцов, сворачиваемая панель цены */
+.table--compact { font-size: .9rem; }
+.table--compact th, .table--compact td { padding: 6px 8px; }
+.table--compact th { font-size: .75rem; letter-spacing: .2px; }
+.table--compact .thumb { width: 46px; }
+.table--compact .thumb img { width: 36px; height: 36px; border-radius: 6px; }
+.table--compact td.actions > * { margin-right: 8px; font-size: 1rem; }
+.table--compact td.actions form { display: inline-block; }
+.table--compact [hidden] { display: none; }
+.nowrap { white-space: nowrap; }
+.badge--sm { padding: 1px 8px; font-size: .72rem; font-weight: 500; }
+.colpick { margin: 0 0 10px; }
+.colpick details { position: relative; display: inline-block; }
+.colpick summary { cursor: pointer; padding: 5px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); font-size: .88rem; list-style: none; }
+.colpick summary::-webkit-details-marker { display: none; }
+.colpick__list { position: absolute; z-index: 20; top: calc(100% + 4px); left: 0; display: flex; flex-direction: column; gap: 6px; min-width: 190px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 6px 18px rgba(0,0,0,.12); }
+.colpick__list label { display: flex; align-items: center; gap: 8px; font-size: .9rem; font-weight: 400; cursor: pointer; }
+.colpick__list input { width: auto; }
+.colpick__list .link-btn { align-self: flex-start; margin-top: 4px; font-size: .85rem; }
+.bulk-wrap { margin-bottom: 12px; }
+.bulk-wrap > summary { cursor: pointer; display: inline-block; padding: 5px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); font-size: .88rem; list-style: none; }
+.bulk-wrap > summary::-webkit-details-marker { display: none; }
+.bulk-wrap[open] > summary { margin-bottom: 8px; }
