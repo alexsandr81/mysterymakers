@@ -660,3 +660,9 @@ a.stat:hover { border-color: var(--accent); }
 .holiday-pick { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; margin: 8px 0; }
 .holiday-pick .check { flex-direction: row; align-items: center; gap: 6px; font-weight: 400; display: flex; }
 .holiday-pick .check input { width: auto; }
+
+/* Форма товара: поля в столбик и укороченные ряды */
+.form__stack { display: grid; grid-template-columns: minmax(0, 520px); gap: 14px; }
+.form__cols--narrow { grid-template-columns: repeat(2, minmax(0, 250px)); }
+.form__cols--3 { grid-template-columns: repeat(3, minmax(0, 160px)); }
+@media (max-width: 760px) { .form__cols--narrow, .form__cols--3 { grid-template-columns: 1fr; } }

@@ -41,7 +41,7 @@
         $subSel = in_array($subRaw, ['self', 'new'], true) ? $subRaw : (($cur && $cur->parent_id) ? (string) $cur->id : 'self');
         $kidsJs = $kids->map(fn ($g) => $g->map(fn ($c) => ['id' => $c->id, 'name' => $c->name_ru])->values())->all();
     @endphp
-    <div class="form__cols">
+    <div class="form__stack">
         <label>Категория
             <select name="category_top" id="cat-top" required>
                 @foreach($tops as $c)
@@ -98,11 +98,7 @@
     })();
     </script>
 
-    <div class="form__cols form__cols--4">
-        <label>Артикул
-            <input type="text" name="sku" value="{{ old('sku', $product->sku) }}" placeholder="Автоматически (по категории)">
-            <span class="muted">Пусто — номер присвоится сам.</span>
-        </label>
+    <div class="form__cols form__cols--narrow">
         <label>Цена, грн
             <input type="number" step="0.01" min="0.01" name="price" value="{{ old('price', $product->price) }}" required>
         </label>
@@ -111,31 +107,40 @@
         </label>
     </div>
 
-    <h3>Размер изделия, мм</h3>
-    @php $shape = old('size_shape', $product->size_diameter ? 'round' : 'rect'); @endphp
-    <div class="seg" id="shape-tabs" role="radiogroup" aria-label="Форма изделия">
-        <label class="seg__item"><input type="radio" name="size_shape" value="rect" @checked($shape === 'rect')> ▭ Длина × ширина</label>
-        <label class="seg__item"><input type="radio" name="size_shape" value="round" @checked($shape === 'round')> ◯ Диаметр</label>
+    <div class="form__stack">
+        <label>Артикул
+            <input type="text" name="sku" value="{{ old('sku', $product->sku) }}" placeholder="Автоматически (по категории)">
+            <span class="muted">Пусто — номер присвоится сам.</span>
+        </label>
     </div>
-    <div class="form__cols form__cols--4" id="size-fields">
+
+    @php $shape = old('size_shape', $product->size_diameter ? 'round' : 'rect'); @endphp
+    <div class="form__stack">
+        <label>Размер изделия, мм
+            <select name="size_shape" id="size-shape">
+                <option value="rect" @selected($shape === 'rect')>Длина × ширина</option>
+                <option value="round" @selected($shape === 'round')>Диаметр</option>
+            </select>
+        </label>
+    </div>
+    <div class="form__cols form__cols--3" id="size-fields">
         <label data-for="rect">Длина <input type="number" min="1" name="size_length" value="{{ old('size_length', $product->size_length) }}" placeholder="мм"></label>
         <label data-for="rect">Ширина <input type="number" min="1" name="size_width" value="{{ old('size_width', $product->size_width) }}" placeholder="мм"></label>
         <label data-for="round">Диаметр <input type="number" min="1" name="size_diameter" value="{{ old('size_diameter', $product->size_diameter) }}" placeholder="мм"></label>
         <label>Высота <input type="number" min="1" name="size_height" value="{{ old('size_height', $product->size_height) }}" placeholder="мм"></label>
     </div>
-    <p class="muted">Только цифры — «мм» подставится автоматически. Для круглых изделий выберите «Диаметр»: длина и ширина отключатся, на сайте будет «⌀ 120 мм, высота 50 мм».</p>
+    <p class="muted">Только цифры — «мм» подставится автоматически. Для круглых изделий выберите «Диаметр»: поля длины и ширины скроются, на сайте будет «⌀ 120 мм, высота 50 мм».</p>
     <script>
     (function () {
-        var box = document.getElementById('size-fields');
+        var sel = document.getElementById('size-shape'), box = document.getElementById('size-fields');
         function apply() {
-            var shape = document.querySelector('#shape-tabs input:checked').value;
             box.querySelectorAll('label[data-for]').forEach(function (l) {
-                var off = l.dataset.for !== shape;
-                l.classList.toggle('is-off', off);
+                var off = l.dataset.for !== sel.value;
+                l.hidden = off;                       // скрытое поле не видно и не отправляется
                 l.querySelector('input').disabled = off;
             });
         }
-        document.querySelectorAll('#shape-tabs input').forEach(function (r) { r.addEventListener('change', apply); });
+        sel.addEventListener('change', apply);
         apply();
     })();
     </script>
