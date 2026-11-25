@@ -86,6 +86,7 @@ class Cart
         }
 
         return Product::active()
+            ->where('price', '>', 0)
             ->whereIn('id', array_keys($cart))
             ->get()
             ->map(fn (Product $p) => [

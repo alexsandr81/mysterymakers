@@ -21,7 +21,7 @@
             <td>{{ $u->email }}</td>
             <td>{{ $u->phone ?: '—' }}</td>
             <td>{{ $u->orders_count }}</td>
-            <td>{{ $u->is_admin ? 'Администратор' : 'Покупатель' }}</td>
+            <td>{{ ['admin' => 'Администратор', 'moderator' => 'Модератор', 'customer' => 'Покупатель'][$u->role()] }}</td>
             <td>{{ $u->created_at?->format('d.m.Y') }}</td>
             <td class="actions">
                 <a href="{{ route('admin.users.edit', $u) }}">Изменить</a>

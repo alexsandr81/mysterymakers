@@ -18,6 +18,7 @@ class Product extends Model
         'category_id', 'sku', 'slug', 'name_uk', 'name_ru',
         'description_uk', 'description_ru', 'price', 'old_price',
         'stock', 'is_active', 'images', 'size_length', 'size_width', 'size_height', 'size_diameter',
+        'needs_review', 'modified_by',
     ];
 
     protected function casts(): array
@@ -25,6 +26,7 @@ class Product extends Model
         return [
             'images' => 'array',
             'is_active' => 'boolean',
+            'needs_review' => 'boolean',
             'price' => 'decimal:2',
             'old_price' => 'decimal:2',
         ];
@@ -122,6 +124,23 @@ class Product extends Model
         }
 
         return (int) round((1 - $this->price / $this->old_price) * 100);
+    }
+
+    /** Цена задана (товар от модератора появляется без цены — «цена уточняется») */
+    public function getHasPriceAttribute(): bool
+    {
+        return (float) $this->price > 0;
+    }
+
+    /** Можно ли купить: есть цена и остаток */
+    public function getPurchasableAttribute(): bool
+    {
+        return $this->has_price && $this->in_stock;
+    }
+
+    public function modifier(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'modified_by');
     }
 
     public function getInStockAttribute(): bool

@@ -21,7 +21,9 @@ class ProductController extends Controller
         $sort = in_array($sort, ['created', 'name', 'sku', 'category', 'sub', 'price', 'stock', 'active'], true) ? $sort : 'created';
         $dir = $request->query('dir') === 'asc' ? 'asc' : 'desc';
 
-        $products = Product::with('category.parent')
+        $onlyReview = $request->boolean('review') && $request->user()->is_admin;
+        $products = Product::with(['category.parent', 'modifier'])
+            ->when($onlyReview, fn ($query) => $query->where('needs_review', true))
             ->when($q !== '', function ($query) use ($q) {
                 $like = '%' . str_replace(['%', '_'], ['\%', '\_'], $q) . '%';
                 $query->where(fn ($w) => $w->where('name_uk', 'like', $like)
@@ -31,7 +33,9 @@ class ProductController extends Controller
             ->when(true, fn ($query) => $this->applySort($query, $sort, $dir))
             ->paginate(20)->withQueryString();
 
-        return view('admin.products.index', compact('products', 'q', 'sort', 'dir'));
+        $reviewCount = Product::where('needs_review', true)->count();
+
+        return view('admin.products.index', compact('products', 'q', 'sort', 'dir', 'onlyReview', 'reviewCount'));
     }
 
     /** Сортировка списка товаров по клику на заголовок колонки (только из разрешённых полей) */
@@ -155,6 +159,7 @@ class ProductController extends Controller
         $new = $this->storeImages($request);
         $data['images'] = $this->arrangeImages($new, $new, (string) $request->input('main_choice', ''));
 
+        $data += $this->reviewFlags($request, null);
         $product = Product::create($data);
         $product->characteristicValues()->sync($this->selectedValueIds($request));
         $this->syncHolidays($product, $request);
@@ -188,6 +193,7 @@ class ProductController extends Controller
         $new = $this->storeImages($request);
         $kept = $images->diff($remove)->values()->all();
         $data['images'] = $this->arrangeImages(array_merge($kept, $new), $new, (string) $request->input('main_choice', ''));
+        $data += $this->reviewFlags($request, $product);
         $product->update($data);
         $product->characteristicValues()->sync($this->selectedValueIds($request));
         $this->syncHolidays($product, $request);
@@ -208,7 +214,8 @@ class ProductController extends Controller
 
     private function validated(Request $request, ?Product $product = null): array
     {
-        $data = $request->validate([
+        $isAdmin = (bool) $request->user()?->is_admin;
+        $rules = [
             // Категория: id, «new» (создать новую); подкатегория (category_id): id, «self» (прямо в категории) или «new»
             'holidays' => ['nullable', 'array', 'max:100'],
             'holidays.*' => ['integer', 'exists:holidays,id'],
@@ -237,7 +244,12 @@ class ProductController extends Controller
             'images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:20480'],
             'char' => ['nullable', 'array'],
             'char.*' => ['nullable', 'integer', 'exists:characteristic_values,id'],
-        ]);
+        ];
+        // Модератор цены не вводит: цену и старую цену не принимаем (у нового товара цена «не задана»)
+        if (! $isAdmin) {
+            unset($rules['price'], $rules['old_price']);
+        }
+        $data = $request->validate($rules);
 
         unset($data['images'], $data['char'], $data['holidays'], $data['new_holiday_uk'], $data['new_holiday_ru']);
 
@@ -254,6 +266,9 @@ class ProductController extends Controller
         if (empty($data['sku'])) {
             // Пустой артикул: для нового товара — следующий по категории, при редактировании остаётся прежний
             $data['sku'] = $product?->sku ?: \App\Models\Category::findOrFail($data['category_id'])->nextSku();
+        }
+        if (! $isAdmin) {
+            $data['price'] = $product?->price ?? 0;
         }
         $data['is_active'] = $request->boolean('is_active');
 
@@ -273,6 +288,40 @@ class ProductController extends Controller
         }
 
         $product->holidays()->sync(array_values(array_unique($ids)));
+    }
+
+    /**
+     * Метки проверки. Модератор: товар всегда уходит «на проверку» (на сайте остаётся как был).
+     * Администратор: метка снимается галочкой «Проверено» (в форме она стоит по умолчанию), иначе остаётся.
+     */
+    private function reviewFlags(Request $request, ?Product $product): array
+    {
+        $user = $request->user();
+        if (! $user->is_admin) {
+            return ['needs_review' => true, 'modified_by' => $user->id];
+        }
+
+        return ['needs_review' => (bool) ($product?->needs_review && ! $request->boolean('reviewed'))];
+    }
+
+    /** Администратор: «Проверено» для одного товара */
+    public function reviewed(Product $product)
+    {
+        $product->forceFill(['needs_review' => false])->save();
+
+        return back()->with('status', 'Отмечено как проверенное: ' . $product->name_ru);
+    }
+
+    /** Администратор: «Проверено» для товаров, отмеченных галочками */
+    public function bulkReviewed(Request $request)
+    {
+        $ids = array_filter((array) $request->input('ids', []), 'is_numeric');
+        if (! $ids) {
+            return back()->withErrors(['bulk' => 'Отметьте товары галочками слева.']);
+        }
+        $n = Product::where('needs_review', true)->whereIn('id', $ids)->update(['needs_review' => false]);
+
+        return back()->with('status', "Отмечено проверенными: {$n}.");
     }
 
     /**

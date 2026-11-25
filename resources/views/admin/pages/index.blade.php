@@ -20,10 +20,10 @@
             <td>{{ $p->sort }}</td>
             <td class="actions">
                 <a href="{{ route('admin.pages.edit', $p) }}">Изменить</a>
-                <form action="{{ route('admin.pages.destroy', $p) }}" method="POST" onsubmit="return confirm('Удалить страницу?')">
+                @if(auth()->user()->is_admin)<form action="{{ route('admin.pages.destroy', $p) }}" method="POST" onsubmit="return confirm('Удалить страницу?')">
                     @csrf @method('DELETE')
                     <button class="link-btn link-btn--danger">Удалить</button>
-                </form>
+                </form>@endif
             </td>
         </tr>
     @empty

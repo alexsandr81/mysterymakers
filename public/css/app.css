@@ -710,3 +710,12 @@ h1, h2, h3, h4, .hero h1 { font-family: var(--font-heading, inherit); }
 .font-preview__logo b { color: var(--accent); }
 .font-preview__head { font-size: 1.5rem; font-weight: 700; margin-bottom: 6px; color: var(--brand-dark); }
 .font-preview__text { margin: 0; }
+
+/* Модератор: метка «ждёт проверки» */
+.review-box { background: var(--tint); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 8px; padding: 10px 14px; display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; }
+.review-box .check { margin: 0; }
+.badge--review { background: #f6e3b4; color: #6b4a00; border: 1px solid #e0c36c; }
+[data-theme="dark"] .badge--review { background: #4b3a14; color: #f2d58a; border-color: #7a6020; }
+.review-filter { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin: 0 0 10px; }
+.review-filter a.is-active { font-weight: 700; text-decoration: underline; }
+.table--compact .review-ok { font-size: 1rem; }

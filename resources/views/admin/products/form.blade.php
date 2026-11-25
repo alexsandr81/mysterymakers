@@ -98,14 +98,18 @@
     })();
     </script>
 
+    @if(auth()->user()->is_admin)
     <div class="form__cols form__cols--narrow">
         <label>Цена, грн
-            <input type="number" step="0.01" min="0.01" name="price" value="{{ old('price', $product->price) }}" required>
+            <input type="number" step="0.01" min="0.01" name="price" value="{{ old('price', $product->price > 0 ? $product->price : '') }}" required>
         </label>
         <label>Старая цена (для скидки)
             <input type="number" step="0.01" name="old_price" value="{{ old('old_price', $product->old_price) }}">
         </label>
     </div>
+    @else
+    <p class="muted">Цену ставит администратор. Пока цены нет, на сайте будет «Цена уточняется», и купить товар нельзя.</p>
+    @endif
 
     <div class="form__stack">
         <label>Артикул
@@ -153,6 +157,18 @@
             <input type="checkbox" name="is_active" value="1" @checked(old('is_active', $product->is_active))> Показывать на сайте
         </label>
     </div>
+
+    @if(! $isNew && $product->needs_review)
+        <div class="review-box">
+            ⏳ <strong>Ждёт проверки.</strong>
+            @if($product->modifier)Последним менял: {{ $product->modifier->name }}.@endif
+            @if(auth()->user()->is_admin)
+                <label class="check"><input type="checkbox" name="reviewed" value="1" @checked(old('reviewed', true))> Проверено (снять метку при сохранении)</label>
+            @else
+                <span class="muted">После ваших изменений администратор ещё раз проверит товар.</span>
+            @endif
+        </div>
+    @endif
 
     <div>
         <strong>Праздники и поводы</strong> <span class="muted">(можно выбрать несколько — по ним работает фильтр в каталоге)</span>

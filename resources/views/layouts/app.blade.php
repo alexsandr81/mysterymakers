@@ -57,7 +57,7 @@
 
         <nav class="header__actions">
             @auth
-                @if(auth()->user()->is_admin)
+                @if(auth()->user()->isStaff())
                     <a href="{{ route('admin.dashboard') }}">⚙ {{ __('shop.admin') }}</a>
                 @endif
                 <a href="{{ route('account') }}">👤 {{ auth()->user()->name }}</a>

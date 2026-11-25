@@ -21,10 +21,10 @@
             <td>{{ $c->sort }}</td>
             <td class="actions">
                 <a href="{{ route('admin.characteristics.edit', $c) }}">Изменить</a>
-                <form action="{{ route('admin.characteristics.destroy', $c) }}" method="POST" onsubmit="return confirm('Удалить характеристику вместе со всеми значениями у товаров?')">
+                @if(auth()->user()->is_admin)<form action="{{ route('admin.characteristics.destroy', $c) }}" method="POST" onsubmit="return confirm('Удалить характеристику вместе со всеми значениями у товаров?')">
                     @csrf @method('DELETE')
                     <button class="link-btn link-btn--danger">Удалить</button>
-                </form>
+                </form>@endif
             </td>
         </tr>
     @empty

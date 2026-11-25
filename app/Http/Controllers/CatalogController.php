@@ -66,6 +66,9 @@ class CatalogController extends Controller
 
         $sort = $request->query('sort', 'new');
         [$column, $direction] = self::SORTS[$sort] ?? self::SORTS['new'];
+        if ($column === 'price') {
+            $query->orderByRaw('(price > 0) desc'); // товары без цены («цена уточняется») всегда в конце
+        }
         $query->orderBy($column, $direction);
 
         return view('catalog.index', [
@@ -85,7 +88,7 @@ class CatalogController extends Controller
     public function show(Product $product)
     {
         // Скрытые товары видит только администратор (например, из заказа)
-        abort_unless($product->is_active || auth()->user()?->is_admin, 404);
+        abort_unless($product->is_active || auth()->user()?->isStaff(), 404);
 
         $reviews = $product->approvedReviews()->with('user')->latest()->get();
         $myReview = auth()->check()

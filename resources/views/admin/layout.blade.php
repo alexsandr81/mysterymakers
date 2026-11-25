@@ -11,28 +11,39 @@
 <body class="admin">
 <div class="admin-shell">
     <aside class="admin-side">
-        <a href="{{ route('admin.dashboard') }}" class="logo logo--footer">Mystery<b>Makers</b></a>
+        <a href="{{ route(auth()->user()->is_admin ? 'admin.dashboard' : 'admin.products.index') }}" class="logo logo--footer">Mystery<b>Makers</b></a>
         <nav>
+            @php $isAdmin = auth()->user()->is_admin; $toReview = \App\Models\Product::where('needs_review', true)->count(); @endphp
+            @if($isAdmin)
             <a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">📊 Дашборд</a>
             @php $newOrders = \App\Models\Order::where('status', 'new')->count(); @endphp
             <a href="{{ route('admin.orders.index') }}" class="{{ request()->routeIs('admin.orders.*') ? 'active' : '' }}">🛒 Заказы <span class="badge" id="orders-badge" @if(!$newOrders) hidden @endif>{{ $newOrders }}</span></a>
-            <a href="{{ route('admin.products.index') }}" class="{{ request()->routeIs('admin.products.*') ? 'active' : '' }}">📦 Товары</a>
+            @endif
+            <a href="{{ route('admin.products.index') }}" class="{{ request()->routeIs('admin.products.*') ? 'active' : '' }}">📦 Товары@if($isAdmin && $toReview) <span class="badge" title="Ждут проверки">{{ $toReview }}</span>@endif</a>
+            @if($isAdmin)
             @php $pendingReviews = \App\Models\Review::where('status', 'pending')->count(); @endphp
             <a href="{{ route('admin.reviews.index') }}" class="{{ request()->routeIs('admin.reviews.*') ? 'active' : '' }}">💬 Отзывы@if($pendingReviews) <span class="badge">{{ $pendingReviews }}</span>@endif</a>
             <a href="{{ route('admin.users.index') }}" class="{{ request()->routeIs('admin.users.*') ? 'active' : '' }}">👥 Пользователи</a>
+            @endif
             <a href="{{ route('admin.categories.index') }}" class="{{ request()->routeIs('admin.categories.*') ? 'active' : '' }}">📂 Категории</a>
             <a href="{{ route('admin.holidays.index') }}" class="{{ request()->routeIs('admin.holidays.*') ? 'active' : '' }}">🎉 Праздники</a>
             <a href="{{ route('admin.characteristics.index') }}" class="{{ request()->routeIs('admin.characteristics.*') ? 'active' : '' }}">🏷 Характеристики</a>
             <a href="{{ route('admin.banners.index') }}" class="{{ request()->routeIs('admin.banners.*') ? 'active' : '' }}">🖼 Баннеры</a>
             <a href="{{ route('admin.pages.index') }}" class="{{ request()->routeIs('admin.pages.*') ? 'active' : '' }}">📄 Страницы</a>
+            @if($isAdmin)
             <a href="{{ route('admin.settings.edit') }}" class="{{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">⚙ Настройки</a>
             <a href="{{ route('admin.calculator.index') }}" class="{{ request()->routeIs('admin.calculator.*') ? 'active' : '' }}">🧮 Калькулятор</a>
             <a href="{{ route('admin.novaposhta.edit') }}" class="{{ request()->routeIs('admin.novaposhta.*') ? 'active' : '' }}">📦 Новая Почта</a>
             <a href="{{ route('admin.backups.index') }}" class="{{ request()->routeIs('admin.backups.*') ? 'active' : '' }}">💾 Копии</a>
+            @endif
             <a href="{{ route('home') }}">↩ На сайт</a>
         </nav>
         @include('partials.theme-button', ['class' => 'link-btn link-btn--light', 'title' => 'Тема'])
+        @if(auth()->user()->is_admin)
         <button type="button" class="link-btn link-btn--light" id="sound-toggle" title="Звук при новом заказе">🔕 Звук выключен</button>
+        @else
+        <span class="muted role-note">Роль: модератор</span>
+        @endif
         <form action="{{ route('logout') }}" method="POST">
             @csrf
             <button type="submit" class="link-btn link-btn--light">Выйти</button>
@@ -45,6 +56,7 @@
     </div>
 </div>
 @include('partials.password-toggle')
+@if(auth()->user()->is_admin)
 <div class="order-toast" id="order-toast" hidden></div>
 <script>
 (function () {
@@ -103,5 +115,6 @@
     setInterval(poll, 20000);
 })();
 </script>
+@endif
 </body>
 </html>

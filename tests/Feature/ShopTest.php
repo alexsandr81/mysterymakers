@@ -305,6 +305,96 @@ class ShopTest extends TestCase
             ->assertSee('Подарочные коробки')->assertSee('Круглые');
     }
 
+    public function test_moderator_access_is_limited(): void
+    {
+        $mod = User::factory()->create(['is_moderator' => true]);
+        $p = $this->product();
+
+        $this->actingAs($mod)->get(route('admin.products.index'))->assertOk()->assertDontSee('Массовое изменение цены');
+        $this->actingAs($mod)->get(route('admin.categories.index'))->assertOk();
+        $this->actingAs($mod)->get(route('admin.products.create'))->assertOk()->assertDontSee('name="price"', false);
+        $this->actingAs($mod)->get(route('admin.dashboard'))->assertRedirect(route('admin.products.index'));
+
+        foreach (['admin.orders.index', 'admin.users.index', 'admin.settings.edit', 'admin.calculator.index', 'admin.backups.index', 'admin.reviews.index', 'admin.novaposhta.edit'] as $r) {
+            $this->actingAs($mod)->get(route($r))->assertForbidden();
+        }
+        $this->actingAs($mod)->delete(route('admin.products.destroy', $p))->assertForbidden();
+        $this->actingAs($mod)->post(route('admin.products.bulk-price'), ['mode' => 'set', 'value' => 1, 'round' => 0, 'scope_all' => 1])->assertForbidden();
+        $this->assertSame('500.00', $p->fresh()->price);
+
+        // Покупатель в админку не попадает
+        $this->actingAs(User::factory()->create())->get(route('admin.products.index'))->assertForbidden();
+    }
+
+    public function test_moderator_product_has_no_price_and_waits_for_review(): void
+    {
+        $mod = User::factory()->create(['is_moderator' => true, 'name' => 'Жена']);
+        $admin = User::factory()->create(['is_admin' => true]);
+        $cat = Category::create(['slug' => 'c', 'name_uk' => 'К', 'name_ru' => 'К', 'sort' => 1, 'sku_start' => 10000]);
+        $base = ['name_uk' => 'Скринька', 'name_ru' => 'Шкатулка', 'stock' => 3, 'is_active' => 1, 'category_top' => (string) $cat->id, 'category_id' => 'self'];
+
+        // Цену модератор не вводит, а если пришлёт — она игнорируется
+        $this->actingAs($mod)->post(route('admin.products.store'), $base + ['price' => 999])->assertRedirect();
+        $p = Product::where('name_ru', 'Шкатулка')->first();
+        $this->assertNotNull($p);
+        $this->assertSame(0.0, (float) $p->price);
+        $this->assertTrue($p->needs_review);
+        $this->assertSame($mod->id, $p->modified_by);
+
+        // На сайте виден сразу, но без цены и без покупки
+        $this->withSession(['locale' => 'ru'])->get(route('product', $p))->assertOk()->assertSee('Цена уточняется')->assertDontSee('name="quantity"', false);
+        $this->withSession(['locale' => 'ru'])->get('/catalog')->assertOk()->assertSee('Шкатулка')->assertSee('Цена уточняется');
+        $this->post(route('cart.add', $p))->assertNotFound();
+
+        // Администратор видит метку и фильтр; без цены сохранить нельзя
+        $this->actingAs($admin)->get(route('admin.products.index'))->assertOk()->assertSee('проверить')->assertSee('нет цены');
+        $this->actingAs($admin)->get(route('admin.products.index', ['review' => 1]))->assertOk()->assertSee('Шкатулка');
+        $this->actingAs($admin)->put(route('admin.products.update', $p), $base + ['reviewed' => 1])->assertSessionHasErrors('price');
+
+        // Админ ставит цену и снимает метку галочкой «Проверено»
+        $this->actingAs($admin)->put(route('admin.products.update', $p), $base + ['price' => 450, 'reviewed' => 1])->assertSessionHasNoErrors();
+        $p->refresh();
+        $this->assertFalse($p->needs_review);
+        $this->assertSame(450.0, (float) $p->price);
+        $this->withSession(['locale' => 'ru'])->get(route('product', $p))->assertOk()->assertSee('name="quantity"', false);
+
+        // Модератор правит проверенный товар: цена не меняется, метка возвращается
+        $this->actingAs($mod)->put(route('admin.products.update', $p), $base + ['name_ru' => 'Шкатулка 2', 'price' => 1])->assertRedirect();
+        $p->refresh();
+        $this->assertSame('Шкатулка 2', $p->name_ru);
+        $this->assertSame(450.0, (float) $p->price);
+        $this->assertTrue($p->needs_review);
+
+        // Админ сохраняет без галочки «Проверено» — метка остаётся; кнопка ✔ и массовая отметка её снимают
+        $this->actingAs($admin)->put(route('admin.products.update', $p), $base + ['price' => 450])->assertSessionHasNoErrors();
+        $this->assertTrue($p->fresh()->needs_review);
+        $this->actingAs($admin)->post(route('admin.products.reviewed', $p))->assertRedirect();
+        $this->assertFalse($p->fresh()->needs_review);
+
+        $p->forceFill(['needs_review' => true])->save();
+        $this->actingAs($mod)->post(route('admin.products.bulk-reviewed'), ['ids' => [$p->id]])->assertForbidden();
+        $this->actingAs($admin)->post(route('admin.products.bulk-reviewed'), ['ids' => [$p->id]])->assertRedirect();
+        $this->assertFalse($p->fresh()->needs_review);
+    }
+
+    public function test_admin_can_assign_roles(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $u = User::factory()->create();
+        $form = ['name' => $u->name, 'email' => $u->email];
+
+        $this->actingAs($admin)->put(route('admin.users.update', $u), $form + ['role' => 'moderator'])->assertRedirect();
+        $this->assertSame('moderator', $u->fresh()->role());
+
+        $this->actingAs($admin)->put(route('admin.users.update', $u), $form + ['role' => 'admin'])->assertRedirect();
+        $this->assertSame('admin', $u->fresh()->role());
+        $this->assertFalse($u->fresh()->is_moderator);
+
+        // Нельзя оставить сайт без администратора
+        $this->actingAs($admin)->put(route('admin.users.update', $admin), ['name' => $admin->name, 'email' => $admin->email, 'role' => 'moderator'])->assertSessionHasErrors('role');
+        $this->actingAs($admin)->put(route('admin.users.update', $u), $form + ['role' => 'boss'])->assertSessionHasErrors('role');
+    }
+
     public function test_site_fonts_setting(): void
     {
         $admin = User::factory()->create(['is_admin' => true]);

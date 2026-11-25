@@ -22,7 +22,19 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_admin' => 'boolean',
+            'is_moderator' => 'boolean',
         ];
+    }
+
+    /** Роль: admin (всё), moderator (товары и каталог, без цен и заказов), customer */
+    public function role(): string
+    {
+        return $this->is_admin ? 'admin' : ($this->is_moderator ? 'moderator' : 'customer');
+    }
+
+    public function isStaff(): bool
+    {
+        return $this->is_admin || $this->is_moderator;
     }
 
     /** Письмо для сброса пароля — на языке сайта */

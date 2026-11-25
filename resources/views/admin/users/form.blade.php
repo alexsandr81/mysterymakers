@@ -26,9 +26,13 @@
             <label>Новый пароль (оставьте пустым, чтобы не менять)
                 <input type="password" name="password" minlength="8" autocomplete="new-password">
             </label>
-            <label class="check">
-                <input type="hidden" name="is_admin" value="0">
-                <input type="checkbox" name="is_admin" value="1" @checked(old('is_admin', $user->is_admin))> Администратор (доступ к админке)
+            <label>Роль
+                <select name="role">
+                    @php $curRole = old('role', $user->role()); @endphp
+                    <option value="customer" @selected($curRole === 'customer')>Покупатель (без доступа к админке)</option>
+                    <option value="moderator" @selected($curRole === 'moderator')>Модератор (товары, категории, праздники, характеристики, баннеры, страницы; без цен, удаления и заказов)</option>
+                    <option value="admin" @selected($curRole === 'admin')>Администратор (полный доступ)</option>
+                </select>
             </label>
             @if($user->google_id)<p class="muted">Привязан вход через Google.</p>
             @endif

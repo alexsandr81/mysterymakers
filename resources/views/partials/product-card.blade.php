@@ -15,9 +15,15 @@
         @if($product->has_discount)
             <s class="old">{{ Money::format($product->old_price) }}</s>
         @endif
-        <span class="now {{ $product->has_discount ? 'now--sale' : '' }}">{{ Money::format($product->price) }} {{ __('shop.currency') }}</span>
+        @if($product->has_price)
+            <span class="now {{ $product->has_discount ? 'now--sale' : '' }}">{{ Money::format($product->price) }} {{ __('shop.currency') }}</span>
+        @else
+            <span class="muted">{{ __('shop.price_tbd') }}</span>
+        @endif
     </div>
-    @if($product->in_stock)
+    @if(! $product->has_price)
+        {{-- без цены купить нельзя --}}
+    @elseif($product->in_stock)
         <form action="{{ route('cart.add', $product) }}" method="POST">
             @csrf
             <button type="submit" class="btn btn--accent btn--block">🛒 {{ __('shop.add_to_cart') }}</button>

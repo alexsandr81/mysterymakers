@@ -32,6 +32,7 @@ return [
     'description' => 'Опис',
     'related' => 'Схожі товари',
     'price' => 'Ціна',
+    'price_tbd' => 'Ціна уточнюється',
     'currency' => 'грн',
     'quantity' => 'Кількість',
     'sum' => 'Сума',

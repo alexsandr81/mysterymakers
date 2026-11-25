@@ -18,7 +18,7 @@ class CartController extends Controller
 
     public function add(Request $request, Cart $cart, Product $product)
     {
-        abort_unless($product->is_active && $product->in_stock, 404);
+        abort_unless($product->is_active && $product->purchasable, 404);
         $cart->add($product, max(1, (int) $request->input('quantity', 1)));
 
         return back()->with('status', __('shop.added_to_cart'));

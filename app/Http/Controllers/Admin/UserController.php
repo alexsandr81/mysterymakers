@@ -41,13 +41,16 @@ class UserController extends Controller
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
             'phone' => ['nullable', 'regex:/^\+?\d{10,12}$/'],
             'password' => ['nullable', 'string', 'min:8'],
+            'role' => ['required', Rule::in(['customer', 'moderator', 'admin'])],
         ]);
 
-        $isAdmin = $request->boolean('is_admin');
+        $role = $data['role'];
+        unset($data['role']);
+        $isAdmin = $role === 'admin';
 
         // Нельзя снять права администратора с самого себя и оставить сайт без админов
         if ($user->is_admin && !$isAdmin && ($user->id === $request->user()->id || User::where('is_admin', true)->count() <= 1)) {
-            return back()->withErrors(['is_admin' => 'Нельзя снять права администратора у себя или у последнего администратора.'])->withInput();
+            return back()->withErrors(['role' => 'Нельзя снять права администратора у себя или у последнего администратора.'])->withInput();
         }
 
         if (empty($data['password'])) {
@@ -56,6 +59,7 @@ class UserController extends Controller
 
         $user->fill($data);
         $user->is_admin = $isAdmin;
+        $user->is_moderator = $role === 'moderator';
         $user->save();
 
         return redirect()->route('admin.users.index')->with('status', 'Пользователь сохранён');

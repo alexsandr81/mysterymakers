@@ -25,6 +25,9 @@
             'availability' => $product->in_stock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
         ],
     ];
+    if (! $product->has_price) {
+        unset($ld['offers']); // цена не задана — разметку цены поисковикам не отдаём
+    }
     if ($reviews->isNotEmpty()) {
         $ld['aggregateRating'] = [
             '@type' => 'AggregateRating',
@@ -72,12 +75,16 @@
                 <s class="old">{{ Money::format($product->old_price) }} {{ __('shop.currency') }}</s>
                 <span class="tag tag--sale">−{{ $product->discount_percent }}%</span>
             @endif
-            <div class="now {{ $product->has_discount ? 'now--sale' : '' }}">{{ Money::format($product->price) }} {{ __('shop.currency') }}</div>
+            @if($product->has_price)
+                <div class="now {{ $product->has_discount ? 'now--sale' : '' }}">{{ Money::format($product->price) }} {{ __('shop.currency') }}</div>
+            @else
+                <div class="now muted">{{ __('shop.price_tbd') }}</div>
+            @endif
         </div>
 
         @include('partials.favorite-button', ['product' => $product, 'wide' => true])
 
-        @if($product->in_stock)
+        @if($product->purchasable)
             <form action="{{ route('cart.add', $product) }}" method="POST" class="buy">
                 @csrf
                 <input type="number" name="quantity" value="1" min="1" max="{{ min(99, $product->stock) }}" class="qty">
