@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
+use App\Support\Fonts;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class SettingController extends Controller
 {
@@ -27,6 +29,9 @@ class SettingController extends Controller
             'email' => ['nullable', 'email', 'max:150'],
             'notify_email' => ['nullable', 'email', 'max:150'],
             'address' => ['nullable', 'string', 'max:255'],
+            'font_body' => ['sometimes', 'required', Rule::in(Fonts::keys())],
+            'font_heading' => ['sometimes', 'required', Rule::in(Fonts::keysWithSame())],
+            'font_logo' => ['sometimes', 'required', Rule::in(Fonts::keysWithSame())],
         ]);
 
         // Телефоны: до 5 строк, в каждой должен быть номер (10–13 цифр)

@@ -305,6 +305,26 @@ class ShopTest extends TestCase
             ->assertSee('Подарочные коробки')->assertSee('Круглые');
     }
 
+    public function test_site_fonts_setting(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $form = ['site_name' => 'Mystery Makers', 'phone' => '+380501234567'];
+
+        // По умолчанию — системный шрифт, ничего с Google Fonts не подгружается
+        $this->get('/')->assertOk()->assertDontSee('fonts.googleapis.com', false);
+
+        $this->actingAs($admin)->get(route('admin.settings.edit'))->assertOk()->assertSee('Шрифты')->assertSee('Playfair Display');
+
+        $this->actingAs($admin)->put(route('admin.settings.update'), $form + ['font_body' => 'nunito', 'font_heading' => 'playfair', 'font_logo' => 'same'])->assertSessionHasNoErrors();
+        $this->get('/')->assertOk()
+            ->assertSee('fonts.googleapis.com/css2?family=Nunito', false)
+            ->assertSee('Playfair+Display', false)
+            ->assertSee('--font-logo:"Playfair Display"', false);
+
+        // Неизвестный шрифт отклоняется
+        $this->actingAs($admin)->put(route('admin.settings.update'), $form + ['font_body' => 'evil; x', 'font_heading' => 'same', 'font_logo' => 'same'])->assertSessionHasErrors('font_body');
+    }
+
     public function test_admin_tables_have_column_picker(): void
     {
         $admin = User::factory()->create(['is_admin' => true]);

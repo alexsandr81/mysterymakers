@@ -19,6 +19,7 @@
     @hasSection('og_image')<meta property="og:image" content="@yield('og_image')">@endif
     @stack('head')
     @include('partials.theme-head')
+    @include('partials.fonts-head')
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
 </head>
 <body>

@@ -6,6 +6,7 @@
     <title>@yield('title', 'Админка') — MysteryMakers</title>
     @include('partials.theme-head')
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    @stack('head')
 </head>
 <body class="admin">
 <div class="admin-shell">
