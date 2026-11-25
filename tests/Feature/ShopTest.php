@@ -313,7 +313,7 @@ class ShopTest extends TestCase
         // По умолчанию — системный шрифт, ничего с Google Fonts не подгружается
         $this->get('/')->assertOk()->assertDontSee('fonts.googleapis.com', false);
 
-        $this->actingAs($admin)->get(route('admin.settings.edit'))->assertOk()->assertSee('Шрифты')->assertSee('Playfair Display');
+        $this->actingAs($admin)->get(route('admin.settings.edit'))->assertOk()->assertSee('Шрифты')->assertSee('Playfair Display')->assertSee('Literata')->assertSee('Source Serif 4');
 
         $this->actingAs($admin)->put(route('admin.settings.update'), $form + ['font_body' => 'nunito', 'font_heading' => 'playfair', 'font_logo' => 'same'])->assertSessionHasNoErrors();
         $this->get('/')->assertOk()
