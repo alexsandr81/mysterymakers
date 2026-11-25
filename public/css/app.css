@@ -733,3 +733,11 @@ h1, h2, h3, h4, .hero h1 { font-family: var(--font-heading, inherit); }
 /* Подписи сверху, поля ввода снизу: ряд не «съезжает», если у одного поля есть строка-подсказка */
 .calc__grid label { justify-content: space-between; }
 .calc .check-line { justify-content: flex-start; }
+
+/* Калькулятор: параметры и материалы раскрываются по ⚙ */
+.calc__fold { border-top: 1px solid var(--line); padding: 10px 0; }
+.calc__fold > summary { cursor: pointer; font-weight: 700; font-size: 1.05rem; color: var(--brand-dark); list-style: none; }
+.calc__fold > summary::-webkit-details-marker { display: none; }
+.calc__fold[open] > summary { margin-bottom: 12px; }
+.calc__save { margin-top: 10px; }
+.calc__box:not(:has(.calc__fold[open])) .calc__save { display: none; }

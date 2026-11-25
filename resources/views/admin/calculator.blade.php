@@ -69,7 +69,10 @@
 
     <form action="{{ route('admin.calculator.update') }}" method="POST" class="calc__box">
         @csrf @method('PUT')
-        <h3>Параметры расчёта</h3>
+        <p class="muted">Ставки и материалы спрятаны, чтобы не мешали. Нажмите ⚙, чтобы изменить. Расчёт выше пересчитывается сразу, а запоминается после «Сохранить».</p>
+
+        <details class="calc__fold" @if($errors->any()) open @endif>
+        <summary>⚙ Параметры расчёта</summary>
         <div class="calc__grid">
             <label>Использование листа, % <small class="muted">остальное — обрезки и отходы</small>
                 <input type="number" name="calc_waste" min="10" max="100" step="any" value="{{ old('calc_waste', $fmt($p['calc_waste'])) }}" required></label>
@@ -86,8 +89,10 @@
             <label>Округлять цену вверх до, грн <small class="muted">0 — не округлять</small>
                 <input type="number" name="calc_round" min="0" step="any" value="{{ old('calc_round', $fmt($p['calc_round'])) }}" required></label>
         </div>
+        </details>
 
-        <h3>Материалы</h3>
+        <details class="calc__fold" @if($errors->any()) open @endif>
+        <summary>⚙ Материалы</summary>
         <p class="muted">Цена листа и тариф резки за погонный метр. Дата показывает, когда цену листа меняли в последний раз — «не проверялась» значит цену нужно сверить с поставщиком.</p>
         <div class="table-wrap">
         <table class="table calc__materials" id="mat-table">
@@ -111,8 +116,9 @@
         </table>
         </div>
         <p><button type="button" class="btn" id="mat-add">+ Добавить материал</button></p>
+        </details>
 
-        <div><button type="submit" class="btn btn--accent btn--lg">Сохранить параметры</button></div>
+        <div class="calc__save"><button type="submit" class="btn btn--accent btn--lg">Сохранить параметры</button></div>
     </form>
 </div>
 
