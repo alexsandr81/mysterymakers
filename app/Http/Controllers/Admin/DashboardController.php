@@ -13,11 +13,6 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-        // Модератору дашборд (выручка, заказы) не показываем
-        if (! $request->user()->is_admin) {
-            return redirect()->route('admin.products.index');
-        }
-
         $days = in_array((int) $request->query('days'), [7, 30, 90], true) ? (int) $request->query('days') : 30;
         $from = today()->subDays($days - 1);
 

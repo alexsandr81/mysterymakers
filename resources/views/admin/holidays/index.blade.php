@@ -22,10 +22,10 @@
             <td>{{ $h->is_active ? '✓' : 'скрыт' }}</td>
             <td class="actions">
                 <a href="{{ route('admin.holidays.edit', $h) }}">Изменить</a>
-                @if(auth()->user()->is_admin)<form action="{{ route('admin.holidays.destroy', $h) }}" method="POST" onsubmit="return confirm('Удалить праздник? У товаров эта метка пропадёт.')">
+                <form action="{{ route('admin.holidays.destroy', $h) }}" method="POST" onsubmit="return confirm('Удалить праздник? У товаров эта метка пропадёт.')">
                     @csrf @method('DELETE')
                     <button class="link-btn link-btn--danger">Удалить</button>
-                </form>@endif
+                </form>
             </td>
         </tr>
     @empty

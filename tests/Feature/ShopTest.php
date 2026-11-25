@@ -305,36 +305,38 @@ class ShopTest extends TestCase
             ->assertSee('Подарочные коробки')->assertSee('Круглые');
     }
 
-    public function test_moderator_access_is_limited(): void
+    public function test_moderator_has_full_access_except_journal_and_review_marks(): void
     {
         $mod = User::factory()->create(['is_moderator' => true]);
         $p = $this->product();
 
-        $this->actingAs($mod)->get(route('admin.products.index'))->assertOk()->assertDontSee('Массовое изменение цены');
-        $this->actingAs($mod)->get(route('admin.categories.index'))->assertOk();
-        $this->actingAs($mod)->get(route('admin.products.create'))->assertOk()->assertDontSee('name="price"', false);
-        $this->actingAs($mod)->get(route('admin.dashboard'))->assertRedirect(route('admin.products.index'));
-
-        foreach (['admin.orders.index', 'admin.users.index', 'admin.settings.edit', 'admin.calculator.index', 'admin.backups.index', 'admin.reviews.index', 'admin.novaposhta.edit'] as $r) {
-            $this->actingAs($mod)->get(route($r))->assertForbidden();
+        foreach (['admin.dashboard', 'admin.products.index', 'admin.categories.index', 'admin.orders.index', 'admin.users.index', 'admin.settings.edit', 'admin.calculator.index'] as $r) {
+            $this->actingAs($mod)->get(route($r))->assertOk();
         }
-        $this->actingAs($mod)->delete(route('admin.products.destroy', $p))->assertForbidden();
-        $this->actingAs($mod)->post(route('admin.products.bulk-price'), ['mode' => 'set', 'value' => 1, 'round' => 0, 'scope_all' => 1])->assertForbidden();
-        $this->assertSame('500.00', $p->fresh()->price);
+        foreach (['admin.backups.index', 'admin.reviews.index', 'admin.novaposhta.edit'] as $r) {
+            $this->assertNotSame(403, $this->actingAs($mod)->get(route($r))->status(), $r); // доступ есть (страница может просить настройки)
+        }
+        $this->actingAs($mod)->get(route('admin.products.index'))->assertOk()->assertSee('Массовое изменение цены');
+        $this->actingAs($mod)->get(route('admin.products.create'))->assertOk()->assertSee('name="price"', false);
+
+        // Журнал и «Проверено» — только у администратора
+        $this->actingAs($mod)->get(route('admin.activity.index'))->assertForbidden();
+        $this->actingAs($mod)->post(route('admin.products.reviewed', $p))->assertForbidden();
+        $this->actingAs($mod)->post(route('admin.products.bulk-reviewed'), ['ids' => [$p->id]])->assertForbidden();
 
         // Покупатель в админку не попадает
         $this->actingAs(User::factory()->create())->get(route('admin.products.index'))->assertForbidden();
     }
 
-    public function test_moderator_product_has_no_price_and_waits_for_review(): void
+    public function test_moderator_product_waits_for_review_and_actions_are_logged(): void
     {
         $mod = User::factory()->create(['is_moderator' => true, 'name' => 'Жена']);
         $admin = User::factory()->create(['is_admin' => true]);
         $cat = Category::create(['slug' => 'c', 'name_uk' => 'К', 'name_ru' => 'К', 'sort' => 1, 'sku_start' => 10000]);
         $base = ['name_uk' => 'Скринька', 'name_ru' => 'Шкатулка', 'stock' => 3, 'is_active' => 1, 'category_top' => (string) $cat->id, 'category_id' => 'self'];
 
-        // Цену модератор не вводит, а если пришлёт — она игнорируется
-        $this->actingAs($mod)->post(route('admin.products.store'), $base + ['price' => 999])->assertRedirect();
+        // Без цены можно: товар создаётся с пустой ценой и меткой «на проверку»
+        $this->actingAs($mod)->post(route('admin.products.store'), $base)->assertRedirect();
         $p = Product::where('name_ru', 'Шкатулка')->first();
         $this->assertNotNull($p);
         $this->assertSame(0.0, (float) $p->price);
@@ -346,35 +348,55 @@ class ShopTest extends TestCase
         $this->withSession(['locale' => 'ru'])->get('/catalog')->assertOk()->assertSee('Шкатулка')->assertSee('Цена уточняется');
         $this->post(route('cart.add', $p))->assertNotFound();
 
-        // Администратор видит метку и фильтр; без цены сохранить нельзя
-        $this->actingAs($admin)->get(route('admin.products.index'))->assertOk()->assertSee('проверить')->assertSee('нет цены');
-        $this->actingAs($admin)->get(route('admin.products.index', ['review' => 1]))->assertOk()->assertSee('Шкатулка');
-        $this->actingAs($admin)->put(route('admin.products.update', $p), $base + ['reviewed' => 1])->assertSessionHasErrors('price');
-
-        // Админ ставит цену и снимает метку галочкой «Проверено»
-        $this->actingAs($admin)->put(route('admin.products.update', $p), $base + ['price' => 450, 'reviewed' => 1])->assertSessionHasNoErrors();
+        // Модератор тоже может поставить цену — товар всё равно остаётся «на проверку»
+        $this->actingAs($mod)->put(route('admin.products.update', $p), $base + ['price' => 300])->assertRedirect();
         $p->refresh();
-        $this->assertFalse($p->needs_review);
-        $this->assertSame(450.0, (float) $p->price);
-        $this->withSession(['locale' => 'ru'])->get(route('product', $p))->assertOk()->assertSee('name="quantity"', false);
-
-        // Модератор правит проверенный товар: цена не меняется, метка возвращается
-        $this->actingAs($mod)->put(route('admin.products.update', $p), $base + ['name_ru' => 'Шкатулка 2', 'price' => 1])->assertRedirect();
-        $p->refresh();
-        $this->assertSame('Шкатулка 2', $p->name_ru);
-        $this->assertSame(450.0, (float) $p->price);
+        $this->assertSame(300.0, (float) $p->price);
         $this->assertTrue($p->needs_review);
 
-        // Админ сохраняет без галочки «Проверено» — метка остаётся; кнопка ✔ и массовая отметка её снимают
-        $this->actingAs($admin)->put(route('admin.products.update', $p), $base + ['price' => 450])->assertSessionHasNoErrors();
+        // Ошибка в форме в журнал не попадает
+        $before = \App\Models\Activity::count();
+        $this->actingAs($mod)->post(route('admin.products.store'), ['name_ru' => ''] + $base)->assertSessionHasErrors();
+        $this->assertSame($before, \App\Models\Activity::count());
+
+        // Журнал: добавление и изменение, с именем модератора и ссылкой на товар
+        $this->assertSame(2, \App\Models\Activity::count());
+        $this->actingAs($admin)->get(route('admin.activity.index'))->assertOk()
+            ->assertSee('Жена')->assertSee('Добавлен товар')->assertSee('Изменён товар')->assertSee('Шкатулка')->assertSee(route('admin.products.edit', $p), false);
+
+        // Счётчик «новое» у администратора обнуляется после просмотра журнала
+        $this->assertSame(0, \App\Models\Activity::unseenCount($admin->fresh()));
+        $this->travel(5)->seconds(); // следующее действие — уже после просмотра журнала
+        $this->actingAs($mod)->put(route('admin.products.update', $p), $base + ['price' => 310])->assertRedirect();
+        $this->assertSame(1, \App\Models\Activity::unseenCount($admin->fresh()));
+        $poll = $this->actingAs($admin)->getJson(route('admin.orders.poll'))->assertOk()->json();
+        $this->assertSame(1, $poll['act_unseen']);
+        $this->assertStringContainsString('Жена: Изменён товар «Шкатулка', $poll['act_text']);
+
+        // Действия администратора в журнал не пишутся
+        $n = \App\Models\Activity::count();
+        $this->actingAs($admin)->put(route('admin.products.update', $p), $base + ['price' => 450, 'reviewed' => 1])->assertSessionHasNoErrors();
+        $this->assertSame($n, \App\Models\Activity::count());
+        $this->assertFalse($p->fresh()->needs_review);
+        $this->withSession(['locale' => 'ru'])->get(route('product', $p))->assertOk()->assertSee('name="quantity"', false);
+
+        // Метка возвращается после правки модератора; ✔ и массовая отметка у администратора её снимают
+        $this->actingAs($mod)->put(route('admin.products.update', $p), $base + ['name_ru' => 'Шкатулка 2', 'price' => 450])->assertRedirect();
         $this->assertTrue($p->fresh()->needs_review);
+        $this->actingAs($admin)->get(route('admin.products.index', ['review' => 1]))->assertOk()->assertSee('проверить')->assertSee('Шкатулка 2');
         $this->actingAs($admin)->post(route('admin.products.reviewed', $p))->assertRedirect();
         $this->assertFalse($p->fresh()->needs_review);
-
         $p->forceFill(['needs_review' => true])->save();
-        $this->actingAs($mod)->post(route('admin.products.bulk-reviewed'), ['ids' => [$p->id]])->assertForbidden();
         $this->actingAs($admin)->post(route('admin.products.bulk-reviewed'), ['ids' => [$p->id]])->assertRedirect();
         $this->assertFalse($p->fresh()->needs_review);
+
+        // Администратор без галочки «Проверено» оставляет метку
+        $p->forceFill(['needs_review' => true])->save();
+        $this->actingAs($admin)->put(route('admin.products.update', $p), $base + ['price' => 450])->assertSessionHasNoErrors();
+        $this->assertTrue($p->fresh()->needs_review);
+
+        // Админ без цены сохранить товар не может
+        $this->actingAs($admin)->put(route('admin.products.update', $p), $base)->assertSessionHasErrors('price');
     }
 
     public function test_admin_can_assign_roles(): void

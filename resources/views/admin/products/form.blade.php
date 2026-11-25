@@ -98,18 +98,15 @@
     })();
     </script>
 
-    @if(auth()->user()->is_admin)
     <div class="form__cols form__cols--narrow">
         <label>Цена, грн
-            <input type="number" step="0.01" min="0.01" name="price" value="{{ old('price', $product->price > 0 ? $product->price : '') }}" required>
+            <input type="number" step="0.01" min="0.01" name="price" value="{{ old('price', $product->price > 0 ? $product->price : '') }}" @if(auth()->user()->is_admin) required @endif>
+            @unless(auth()->user()->is_admin)<span class="muted">Можно оставить пустой: на сайте будет «Цена уточняется».</span>@endunless
         </label>
         <label>Старая цена (для скидки)
             <input type="number" step="0.01" name="old_price" value="{{ old('old_price', $product->old_price) }}">
         </label>
     </div>
-    @else
-    <p class="muted">Цену ставит администратор. Пока цены нет, на сайте будет «Цена уточняется», и купить товар нельзя.</p>
-    @endif
 
     <div class="form__stack">
         <label>Артикул

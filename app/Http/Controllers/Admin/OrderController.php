@@ -20,16 +20,25 @@ class OrderController extends Controller
     }
 
     /** Для автообновления счётчика и звука: сколько новых заказов и какой заказ последний */
-    public function poll()
+    public function poll(Request $request)
     {
         $last = Order::latest('id')->first(['id', 'number', 'total']);
-
-        return response()->json([
+        $data = [
             'new' => Order::where('status', 'new')->count(),
             'last_id' => $last?->id ?? 0,
             'number' => $last?->number,
             'total' => $last ? \App\Support\Money::format($last->total) : null,
-        ]);
+        ];
+
+        // Администратору — ещё и новые действия модератора
+        if ($request->user()->is_admin) {
+            $act = \App\Models\Activity::latest('id')->first();
+            $data['act_last_id'] = $act?->id ?? 0;
+            $data['act_text'] = $act?->text;
+            $data['act_unseen'] = \App\Models\Activity::unseenCount($request->user());
+        }
+
+        return response()->json($data);
     }
 
     /** Отметить заказ оплаченным (для «Оплата на карту») или снять отметку */

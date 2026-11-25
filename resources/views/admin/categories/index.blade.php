@@ -77,10 +77,10 @@
                     <a href="{{ route('admin.categories.create', ['parent_id' => $c->id]) }}" title="Добавить подкатегорию в «{{ $c->name_ru }}»">＋ Подкат.</a>
                 @endunless
                 <a href="{{ route('admin.categories.edit', $c) }}" title="Изменить">✎</a>
-                @if(auth()->user()->is_admin)<form action="{{ route('admin.categories.destroy', $c) }}" method="POST" onsubmit="return confirm('Удалить категорию?')">
+                <form action="{{ route('admin.categories.destroy', $c) }}" method="POST" onsubmit="return confirm('Удалить категорию?')">
                     @csrf @method('DELETE')
                     <button class="link-btn link-btn--danger" title="Удалить">✕</button>
-                </form>@endif
+                </form>
             </td>
         </tr>
     @endforeach

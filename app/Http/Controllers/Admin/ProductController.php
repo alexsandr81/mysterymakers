@@ -245,9 +245,10 @@ class ProductController extends Controller
             'char' => ['nullable', 'array'],
             'char.*' => ['nullable', 'integer', 'exists:characteristic_values,id'],
         ];
-        // Модератор цены не вводит: цену и старую цену не принимаем (у нового товара цена «не задана»)
+        // Модератор может не указывать цену: у нового товара она остаётся пустой («Цена уточняется»), пока её не поставит администратор
         if (! $isAdmin) {
-            unset($rules['price'], $rules['old_price']);
+            $rules['price'] = ['nullable', 'numeric', 'min:0.01', 'max:99999999'];
+            $rules['old_price'] = ['nullable', 'numeric', 'min:0.01', 'max:99999999'];
         }
         $data = $request->validate($rules);
 
@@ -268,7 +269,10 @@ class ProductController extends Controller
             $data['sku'] = $product?->sku ?: \App\Models\Category::findOrFail($data['category_id'])->nextSku();
         }
         if (! $isAdmin) {
-            $data['price'] = $product?->price ?? 0;
+            $data['price'] = $data['price'] ?? ($product?->price ?? 0);
+            if ((float) $data['price'] <= 0 || (isset($data['old_price']) && (float) $data['old_price'] <= (float) $data['price'])) {
+                $data['old_price'] = null; // скидка без цены или с «старой» ценой ниже новой не имеет смысла
+            }
         }
         $data['is_active'] = $request->boolean('is_active');
 
@@ -298,7 +302,7 @@ class ProductController extends Controller
     {
         $user = $request->user();
         if (! $user->is_admin) {
-            return ['needs_review' => true, 'modified_by' => $user->id];
+            return ['needs_review' => true, 'modified_by' => $user->id]; // каждое изменение модератора проверяет администратор
         }
 
         return ['needs_review' => (bool) ($product?->needs_review && ! $request->boolean('reviewed'))];

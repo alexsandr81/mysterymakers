@@ -719,3 +719,7 @@ h1, h2, h3, h4, .hero h1 { font-family: var(--font-heading, inherit); }
 .review-filter { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin: 0 0 10px; }
 .review-filter a.is-active { font-weight: 700; text-decoration: underline; }
 .table--compact .review-ok { font-size: 1rem; }
+
+.act-new td { background: var(--tint); font-weight: 600; }
+#activity-badge[hidden] { display: none; }
+.role-note { display: block; font-size: .85rem; margin: 4px 0; }

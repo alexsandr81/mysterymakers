@@ -17,6 +17,7 @@ use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\PageController;
 use App\Http\Middleware\EnsureAdmin;
 use App\Http\Middleware\EnsureStaff;
+use App\Http\Middleware\LogStaffActions;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
@@ -84,54 +85,49 @@ Route::middleware(SetLocale::class)->group(function () {
         Route::post('/favorites/{product}', [FavoriteController::class, 'toggle'])->name('favorites.toggle');
     });
 
-    // Админка: администратор (всё) и модератор (товары, категории, праздники, характеристики, баннеры, страницы — без цен, удаления, заказов)
-    Route::prefix('admin')->name('admin.')->middleware(['auth', EnsureStaff::class])->group(function () {
+    // Админка: администратор и модератор (у модератора права те же; его действия пишутся в журнал, а товары идут «на проверку»)
+    Route::prefix('admin')->name('admin.')->middleware(['auth', EnsureStaff::class, LogStaffActions::class])->group(function () {
         Route::get('/', [Admin\DashboardController::class, 'index'])->name('dashboard');
+        Route::post('products/bulk-price', [Admin\ProductController::class, 'bulkPrice'])->name('products.bulk-price');
         Route::post('products/{product}/drive', [Admin\DriveController::class, 'product'])->name('products.drive');
         Route::post('categories/{category}/drive', [Admin\DriveController::class, 'category'])->name('categories.drive');
-        Route::resource('products', Admin\ProductController::class)->except(['show', 'destroy']);
+        Route::resource('products', Admin\ProductController::class)->except('show');
         Route::post('categories/{category}/move/{direction}', [Admin\CategoryController::class, 'move'])->name('categories.move');
-        Route::resource('categories', Admin\CategoryController::class)->except(['show', 'destroy']);
-        Route::resource('pages', Admin\PageController::class)->except(['show', 'destroy']);
-        Route::resource('banners', Admin\BannerController::class)->except(['show', 'destroy']);
-        Route::resource('characteristics', Admin\CharacteristicController::class)->except(['show', 'destroy']);
-        Route::resource('holidays', Admin\HolidayController::class)->except(['show', 'destroy']);
+        Route::resource('categories', Admin\CategoryController::class)->except('show');
+        Route::get('/backups', [Admin\BackupController::class, 'index'])->name('backups.index');
+        Route::post('/backups', [Admin\BackupController::class, 'store'])->name('backups.store');
+        Route::get('/backups/{file}', [Admin\BackupController::class, 'download'])->name('backups.download');
+        Route::delete('/backups/{file}', [Admin\BackupController::class, 'destroy'])->name('backups.destroy');
+        Route::get('/calculator', [Admin\CalculatorController::class, 'index'])->name('calculator.index');
+        Route::put('/calculator', [Admin\CalculatorController::class, 'update'])->name('calculator.update');
+        Route::get('/novaposhta', [Admin\NovaPoshtaController::class, 'edit'])->name('novaposhta.edit');
+        Route::put('/novaposhta', [Admin\NovaPoshtaController::class, 'update'])->name('novaposhta.update');
+        Route::post('/orders/{order}/ttn', [Admin\OrderTtnController::class, 'store'])->name('orders.ttn.store');
+        Route::post('/orders/{order}/ttn/refresh', [Admin\OrderTtnController::class, 'refresh'])->name('orders.ttn.refresh');
+        Route::get('/orders/{order}/ttn/print', [Admin\OrderTtnController::class, 'print'])->name('orders.ttn.print');
+        Route::delete('/orders/{order}/ttn', [Admin\OrderTtnController::class, 'destroy'])->name('orders.ttn.destroy');
+        Route::get('/settings', [Admin\SettingController::class, 'edit'])->name('settings.edit');
+        Route::put('/settings', [Admin\SettingController::class, 'update'])->name('settings.update');
+        Route::get('/reviews', [Admin\ReviewController::class, 'index'])->name('reviews.index');
+        Route::patch('/reviews/{review}/status', [Admin\ReviewController::class, 'updateStatus'])->name('reviews.status');
+        Route::delete('/reviews/{review}', [Admin\ReviewController::class, 'destroy'])->name('reviews.destroy');
+        Route::resource('users', Admin\UserController::class)->only(['index', 'edit', 'update', 'destroy']);
+        Route::resource('pages', Admin\PageController::class)->except('show');
+        Route::resource('banners', Admin\BannerController::class)->except('show');
+        Route::resource('characteristics', Admin\CharacteristicController::class)->except('show');
+        Route::resource('holidays', Admin\HolidayController::class)->except('show');
+        Route::post('/orders/{order}/paid', [Admin\OrderController::class, 'togglePaid'])->name('orders.paid');
+        Route::get('/orders/poll', [Admin\OrderController::class, 'poll'])->name('orders.poll');
+        Route::get('/orders', [Admin\OrderController::class, 'index'])->name('orders.index');
+        Route::get('/orders/{order}', [Admin\OrderController::class, 'show'])->name('orders.show');
+        Route::delete('/orders/{order}', [Admin\OrderController::class, 'destroy'])->name('orders.destroy');
+        Route::patch('/orders/{order}/status', [Admin\OrderController::class, 'updateStatus'])->name('orders.status');
 
-        // Только администратор
+        // Только администратор: журнал действий модератора и отметка «Проверено»
         Route::middleware(EnsureAdmin::class)->group(function () {
-            Route::post('products/bulk-price', [Admin\ProductController::class, 'bulkPrice'])->name('products.bulk-price');
+            Route::get('/activity', [Admin\ActivityController::class, 'index'])->name('activity.index');
             Route::post('products/bulk-reviewed', [Admin\ProductController::class, 'bulkReviewed'])->name('products.bulk-reviewed');
             Route::post('products/{product}/reviewed', [Admin\ProductController::class, 'reviewed'])->name('products.reviewed');
-            Route::delete('products/{product}', [Admin\ProductController::class, 'destroy'])->name('products.destroy');
-            Route::delete('categories/{category}', [Admin\CategoryController::class, 'destroy'])->name('categories.destroy');
-            Route::delete('pages/{page}', [Admin\PageController::class, 'destroy'])->name('pages.destroy');
-            Route::delete('banners/{banner}', [Admin\BannerController::class, 'destroy'])->name('banners.destroy');
-            Route::delete('characteristics/{characteristic}', [Admin\CharacteristicController::class, 'destroy'])->name('characteristics.destroy');
-            Route::delete('holidays/{holiday}', [Admin\HolidayController::class, 'destroy'])->name('holidays.destroy');
-            Route::get('/backups', [Admin\BackupController::class, 'index'])->name('backups.index');
-            Route::post('/backups', [Admin\BackupController::class, 'store'])->name('backups.store');
-            Route::get('/backups/{file}', [Admin\BackupController::class, 'download'])->name('backups.download');
-            Route::delete('/backups/{file}', [Admin\BackupController::class, 'destroy'])->name('backups.destroy');
-            Route::get('/calculator', [Admin\CalculatorController::class, 'index'])->name('calculator.index');
-            Route::put('/calculator', [Admin\CalculatorController::class, 'update'])->name('calculator.update');
-            Route::get('/novaposhta', [Admin\NovaPoshtaController::class, 'edit'])->name('novaposhta.edit');
-            Route::put('/novaposhta', [Admin\NovaPoshtaController::class, 'update'])->name('novaposhta.update');
-            Route::post('/orders/{order}/ttn', [Admin\OrderTtnController::class, 'store'])->name('orders.ttn.store');
-            Route::post('/orders/{order}/ttn/refresh', [Admin\OrderTtnController::class, 'refresh'])->name('orders.ttn.refresh');
-            Route::get('/orders/{order}/ttn/print', [Admin\OrderTtnController::class, 'print'])->name('orders.ttn.print');
-            Route::delete('/orders/{order}/ttn', [Admin\OrderTtnController::class, 'destroy'])->name('orders.ttn.destroy');
-            Route::get('/settings', [Admin\SettingController::class, 'edit'])->name('settings.edit');
-            Route::put('/settings', [Admin\SettingController::class, 'update'])->name('settings.update');
-            Route::get('/reviews', [Admin\ReviewController::class, 'index'])->name('reviews.index');
-            Route::patch('/reviews/{review}/status', [Admin\ReviewController::class, 'updateStatus'])->name('reviews.status');
-            Route::delete('/reviews/{review}', [Admin\ReviewController::class, 'destroy'])->name('reviews.destroy');
-            Route::resource('users', Admin\UserController::class)->only(['index', 'edit', 'update', 'destroy']);
-            Route::post('/orders/{order}/paid', [Admin\OrderController::class, 'togglePaid'])->name('orders.paid');
-            Route::get('/orders/poll', [Admin\OrderController::class, 'poll'])->name('orders.poll');
-            Route::get('/orders', [Admin\OrderController::class, 'index'])->name('orders.index');
-            Route::get('/orders/{order}', [Admin\OrderController::class, 'show'])->name('orders.show');
-            Route::delete('/orders/{order}', [Admin\OrderController::class, 'destroy'])->name('orders.destroy');
-            Route::patch('/orders/{order}/status', [Admin\OrderController::class, 'updateStatus'])->name('orders.status');
         });
     });
 });

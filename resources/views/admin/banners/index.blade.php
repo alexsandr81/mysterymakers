@@ -20,10 +20,10 @@
             <td>{{ $b->is_active ? '✓' : '—' }}</td>
             <td class="actions">
                 <a href="{{ route('admin.banners.edit', $b) }}">Изменить</a>
-                @if(auth()->user()->is_admin)<form action="{{ route('admin.banners.destroy', $b) }}" method="POST" onsubmit="return confirm('Удалить баннер?')">
+                <form action="{{ route('admin.banners.destroy', $b) }}" method="POST" onsubmit="return confirm('Удалить баннер?')">
                     @csrf @method('DELETE')
                     <button class="link-btn link-btn--danger">Удалить</button>
-                </form>@endif
+                </form>
             </td>
         </tr>
     @empty
