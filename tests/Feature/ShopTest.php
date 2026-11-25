@@ -228,11 +228,12 @@ class ShopTest extends TestCase
 
         $m = \App\Models\CalcMaterial::first();
         $this->actingAs($admin)->put(route('admin.calculator.update'), [
-            'calc_waste' => 80, 'calc_engr_rate' => 0.5, 'calc_overhead' => 10, 'calc_margin' => 40, 'calc_min_price' => 0, 'calc_round' => 5,
+            'calc_waste' => 80, 'calc_engr_rate' => 0.5, 'calc_filament_price' => 0.9, 'calc_overhead' => 10, 'calc_margin' => 40, 'calc_min_price' => 0, 'calc_round' => 5,
             'materials' => [['id' => $m->id, 'name' => 'Фанера', 'thickness' => 3, 'sheet_w' => 1525, 'sheet_h' => 1525, 'sheet_price' => 900, 'cut_rate' => 6, 'link' => '']],
         ])->assertRedirect();
 
         $this->assertSame('80', Setting::get('calc_waste'));
+        $this->assertSame('0.9', Setting::get('calc_filament_price'));
         $this->assertEquals(900, $m->fresh()->sheet_price);
         $this->assertNotNull($m->fresh()->price_date); // цена изменилась — дата проверки обновилась
     }
@@ -305,12 +306,12 @@ class ShopTest extends TestCase
             ->assertSee('Подарочные коробки')->assertSee('Круглые');
     }
 
-    public function test_moderator_has_full_access_except_journal_and_review_marks(): void
+    public function test_moderator_has_full_access_except_users_journal_and_review_marks(): void
     {
         $mod = User::factory()->create(['is_moderator' => true]);
         $p = $this->product();
 
-        foreach (['admin.dashboard', 'admin.products.index', 'admin.categories.index', 'admin.orders.index', 'admin.users.index', 'admin.settings.edit', 'admin.calculator.index'] as $r) {
+        foreach (['admin.dashboard', 'admin.products.index', 'admin.categories.index', 'admin.orders.index', 'admin.settings.edit', 'admin.calculator.index'] as $r) {
             $this->actingAs($mod)->get(route($r))->assertOk();
         }
         foreach (['admin.backups.index', 'admin.reviews.index', 'admin.novaposhta.edit'] as $r) {
@@ -319,7 +320,13 @@ class ShopTest extends TestCase
         $this->actingAs($mod)->get(route('admin.products.index'))->assertOk()->assertSee('Массовое изменение цены');
         $this->actingAs($mod)->get(route('admin.products.create'))->assertOk()->assertSee('name="price"', false);
 
-        // Журнал и «Проверено» — только у администратора
+        // Пользователи и роли, журнал и «Проверено» — только у администратора
+        $other = User::factory()->create();
+        $this->actingAs($mod)->get(route('admin.users.index'))->assertForbidden();
+        $this->actingAs($mod)->get(route('admin.users.edit', $mod))->assertForbidden();
+        $this->actingAs($mod)->put(route('admin.users.update', $mod), ['name' => 'x', 'email' => $mod->email, 'role' => 'admin'])->assertForbidden();
+        $this->assertFalse($mod->fresh()->is_admin);
+        $this->actingAs($mod)->delete(route('admin.users.destroy', $other))->assertForbidden();
         $this->actingAs($mod)->get(route('admin.activity.index'))->assertForbidden();
         $this->actingAs($mod)->post(route('admin.products.reviewed', $p))->assertForbidden();
         $this->actingAs($mod)->post(route('admin.products.bulk-reviewed'), ['ids' => [$p->id]])->assertForbidden();

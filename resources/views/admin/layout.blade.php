@@ -24,8 +24,8 @@
             <a href="{{ route('admin.orders.index') }}" class="{{ request()->routeIs('admin.orders.*') ? 'active' : '' }}">🛒 Заказы <span class="badge" id="orders-badge" @if(!$newOrders) hidden @endif>{{ $newOrders }}</span></a>
             <a href="{{ route('admin.products.index') }}" class="{{ request()->routeIs('admin.products.*') ? 'active' : '' }}">📦 Товары@if($toReview) <span class="badge" title="Ждут проверки">{{ $toReview }}</span>@endif</a>
             <a href="{{ route('admin.reviews.index') }}" class="{{ request()->routeIs('admin.reviews.*') ? 'active' : '' }}">💬 Отзывы@if($pendingReviews) <span class="badge">{{ $pendingReviews }}</span>@endif</a>
-            <a href="{{ route('admin.users.index') }}" class="{{ request()->routeIs('admin.users.*') ? 'active' : '' }}">👥 Пользователи</a>
             @if($isAdmin)
+            <a href="{{ route('admin.users.index') }}" class="{{ request()->routeIs('admin.users.*') ? 'active' : '' }}">👥 Пользователи</a>
             <a href="{{ route('admin.activity.index') }}" class="{{ request()->routeIs('admin.activity.*') ? 'active' : '' }}">🔔 Действия модератора <span class="badge" id="activity-badge" @if(!$actUnseen) hidden @endif>{{ $actUnseen }}</span></a>
             @endif
             <a href="{{ route('admin.categories.index') }}" class="{{ request()->routeIs('admin.categories.*') ? 'active' : '' }}">📂 Категории</a>

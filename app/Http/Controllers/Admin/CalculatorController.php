@@ -7,12 +7,13 @@ use App\Models\CalcMaterial;
 use App\Models\Setting;
 use Illuminate\Http\Request;
 
-/** Калькулятор цены изделия: материал + резка + гравировка + накладные + наценка */
+/** Калькулятор цены изделия: фанера/МДФ (материал + резка + гравировка) или 3D-печать (филамент) + накладные + наценка */
 class CalculatorController extends Controller
 {
     private const PARAMS = [
         'calc_waste' => ['min' => 10, 'max' => 100],
         'calc_engr_rate' => ['min' => 0, 'max' => 1000],
+        'calc_filament_price' => ['min' => 0, 'max' => 100],
         'calc_overhead' => ['min' => 0, 'max' => 500],
         'calc_margin' => ['min' => 0, 'max' => 1000],
         'calc_min_price' => ['min' => 0, 'max' => 1000000],

@@ -111,7 +111,6 @@ Route::middleware(SetLocale::class)->group(function () {
         Route::get('/reviews', [Admin\ReviewController::class, 'index'])->name('reviews.index');
         Route::patch('/reviews/{review}/status', [Admin\ReviewController::class, 'updateStatus'])->name('reviews.status');
         Route::delete('/reviews/{review}', [Admin\ReviewController::class, 'destroy'])->name('reviews.destroy');
-        Route::resource('users', Admin\UserController::class)->only(['index', 'edit', 'update', 'destroy']);
         Route::resource('pages', Admin\PageController::class)->except('show');
         Route::resource('banners', Admin\BannerController::class)->except('show');
         Route::resource('characteristics', Admin\CharacteristicController::class)->except('show');
@@ -123,8 +122,9 @@ Route::middleware(SetLocale::class)->group(function () {
         Route::delete('/orders/{order}', [Admin\OrderController::class, 'destroy'])->name('orders.destroy');
         Route::patch('/orders/{order}/status', [Admin\OrderController::class, 'updateStatus'])->name('orders.status');
 
-        // Только администратор: журнал действий модератора и отметка «Проверено»
+        // Только администратор: пользователи и роли, журнал действий модератора, отметка «Проверено»
         Route::middleware(EnsureAdmin::class)->group(function () {
+            Route::resource('users', Admin\UserController::class)->only(['index', 'edit', 'update', 'destroy']);
             Route::get('/activity', [Admin\ActivityController::class, 'index'])->name('activity.index');
             Route::post('products/bulk-reviewed', [Admin\ProductController::class, 'bulkReviewed'])->name('products.bulk-reviewed');
             Route::post('products/{product}/reviewed', [Admin\ProductController::class, 'reviewed'])->name('products.reviewed');

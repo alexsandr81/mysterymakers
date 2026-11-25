@@ -723,3 +723,5 @@ h1, h2, h3, h4, .hero h1 { font-family: var(--font-heading, inherit); }
 .act-new td { background: var(--tint); font-weight: 600; }
 #activity-badge[hidden] { display: none; }
 .role-note { display: block; font-size: .85rem; margin: 4px 0; }
+
+.calc [hidden] { display: none !important; }
