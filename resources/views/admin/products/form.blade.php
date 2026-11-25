@@ -50,7 +50,7 @@
                 <option value="new" @selected($topSel === 'new')>＋ Новая категория…</option>
             </select>
         </label>
-        <label id="cat-sub-wrap">Подкатегория <span class="muted">(необязательно)</span>
+        <label id="cat-sub-wrap"><span>Подкатегория <span class="muted">(необязательно)</span></span>
             <select name="category_id" id="cat-sub" required>
                 <option value="self" @selected($subSel === 'self')>— без подкатегории (товар прямо в категории) —</option>
                 @foreach(($topSel === 'new' ? collect() : ($kids[(int) $topSel] ?? collect())) as $c)
@@ -101,7 +101,7 @@
     <div class="form__cols form__cols--4">
         <label>Артикул
             <input type="text" name="sku" value="{{ old('sku', $product->sku) }}" placeholder="Автоматически (по категории)">
-            <span class="muted">Оставьте пустым — присвоится следующий номер категории.</span>
+            <span class="muted">Пусто — номер присвоится сам.</span>
         </label>
         <label>Цена, грн
             <input type="number" step="0.01" min="0.01" name="price" value="{{ old('price', $product->price) }}" required>
