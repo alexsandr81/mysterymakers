@@ -275,4 +275,14 @@ class ShopTest extends TestCase
         $this->actingAs($admin)->post(route('admin.products.bulk-price'), ['mode' => 'set', 'value' => 250, 'round' => 0, 'scope_all' => 1])->assertRedirect();
         $this->assertEquals(250, $c->fresh()->price);
     }
+
+    public function test_product_form_has_category_and_subcategory(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $top = Category::create(['slug' => 'gift', 'name_uk' => 'Коробки', 'name_ru' => 'Подарочные коробки', 'sort' => 1, 'sku_start' => 10000]);
+        Category::create(['parent_id' => $top->id, 'slug' => 'round', 'name_uk' => 'Круглі', 'name_ru' => 'Круглые', 'sort' => 1, 'sku_start' => 11000]);
+
+        $this->actingAs($admin)->get(route('admin.products.create'))
+            ->assertOk()->assertSee('Подкатегория')->assertSee('Круглые')->assertSee('Подарочные коробки');
+    }
 }

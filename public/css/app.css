@@ -642,3 +642,4 @@ a.stat:hover { border-color: var(--accent); }
 .bulk input[type=number], .bulk select { padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--text); font: inherit; width: auto; }
 .bulk .bulk__all { flex-direction: row; align-items: center; gap: 6px; font-weight: 400; }
 .bulk .bulk__all input { width: auto; }
+.form label[hidden] { display: none; }

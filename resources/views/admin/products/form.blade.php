@@ -30,14 +30,56 @@
         </label>
     </div>
 
-    <div class="form__cols form__cols--4">
+    @php
+        // Категория и подкатегория выбираются отдельно; товару назначается подкатегория, а если её нет — сама категория
+        $tops = $categories->whereNull('parent_id')->values();
+        $kids = $categories->whereNotNull('parent_id')->groupBy('parent_id');
+        $curId = (int) old('category_id', $product->category_id);
+        $cur = $categories->firstWhere('id', $curId);
+        $topId = $cur ? ($cur->parent_id ?: $cur->id) : ($tops->first()->id ?? 0);
+        $kidsJs = $kids->map(fn ($g) => $g->map(fn ($c) => ['id' => $c->id, 'name' => $c->name_ru])->values())->all();
+    @endphp
+    <div class="form__cols">
         <label>Категория
-            <select name="category_id" required>
-                @foreach($categories as $c)
-                    <option value="{{ $c->id }}" @selected(old('category_id', $product->category_id) == $c->id)>{{ $c->name_ru }}</option>
+            <select id="cat-top" required>
+                @foreach($tops as $c)
+                    <option value="{{ $c->id }}" @selected($topId === $c->id)>{{ $c->name_ru }}</option>
                 @endforeach
             </select>
         </label>
+        <label id="cat-sub-wrap">Подкатегория
+            <select name="category_id" id="cat-sub" required>
+                <option value="{{ $topId }}">— без подкатегории (товар прямо в категории) —</option>
+                @foreach($kids[$topId] ?? [] as $c)
+                    <option value="{{ $c->id }}" @selected($curId === $c->id)>{{ $c->name_ru }}</option>
+                @endforeach
+            </select>
+        </label>
+    </div>
+    <script>
+    (function () {
+        var kids = @json($kidsJs), top = document.getElementById('cat-top'), sub = document.getElementById('cat-sub'), wrap = document.getElementById('cat-sub-wrap');
+        function fill(keep) {
+            var list = kids[top.value] || [], cur = keep ? sub.value : '';
+            sub.innerHTML = '';
+            var first = document.createElement('option');
+            first.value = top.value;
+            first.textContent = '— без подкатегории (товар прямо в категории) —';
+            sub.appendChild(first);
+            list.forEach(function (c) {
+                var o = document.createElement('option');
+                o.value = c.id; o.textContent = c.name;
+                if (String(c.id) === String(cur)) o.selected = true;
+                sub.appendChild(o);
+            });
+            wrap.hidden = list.length === 0; // нет подкатегорий — выбирать нечего
+        }
+        top.addEventListener('change', function () { fill(false); });
+        wrap.hidden = (kids[top.value] || []).length === 0;
+    })();
+    </script>
+
+    <div class="form__cols form__cols--4">
         <label>Артикул
             <input type="text" name="sku" value="{{ old('sku', $product->sku) }}" placeholder="Автоматически (по категории)">
             <span class="muted">Оставьте пустым — присвоится следующий номер категории.</span>
