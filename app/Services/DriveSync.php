@@ -9,12 +9,13 @@ use Throwable;
 
 /**
  * Папки на Google Диске по структуре сайта:
- *   MysteryMakers / Категория / Подкатегория / «11000 Название товара» / Фото, Чертежи
+ *   MysteryMakers / Категория / Подкатегория / «11000 Название товара»  (папка товара пустая — файлы вы кладёте сами)
  * Ошибки Диска никогда не ломают сохранение на сайте — они пишутся в журнал.
  */
 class DriveSync
 {
-    public const PRODUCT_SUBFOLDERS = ['Фото', 'Чертежи'];
+    /** Подпапки, которые раньше создавались внутри папки товара; команда shop:drive-flatten убирает их, а файлы переносит выше */
+    public const OLD_SUBFOLDERS = ['Фото', 'Чертежи'];
 
     /** Создать/обновить папку категории. Возвращает id папки или null (выключено/ошибка). */
     public static function category(Category $category): ?string
@@ -54,6 +55,46 @@ class DriveSync
         }
 
         return [$ok, $fail];
+    }
+
+    /**
+     * Убирает старые подпапки «Фото» и «Чертежи» внутри папок товаров: файлы переносятся в папку товара,
+     * пустая подпапка уходит в корзину Диска. Подпапки с другими названиями не трогаются.
+     * Возвращает [перенесено файлов, убрано подпапок, ошибок].
+     */
+    public static function flatten(?callable $progress = null): array
+    {
+        $moved = $removed = $errors = 0;
+        if (! GoogleDrive::enabled()) {
+            return [0, 0, 0];
+        }
+        $drive = new GoogleDrive();
+
+        foreach (Product::whereNotNull('drive_folder_id')->orderBy('id')->get() as $product) {
+            try {
+                foreach ($drive->children($product->drive_folder_id) as $sub) {
+                    if (! $drive->isFolder($sub) || ! in_array(trim($sub['name']), self::OLD_SUBFOLDERS, true)) {
+                        continue;
+                    }
+                    foreach ($drive->children($sub['id']) as $item) {
+                        $drive->move($item['id'], $sub['id'], $product->drive_folder_id);
+                        $moved++;
+                    }
+                    // Подпапка уходит в корзину, только если после переноса она действительно пуста
+                    if (! $drive->children($sub['id'])) {
+                        $drive->trash($sub['id']);
+                        $removed++;
+                    }
+                    $progress && $progress($product->sku . ': «' . $sub['name'] . '» перенесена в папку товара');
+                }
+            } catch (Throwable $e) {
+                $errors++;
+                Log::warning('Google Диск (перенос из подпапок), товар ' . $product->sku . ': ' . $e->getMessage());
+                $progress && $progress($product->sku . ': ОШИБКА (подробности в storage/logs/laravel.log)');
+            }
+        }
+
+        return [$moved, $removed, $errors];
     }
 
     private static function safe(callable $fn): ?string
@@ -98,14 +139,9 @@ class DriveSync
         $drive = new GoogleDrive();
         $parentId = self::categoryFolder($product->category);
 
-        [$id, $created] = $drive->ensureFolder($product->drive_folder_id, trim($product->sku . ' ' . $product->name_ru), $parentId);
+        [$id] = $drive->ensureFolder($product->drive_folder_id, trim($product->sku . ' ' . $product->name_ru), $parentId);
         if ($id !== $product->drive_folder_id) {
             $product->forceFill(['drive_folder_id' => $id])->saveQuietly();
-        }
-        if ($created) {
-            foreach (self::PRODUCT_SUBFOLDERS as $sub) {
-                $drive->ensureFolder(null, $sub, $id);
-            }
         }
 
         return $id;

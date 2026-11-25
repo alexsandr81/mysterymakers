@@ -97,6 +97,44 @@ class GoogleDrive
         return (string) $res->json('id');
     }
 
+    /** Содержимое папки: [['id','name','mimeType'], …] (все страницы) */
+    public function children(string $folderId): array
+    {
+        $out = [];
+        $token = null;
+        do {
+            $res = $this->http()->get(self::API, array_filter([
+                'q' => "'" . str_replace("'", "\\'", $folderId) . "' in parents and trashed = false",
+                'fields' => 'nextPageToken, files(id,name,mimeType)',
+                'pageSize' => 1000,
+                'pageToken' => $token,
+            ]))->throw();
+            $out = array_merge($out, (array) $res->json('files', []));
+            $token = $res->json('nextPageToken');
+        } while ($token);
+
+        return $out;
+    }
+
+    public function isFolder(array $item): bool
+    {
+        return ($item['mimeType'] ?? '') === self::FOLDER;
+    }
+
+    /** Переносит файл или папку из одной папки в другую (без копирования) */
+    public function move(string $id, string $fromParent, string $toParent): void
+    {
+        $this->http()->withQueryParameters(['addParents' => $toParent, 'removeParents' => $fromParent, 'fields' => 'id'])
+            ->patch(self::API . '/' . $id, (object) [])->throw();
+    }
+
+    /** В корзину Google Диска (восстановить можно ~30 дней) */
+    public function trash(string $id): void
+    {
+        $this->http()->withQueryParameters(['fields' => 'id'])
+            ->patch(self::API . '/' . $id, ['trashed' => true])->throw();
+    }
+
     /**
      * Гарантирует папку: создаёт, если нет; переименовывает и переносит, если имя/родитель изменились.
      * Возвращает [id, создана ли только что].
