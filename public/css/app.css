@@ -741,3 +741,8 @@ h1, h2, h3, h4, .hero h1 { font-family: var(--font-heading, inherit); }
 .calc__fold[open] > summary { margin-bottom: 12px; }
 .calc__save { margin-top: 10px; }
 .calc__box:not(:has(.calc__fold[open])) .calc__save { display: none; }
+
+/* Товар: новое значение характеристики прямо в форме */
+.spec-field { display: flex; flex-direction: column; gap: 6px; }
+.spec-new { display: flex; flex-direction: column; gap: 6px; }
+.spec-new[hidden] { display: none; }

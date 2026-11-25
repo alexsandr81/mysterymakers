@@ -424,6 +424,46 @@ class ShopTest extends TestCase
         $this->actingAs($admin)->put(route('admin.users.update', $u), $form + ['role' => 'boss'])->assertSessionHasErrors('role');
     }
 
+    public function test_product_form_creates_new_characteristic_value_and_characteristic_inline(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $cat = Category::create(['slug' => 'c', 'name_uk' => 'К', 'name_ru' => 'К', 'sort' => 1, 'sku_start' => 10000]);
+        $color = \App\Models\Characteristic::create(['name_uk' => 'Колір', 'name_ru' => 'Цвет', 'is_filterable' => true, 'sort' => 1]);
+        $white = $color->values()->create(['value_uk' => 'Білий', 'value_ru' => 'Белый', 'sort' => 1]);
+        $base = ['name_uk' => 'Т', 'name_ru' => 'Т', 'price' => 50, 'stock' => 1, 'is_active' => 1, 'category_top' => (string) $cat->id, 'category_id' => 'self'];
+
+        // Новое значение в существующей характеристике
+        $this->actingAs($admin)->post(route('admin.products.store'), $base + ['char' => [$color->id => 'new'], 'new_val' => [$color->id => ['uk' => 'Рожевий', 'ru' => 'Розовый']]])->assertSessionHasNoErrors();
+        $p = Product::latest('id')->first();
+        $pink = $color->values()->where('value_ru', 'Розовый')->first();
+        $this->assertNotNull($pink);
+        $this->assertSame([$pink->id], $p->characteristicValues()->pluck('characteristic_values.id')->all());
+
+        // Такое значение уже есть (регистр не важен) — дубль не создаётся
+        $this->actingAs($admin)->post(route('admin.products.store'), $base + ['char' => [$color->id => 'new'], 'new_val' => [$color->id => ['uk' => 'білий', 'ru' => 'БЕЛЫЙ']]])->assertSessionHasNoErrors();
+        $this->assertSame(2, $color->values()->count());
+        $this->assertSame([$white->id], Product::latest('id')->first()->characteristicValues()->pluck('characteristic_values.id')->all());
+
+        // Не заполнено название нового значения — ошибка, ничего не создаётся
+        $products = Product::count();
+        $this->actingAs($admin)->post(route('admin.products.store'), $base + ['char' => [$color->id => 'new'], 'new_val' => [$color->id => ['uk' => 'Синій', 'ru' => '']]])->assertSessionHasErrors("new_val.{$color->id}.ru");
+        $this->assertSame($products, Product::count());
+
+        // Новая характеристика целиком (название + первое значение)
+        $this->actingAs($admin)->post(route('admin.products.store'), $base + ['new_char_name_uk' => 'Розмір', 'new_char_name_ru' => 'Размер', 'new_char_val_uk' => 'Великий', 'new_char_val_ru' => 'Большой'])->assertSessionHasNoErrors();
+        $size = \App\Models\Characteristic::where('name_ru', 'Размер')->first();
+        $this->assertNotNull($size);
+        $this->assertTrue($size->is_filterable);
+        $this->assertSame(['Большой'], $size->values->pluck('value_ru')->all());
+        $this->assertSame(1, Product::latest('id')->first()->characteristicValues()->count());
+
+        // Название без значения — ошибка
+        $this->actingAs($admin)->post(route('admin.products.store'), $base + ['new_char_name_uk' => 'Вага', 'new_char_name_ru' => 'Вес'])->assertSessionHasErrors(['new_char_val_uk', 'new_char_val_ru']);
+
+        // Форма показывает «＋ Новое значение» и «＋ Новая характеристика»
+        $this->actingAs($admin)->get(route('admin.products.create'))->assertOk()->assertSee('Новое значение')->assertSee('Новая характеристика');
+    }
+
     public function test_site_fonts_setting(): void
     {
         $admin = User::factory()->create(['is_admin' => true]);

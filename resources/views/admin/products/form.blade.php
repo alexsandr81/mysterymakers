@@ -202,17 +202,53 @@
             <strong>Характеристики</strong>
             <div class="form__cols form__cols--4 specs-edit">
                 @foreach($characteristics as $characteristic)
-                    <label>{{ $characteristic->name_ru }}
-                        <select name="char[{{ $characteristic->id }}]">
-                            <option value="">— не выбрано —</option>
-                            @foreach($characteristic->values as $value)
-                                <option value="{{ $value->id }}" @selected(in_array($value->id, $chosen, true))>{{ $value->value_ru }}</option>
-                            @endforeach
-                        </select>
-                    </label>
+                    @php $valNew = old('char.' . $characteristic->id) === 'new'; @endphp
+                    <div class="spec-field">
+                        <label>{{ $characteristic->name_ru }}
+                            <select name="char[{{ $characteristic->id }}]" data-newval="nv-{{ $characteristic->id }}">
+                                <option value="">— не выбрано —</option>
+                                @foreach($characteristic->values as $value)
+                                    <option value="{{ $value->id }}" @selected(in_array($value->id, $chosen, true))>{{ $value->value_ru }}</option>
+                                @endforeach
+                                <option value="new" @selected($valNew)>＋ Новое значение…</option>
+                            </select>
+                        </label>
+                        <div class="spec-new" id="nv-{{ $characteristic->id }}" @unless($valNew) hidden @endunless>
+                            <input type="text" name="new_val[{{ $characteristic->id }}][uk]" value="{{ old('new_val.' . $characteristic->id . '.uk') }}" placeholder="Новое значение (укр.)" maxlength="255">
+                            <input type="text" name="new_val[{{ $characteristic->id }}][ru]" value="{{ old('new_val.' . $characteristic->id . '.ru') }}" placeholder="Новое значение (рус.)" maxlength="255">
+                            @error('new_val.' . $characteristic->id . '.uk')<span class="text-warn">{{ $message }}</span>@enderror
+                            @error('new_val.' . $characteristic->id . '.ru')<span class="text-warn">{{ $message }}</span>@enderror
+                        </div>
+                    </div>
                 @endforeach
             </div>
+            @php $openChar = old('new_char_name_uk') || old('new_char_name_ru') || old('new_char_val_uk') || old('new_char_val_ru'); @endphp
+            <p><button type="button" class="link-btn" id="new-char-btn">＋ Новая характеристика</button></p>
+            <div class="form__cols form__cols--4" id="new-char" @unless($openChar) hidden @endunless>
+                <label>Название (укр.) <input type="text" name="new_char_name_uk" value="{{ old('new_char_name_uk') }}" maxlength="255" placeholder="Напр.: Розмір"></label>
+                <label>Название (рус.) <input type="text" name="new_char_name_ru" value="{{ old('new_char_name_ru') }}" maxlength="255" placeholder="Напр.: Размер"></label>
+                <label>Значение (укр.) <input type="text" name="new_char_val_uk" value="{{ old('new_char_val_uk') }}" maxlength="255"></label>
+                <label>Значение (рус.) <input type="text" name="new_char_val_ru" value="{{ old('new_char_val_ru') }}" maxlength="255"></label>
+            </div>
+            @foreach(['new_char_name_uk', 'new_char_name_ru', 'new_char_val_uk', 'new_char_val_ru'] as $f)
+                @error($f)<p class="text-warn">{{ $message }}</p>@enderror
+            @endforeach
+            <p class="muted">Новое значение или характеристика сразу появятся в списках и в фильтре каталога (фильтр включается автоматически).</p>
         </div>
+        <script>
+            document.querySelectorAll('select[data-newval]').forEach(function (sel) {
+                sel.addEventListener('change', function () {
+                    var box = document.getElementById(sel.dataset.newval);
+                    box.hidden = sel.value !== 'new';
+                    if (!box.hidden) box.querySelector('input').focus();
+                });
+            });
+            document.getElementById('new-char-btn').addEventListener('click', function () {
+                var box = document.getElementById('new-char');
+                box.hidden = !box.hidden;
+                if (!box.hidden) box.querySelector('input').focus();
+            });
+        </script>
     @endif
 
     @if(!$isNew && !empty($product->images))

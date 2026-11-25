@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Characteristic;
+use App\Models\CharacteristicValue;
 use App\Models\Holiday;
 use App\Models\Product;
 use Illuminate\Http\Request;
@@ -243,7 +244,20 @@ class ProductController extends Controller
             'main_choice' => ['nullable', 'string', 'max:255'],
             'images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:20480'],
             'char' => ['nullable', 'array'],
-            'char.*' => ['nullable', 'integer', 'exists:characteristic_values,id'],
+            // Значение характеристики: id существующего или «new» (создать новое, тогда заполняются new_val[id][uk|ru])
+            'char.*' => ['nullable', function ($attribute, $value, $fail) {
+                if ($value !== 'new' && (! ctype_digit((string) $value) || ! CharacteristicValue::whereKey((int) $value)->exists())) {
+                    $fail('Выбрано неизвестное значение характеристики.');
+                }
+            }],
+            'new_val' => ['nullable', 'array'],
+            'new_val.*.uk' => ['nullable', 'string', 'max:255'],
+            'new_val.*.ru' => ['nullable', 'string', 'max:255'],
+            // Новая характеристика целиком: название и первое значение
+            'new_char_name_uk' => ['nullable', 'string', 'max:255', 'required_with:new_char_name_ru,new_char_val_uk,new_char_val_ru'],
+            'new_char_name_ru' => ['nullable', 'string', 'max:255', 'required_with:new_char_name_uk,new_char_val_uk,new_char_val_ru'],
+            'new_char_val_uk' => ['nullable', 'string', 'max:255', 'required_with:new_char_name_uk,new_char_name_ru,new_char_val_ru'],
+            'new_char_val_ru' => ['nullable', 'string', 'max:255', 'required_with:new_char_name_uk,new_char_name_ru,new_char_val_uk'],
         ];
         // Модератор может не указывать цену: у нового товара она остаётся пустой («Цена уточняется»), пока её не поставит администратор
         if (! $isAdmin) {
@@ -252,7 +266,18 @@ class ProductController extends Controller
         }
         $data = $request->validate($rules);
 
-        unset($data['images'], $data['char'], $data['holidays'], $data['new_holiday_uk'], $data['new_holiday_ru']);
+        // «＋ Новое значение»: у выбранной характеристики должны быть заполнены оба названия
+        foreach ((array) $request->input('char', []) as $charId => $val) {
+            if ($val === 'new') {
+                foreach (['uk' => 'укр.', 'ru' => 'рус.'] as $lg => $label) {
+                    if (trim((string) $request->input("new_val.$charId.$lg", '')) === '') {
+                        throw \Illuminate\Validation\ValidationException::withMessages(["new_val.$charId.$lg" => "Укажите новое значение характеристики ($label)."]);
+                    }
+                }
+            }
+        }
+
+        unset($data['images'], $data['char'], $data['new_val'], $data['new_char_name_uk'], $data['new_char_name_ru'], $data['new_char_val_uk'], $data['new_char_val_ru'], $data['holidays'], $data['new_holiday_uk'], $data['new_holiday_ru']);
 
         $data['category_id'] = $this->resolveCategory($request, $data);
         unset($data['category_top'], $data['new_cat_uk'], $data['new_cat_ru'], $data['new_sub_uk'], $data['new_sub_ru']);
@@ -381,12 +406,51 @@ class ProductController extends Controller
     }
 
     /** id выбранных значений характеристик (пустые «— не выбрано —» отбрасываются) */
+    /** Выбранные значения характеристик; «＋ Новое значение» и «＋ Новая характеристика» создаются здесь */
     private function selectedValueIds(Request $request): array
     {
-        return collect((array) $request->input('char', []))
-            ->filter(fn ($id) => is_numeric($id) && (int) $id > 0)
-            ->map(fn ($id) => (int) $id)
-            ->unique()->values()->all();
+        $ids = [];
+        foreach ((array) $request->input('char', []) as $charId => $val) {
+            if ($val === 'new') {
+                $id = $this->createValue(Characteristic::find((int) $charId), trim((string) $request->input("new_val.$charId.uk", '')), trim((string) $request->input("new_val.$charId.ru", '')));
+                if ($id) {
+                    $ids[] = $id;
+                }
+            } elseif (is_numeric($val) && (int) $val > 0) {
+                $ids[] = (int) $val;
+            }
+        }
+
+        $nameUk = trim((string) $request->input('new_char_name_uk', ''));
+        $nameRu = trim((string) $request->input('new_char_name_ru', ''));
+        if ($nameUk !== '' && $nameRu !== '') {
+            // Характеристика с таким названием уже есть — добавляем значение в неё, а не плодим дубль
+            $char = Characteristic::all()->first(fn ($c) => mb_strtolower($c->name_ru) === mb_strtolower($nameRu) || mb_strtolower($c->name_uk) === mb_strtolower($nameUk))
+                ?? Characteristic::create(['name_uk' => $nameUk, 'name_ru' => $nameRu, 'is_filterable' => true, 'sort' => (int) Characteristic::max('sort') + 1]);
+            $id = $this->createValue($char, trim((string) $request->input('new_char_val_uk', '')), trim((string) $request->input('new_char_val_ru', '')));
+            if ($id) {
+                $ids[] = $id;
+            }
+        }
+
+        return array_values(array_unique($ids));
+    }
+
+    /** Новое значение характеристики (если такое уже есть — берём его) */
+    private function createValue(?Characteristic $char, string $uk, string $ru): ?int
+    {
+        if (! $char || $uk === '' || $ru === '') {
+            return null;
+        }
+        $existing = $char->values()->get()->first(fn ($v) => mb_strtolower($v->value_ru) === mb_strtolower($ru) || mb_strtolower($v->value_uk) === mb_strtolower($uk));
+        if ($existing) {
+            return $existing->id;
+        }
+
+        return CharacteristicValue::create([
+            'characteristic_id' => $char->id, 'value_uk' => $uk, 'value_ru' => $ru,
+            'sort' => (int) CharacteristicValue::where('characteristic_id', $char->id)->max('sort') + 1,
+        ])->id;
     }
 
     /**
