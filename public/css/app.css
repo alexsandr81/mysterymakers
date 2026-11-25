@@ -677,7 +677,7 @@ a.stat:hover { border-color: var(--accent); }
 .table--compact td.actions form { display: inline-block; }
 .table--compact [hidden] { display: none; }
 .nowrap { white-space: nowrap; }
-.badge--sm { padding: 1px 8px; font-size: .72rem; font-weight: 500; }
+.badge--sm { padding: 0 6px; font-size: .66rem; font-weight: 500; line-height: 1.5; }
 .colpick { margin: 0 0 10px; }
 .colpick details { position: relative; display: inline-block; }
 .colpick summary { cursor: pointer; padding: 5px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); font-size: .88rem; list-style: none; }
@@ -690,3 +690,14 @@ a.stat:hover { border-color: var(--accent); }
 .bulk-wrap > summary { cursor: pointer; display: inline-block; padding: 5px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); font-size: .88rem; list-style: none; }
 .bulk-wrap > summary::-webkit-details-marker { display: none; }
 .bulk-wrap[open] > summary { margin-bottom: 8px; }
+
+/* Изменение ширины столбцов (public/js/table-tools.js) */
+.table[data-tools] thead th { position: relative; overflow: hidden; text-overflow: ellipsis; }
+.table[data-tools].is-fixed { table-layout: fixed; width: auto; }
+.table[data-tools].is-fixed td { overflow-wrap: anywhere; }
+.table[data-tools].is-fixed td.actions { overflow: visible; }
+.col-grip { position: absolute; top: 0; right: 0; width: 8px; height: 100%; cursor: col-resize; touch-action: none; }
+.col-grip::after { content: ""; position: absolute; top: 25%; bottom: 25%; right: 3px; width: 2px; background: var(--line); border-radius: 1px; }
+.col-grip:hover::after, .is-resizing .col-grip::after { background: var(--brand); }
+.is-resizing { user-select: none; cursor: col-resize; }
+.cat-row td { vertical-align: middle; }

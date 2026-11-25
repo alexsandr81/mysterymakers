@@ -71,20 +71,11 @@
 </form>
 </details>
 
-<div class="colpick">
-    <details>
-        <summary>⚙ Столбцы</summary>
-        <div class="colpick__list">
-            @foreach(['photo' => 'Фото', 'sku' => 'Артикул', 'category' => 'Категория', 'sub' => 'Подкатегория', 'price' => 'Цена', 'stock' => 'Остаток', 'active' => 'Активен', 'created' => 'Добавлен'] as $key => $label)
-                <label><input type="checkbox" data-colpick="{{ $key }}" checked> {{ $label }}</label>
-            @endforeach
-            <button type="button" class="link-btn" id="colpick-reset">Сбросить</button>
-        </div>
-    </details>
-</div>
+@include('admin.partials.col-picker', ['table' => 'products', 'cols' => ['photo' => 'Фото', 'sku' => 'Артикул', 'category' => 'Категория', 'sub' => 'Подкатегория', 'price' => 'Цена', 'stock' => 'Остаток', 'active' => 'Активен', 'created' => 'Добавлен']])
 
-<table class="table table--compact" id="products-table">
-    <thead><tr><th><input type="checkbox" id="bulk-toggle" title="Отметить всё на странице"></th><th data-col="photo"></th><th>{{ $th('name', 'Название') }}</th><th data-col="sku">{{ $th('sku', 'Артикул') }}</th><th data-col="category">{{ $th('category', 'Категория') }}</th><th data-col="sub">{{ $th('sub', 'Подкатегория') }}</th><th data-col="price">{{ $th('price', 'Цена') }}</th><th data-col="stock">{{ $th('stock', 'Остаток') }}</th><th data-col="active">{{ $th('active', 'Актив.') }}</th><th data-col="created">{{ $th('created', 'Добавлен') }}</th><th></th></tr></thead>
+<div class="table-wrap">
+<table class="table table--compact" id="products-table" data-tools="products" data-default-hidden="created">
+    <thead><tr><th data-col="chk" data-nores><input type="checkbox" id="bulk-toggle" title="Отметить всё на странице"></th><th data-col="photo" data-nores></th><th data-col="name">{{ $th('name', 'Название') }}</th><th data-col="sku">{{ $th('sku', 'Артикул') }}</th><th data-col="category">{{ $th('category', 'Категория') }}</th><th data-col="sub">{{ $th('sub', 'Подкатегория') }}</th><th data-col="price">{{ $th('price', 'Цена') }}</th><th data-col="stock">{{ $th('stock', 'Остаток') }}</th><th data-col="active">{{ $th('active', 'Актив.') }}</th><th data-col="created">{{ $th('created', 'Добавлен') }}</th><th data-col="act" data-nores></th></tr></thead>
     <tbody>
     @foreach($products as $p)
         <tr>
@@ -116,6 +107,8 @@
     @endforeach
     </tbody>
 </table>
+</div>
+<script src="{{ asset('js/table-tools.js') }}"></script>
 <script>
 (function () {
     var form = document.getElementById('bulk-form');
@@ -153,31 +146,6 @@
     refresh();
 })();
 
-// Выбор видимых столбцов: запоминается в браузере (отдельно у каждого пользователя)
-(function () {
-    var KEY = 'mm_products_cols', DEFAULT_HIDDEN = ['created'];
-    var table = document.getElementById('products-table');
-    var picks = Array.prototype.slice.call(document.querySelectorAll('[data-colpick]'));
-    function load() {
-        try { var v = JSON.parse(localStorage.getItem(KEY)); if (Array.isArray(v)) return v; } catch (e) {}
-        return DEFAULT_HIDDEN.slice();
-    }
-    function save(hidden) { try { localStorage.setItem(KEY, JSON.stringify(hidden)); } catch (e) {} }
-    function apply(hidden) {
-        picks.forEach(function (c) { c.checked = hidden.indexOf(c.dataset.colpick) === -1; });
-        Array.prototype.forEach.call(table.querySelectorAll('[data-col]'), function (el) {
-            el.hidden = hidden.indexOf(el.dataset.col) !== -1;
-        });
-    }
-    picks.forEach(function (c) {
-        c.addEventListener('change', function () {
-            var hidden = picks.filter(function (x) { return !x.checked; }).map(function (x) { return x.dataset.colpick; });
-            save(hidden); apply(hidden);
-        });
-    });
-    document.getElementById('colpick-reset').addEventListener('click', function () { save(DEFAULT_HIDDEN.slice()); apply(DEFAULT_HIDDEN.slice()); });
-    apply(load());
-})();
 </script>
 <div class="pager">{{ $products->links('partials.pagination') }}</div>
 @endsection

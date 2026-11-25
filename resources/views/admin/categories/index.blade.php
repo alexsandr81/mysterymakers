@@ -25,8 +25,11 @@
     <p class="muted">Список отсортирован по колонке. <a href="{{ route('admin.categories.index') }}">Показать деревом</a> (в нём работают кнопки ▲▼ порядка на сайте).</p>
 @endif
 
-<table class="table">
-    <thead><tr><th>Тип</th><th>{{ $th('name', 'Название (рус.)') }}</th><th>{{ $th('name_uk', 'Название (укр.)') }}</th><th>{{ $th('parent', 'Родитель') }}</th><th>{{ $th('products', 'Товаров') }}</th><th>{{ $th('sku', 'Артикулы с') }}</th><th>{{ $th('sort', 'Порядок на сайте') }}</th><th></th></tr></thead>
+@include('admin.partials.col-picker', ['table' => 'categories', 'cols' => ['type' => 'Тип', 'name_uk' => 'Название (укр.)', 'parent' => 'Родитель', 'products' => 'Товаров', 'sku' => 'Артикулы с', 'sort' => 'Порядок на сайте']])
+
+<div class="table-wrap">
+<table class="table table--compact" data-tools="categories">
+    <thead><tr><th data-col="type">Тип</th><th data-col="name">{{ $th('name', 'Название (рус.)') }}</th><th data-col="name_uk">{{ $th('name_uk', 'Название (укр.)') }}</th><th data-col="parent">{{ $th('parent', 'Родитель') }}</th><th data-col="products">{{ $th('products', 'Товаров') }}</th><th data-col="sku">{{ $th('sku', 'Артикулы с') }}</th><th data-col="sort">{{ $th('sort', 'Порядок на сайте') }}</th><th data-col="act" data-nores></th></tr></thead>
     <tbody>
     @php
         // «Соседи» для кнопок ▲▼: первая и последняя категория своего уровня
@@ -35,14 +38,14 @@
     @endphp
     @foreach($categories as $c)
         <tr class="{{ $c->parent_id ? 'cat-row cat-row--sub' : 'cat-row cat-row--top' }}">
-            <td>
+            <td data-col="type">
                 @if($c->parent_id)
-                    <span class="badge badge--sub">Подкатегория</span>
+                    <span class="badge badge--sm badge--sub">Подкатегория</span>
                 @else
-                    <span class="badge badge--top">Категория</span>
+                    <span class="badge badge--sm badge--top">Категория</span>
                 @endif
             </td>
-            <td class="cat-name">
+            <td class="cat-name" data-col="name">
                 @if($c->parent_id)
                     <span class="cat-name__arrow">↳</span>{{ $c->name_ru }}
                 @else
@@ -50,11 +53,11 @@
                     <span class="muted">{{ $c->children_count ? '· подкатегорий: ' . $c->children_count : '' }}</span>
                 @endif
             </td>
-            <td>{{ $c->name_uk }}</td>
-            <td>{{ $c->parent?->name_ru ?? '—' }}</td>
-            <td>{{ $c->products_count }}</td>
-            <td class="muted">{{ $c->sku_start }}</td>
-            <td>
+            <td data-col="name_uk">{{ $c->name_uk }}</td>
+            <td data-col="parent">{{ $c->parent?->name_ru ?? '—' }}</td>
+            <td data-col="products">{{ $c->products_count }}</td>
+            <td data-col="sku" class="muted">{{ $c->sku_start }}</td>
+            <td data-col="sort">
                 @if($sort)
                     {{ $c->sort }}
                 @else
@@ -71,16 +74,18 @@
                     <form action="{{ route('admin.categories.drive', $c) }}" method="POST">@csrf<button class="link-btn" title="Создать папку на Google Диске">📁+</button></form>
                 @endif
                 @unless($c->parent_id)
-                    <a href="{{ route('admin.categories.create', ['parent_id' => $c->id]) }}" title="Добавить подкатегорию в «{{ $c->name_ru }}»">＋ Подкатегория</a>
+                    <a href="{{ route('admin.categories.create', ['parent_id' => $c->id]) }}" title="Добавить подкатегорию в «{{ $c->name_ru }}»">＋ Подкат.</a>
                 @endunless
-                <a href="{{ route('admin.categories.edit', $c) }}">Изменить</a>
+                <a href="{{ route('admin.categories.edit', $c) }}" title="Изменить">✎</a>
                 <form action="{{ route('admin.categories.destroy', $c) }}" method="POST" onsubmit="return confirm('Удалить категорию?')">
                     @csrf @method('DELETE')
-                    <button class="link-btn link-btn--danger">Удалить</button>
+                    <button class="link-btn link-btn--danger" title="Удалить">✕</button>
                 </form>
             </td>
         </tr>
     @endforeach
     </tbody>
 </table>
+</div>
+<script src="{{ asset('js/table-tools.js') }}"></script>
 @endsection

@@ -298,6 +298,15 @@ class ShopTest extends TestCase
             ->assertSee('Подарочные коробки')->assertSee('Круглые');
     }
 
+    public function test_admin_tables_have_column_picker(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $this->product();
+
+        $this->actingAs($admin)->get(route('admin.products.index'))->assertOk()->assertSee('data-tools="products"', false)->assertSee('⚙ Столбцы');
+        $this->actingAs($admin)->get(route('admin.categories.index'))->assertOk()->assertSee('data-tools="categories"', false)->assertSee('⚙ Столбцы');
+    }
+
     public function test_product_creates_new_category_and_subcategory_inline(): void
     {
         $admin = User::factory()->create(['is_admin' => true]);
