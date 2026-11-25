@@ -17,45 +17,45 @@
 <div class="calc">
     <section class="calc__box">
         <h3>Расчёт</h3>
+        <p class="muted">Заполните только те части, которые есть в изделии: лазерная резка, 3D-печать или обе сразу. Пустые графы дают 0, всё складывается в одну себестоимость.</p>
         <div class="calc__grid">
-            <label>Что считаем
-                <select id="c-kind">
-                    <option value="laser" selected>Изделие из фанеры / МДФ (лазер)</option>
-                    <option value="print">3D-печать (филамент)</option>
-                </select>
-            </label>
-            <label class="js-print" hidden>Расход филамента, г <small class="muted">вес изделия вместе с поддержками и отходами, из слайсера</small> <input type="number" id="c-grams" min="0" step="any" value="50"></label>
-            <p class="muted js-print" hidden>Цена филамента: <strong id="c-fprice-note">—</strong> за грамм (меняется в параметрах расчёта ниже). Катушку 1 кг за 700 грн считайте как 0,7 грн/г.</p>
-            <label class="js-laser">Материал
+            <h4 class="calc__sub">✂ Фанера / МДФ (лазер)</h4>
+            <label>Материал
                 <select id="c-material">
                     @foreach($materials as $m)
                         <option value="{{ $m->id }}">{{ $m->label() }}</option>
                     @endforeach
                 </select>
             </label>
-            <label class="js-laser">Как задать размер
+            <label>Как задать размер
                 <select id="c-mode">
                     <option value="area" selected>Площадь из раскладки, см²</option>
                     <option value="size">Габариты: ширина × высота, мм</option>
                 </select>
             </label>
-            <label class="js-area js-laser">Площадь изделия в раскладке, см² <input type="number" id="c-area" min="0" step="any" value="100"></label>
-            <label class="js-size js-laser" hidden>Ширина изделия, мм <input type="number" id="c-w" min="0" step="any" value="100"></label>
-            <label class="js-size js-laser" hidden>Высота изделия, мм <input type="number" id="c-h" min="0" step="any" value="100"></label>
-            <label class="check-line js-laser"><input type="checkbox" id="c-waste"> Добавить обрезки листа (использование <span id="c-waste-pct">{{ $fmt($p['calc_waste']) }}</span>%)</label>
-            <label class="js-laser">Длина реза, мм <input type="number" id="c-cut" min="0" step="any" value="400"></label>
-            <label class="js-laser">Площадь гравировки, см² <input type="number" id="c-engr" min="0" step="any" value="0"></label>
+            <label class="js-area">Площадь изделия в раскладке, см² <input type="number" id="c-area" min="0" step="any" value="0"></label>
+            <label class="js-size" hidden>Ширина изделия, мм <input type="number" id="c-w" min="0" step="any" value="0"></label>
+            <label class="js-size" hidden>Высота изделия, мм <input type="number" id="c-h" min="0" step="any" value="0"></label>
+            <label class="check-line"><input type="checkbox" id="c-waste"> Добавить обрезки листа (использование <span id="c-waste-pct">{{ $fmt($p['calc_waste']) }}</span>%)</label>
+            <label>Длина реза, мм <input type="number" id="c-cut" min="0" step="any" value="0"></label>
+            <label>Площадь гравировки, см² <input type="number" id="c-engr" min="0" step="any" value="0"></label>
+            <p class="muted calc__note">Площадь, длину реза и площадь гравировки берите из раскладки. «Площадь из раскладки» — сколько см² листа занимает изделие вместе с зазорами между деталями; тогда галочку «обрезки» обычно не нужно ставить, они уже учтены. Для режима «габариты» галочка включается сама.</p>
+
+            <h4 class="calc__sub">🖨 3D-печать (филамент)</h4>
+            <label>Расход филамента, г <small class="muted">вес изделия с поддержками и отходами, из слайсера</small> <input type="number" id="c-grams" min="0" step="any" value="0"></label>
+            <p class="muted calc__note">Цена филамента: <strong id="c-fprice-note">—</strong> за грамм (меняется в параметрах расчёта ниже). Катушка 1 кг за 700 грн — это 0,7 грн/г.</p>
+
+            <h4 class="calc__sub">📦 Общее</h4>
             <label>Прочее на изделие, грн <small class="muted">упаковка, фурнитура, покраска</small> <input type="number" id="c-extra" min="0" step="any" value="0"></label>
             <label>Количество, шт <input type="number" id="c-qty" min="1" step="1" value="1"></label>
         </div>
-        <p class="muted js-laser">Площадь, длину реза и площадь гравировки берите из раскладки. «Площадь из раскладки» — сколько см² листа занимает изделие вместе с зазорами между деталями; тогда галочку «обрезки» обычно не нужно ставить, они уже учтены. Для режима «габариты» галочка включается сама.</p>
 
         <table class="table calc__result">
             <tbody>
-                <tr class="js-laser"><td>Материал (с учётом обрезков)</td><td id="r-material">—</td></tr>
-                <tr class="js-laser"><td>Резка</td><td id="r-cut">—</td></tr>
-                <tr class="js-laser"><td>Гравировка</td><td id="r-engr">—</td></tr>
-                <tr class="js-print" hidden><td>Филамент (<span id="r-grams">0</span> г)</td><td id="r-filament">—</td></tr>
+                <tr><td>Материал (с учётом обрезков)</td><td id="r-material">—</td></tr>
+                <tr><td>Резка</td><td id="r-cut">—</td></tr>
+                <tr><td>Гравировка</td><td id="r-engr">—</td></tr>
+                <tr><td>Филамент (<span id="r-grams">0</span> г)</td><td id="r-filament">—</td></tr>
                 <tr><td>Прочее</td><td id="r-extra">—</td></tr>
                 <tr><td><strong>Себестоимость</strong></td><td id="r-cost"><strong>—</strong></td></tr>
                 <tr><td>С накладными расходами</td><td id="r-over">—</td></tr>
@@ -145,33 +145,22 @@
     var n = function (id) { return parseFloat(String($(id).value).replace(',', '.')) || 0; };
     var money = function (v) { return v.toLocaleString('ru-RU', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' грн'; };
 
-    // Что видно: фанера/МДФ (лазер) или 3D-печать
-    function visibility() {
-        var print = $('c-kind').value === 'print', area = $('c-mode').value === 'area';
-        document.querySelectorAll('.js-laser').forEach(function (e) { e.hidden = print; });
-        document.querySelectorAll('.js-print').forEach(function (e) { e.hidden = !print; });
-        document.querySelectorAll('.js-area').forEach(function (e) { e.hidden = print || !area; });
-        document.querySelectorAll('.js-size').forEach(function (e) { e.hidden = print || area; });
-    }
-
     function calc() {
         readForm();
-        var print = $('c-kind').value === 'print';
         var m = M.find(function (x) { return String(x.id) === $('c-material').value; });
-        if (!print && !m) { $('r-warn').textContent = 'Добавьте хотя бы один материал.'; return; }
-        var material = 0, cut = 0, engr = 0, filament = 0, areaMm2 = 0;
-        if (print) {
-            filament = n('c-grams') * P.calc_filament_price;
-            $('c-fprice-note').textContent = money(P.calc_filament_price);
-            $('r-grams').textContent = n('c-grams');
-            $('r-filament').textContent = money(filament);
-        } else {
-            areaMm2 = $('c-mode').value === 'area' ? n('c-area') * 100 : n('c-w') * n('c-h');
+        var areaMm2 = $('c-mode').value === 'area' ? n('c-area') * 100 : n('c-w') * n('c-h');
+        var material = 0, cut = 0;
+        if (m) {
             var usable = m.sw * m.sh * ($('c-waste').checked ? P.calc_waste / 100 : 1);
             material = usable > 0 ? areaMm2 / usable * m.price : 0;
             cut = n('c-cut') / 1000 * m.cut;
-            engr = n('c-engr') * P.calc_engr_rate;
         }
+        var engr = n('c-engr') * P.calc_engr_rate;
+        var grams = n('c-grams');
+        var filament = grams * P.calc_filament_price;
+        $('c-fprice-note').textContent = money(P.calc_filament_price);
+        $('r-grams').textContent = grams;
+        $('r-filament').textContent = money(filament);
         var extra = n('c-extra');
         var cost = material + cut + engr + filament + extra;
         var over = cost * (1 + P.calc_overhead / 100);
@@ -189,16 +178,16 @@
         $('r-profit').textContent = money(price - over);
         $('r-qty').textContent = qty;
         $('r-total').textContent = money(price * qty);
-        $('r-warn').textContent = (!print && areaMm2 > m.sw * m.sh) ? '⚠ Изделие больше листа выбранного материала.' : '';
+        $('r-warn').textContent = !m && (areaMm2 > 0 || n('c-cut') > 0) ? 'Для лазерной части добавьте хотя бы один материал.' : (m && areaMm2 > m.sw * m.sh ? '⚠ Изделие больше листа выбранного материала.' : '');
     }
     ['c-material','c-area','c-w','c-h','c-cut','c-engr','c-extra','c-qty','c-waste','c-grams'].forEach(function (id) { $(id).addEventListener('input', calc); });
     $('c-mode').addEventListener('change', function () {
-        $('c-waste').checked = this.value !== 'area'; // габариты — прибавляем обрезки, раскладка — уже учтены
-        visibility();
+        var area = this.value === 'area';
+        document.querySelectorAll('.js-area').forEach(function (e) { e.hidden = !area; });
+        document.querySelectorAll('.js-size').forEach(function (e) { e.hidden = area; });
+        $('c-waste').checked = !area; // габариты — прибавляем обрезки, раскладка — уже учтены
         calc();
     });
-    $('c-kind').addEventListener('change', function () { visibility(); calc(); });
-    visibility();
     // Любое изменение в параметрах и таблице материалов сразу пересчитывает цену
     document.querySelector('form.calc__box').addEventListener('input', calc);
     document.querySelector('form.calc__box').addEventListener('change', calc);

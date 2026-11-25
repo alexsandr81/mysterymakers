@@ -725,3 +725,7 @@ h1, h2, h3, h4, .hero h1 { font-family: var(--font-heading, inherit); }
 .role-note { display: block; font-size: .85rem; margin: 4px 0; }
 
 .calc [hidden] { display: none !important; }
+
+.calc__sub { grid-column: 1 / -1; margin: 10px 0 0; padding-top: 8px; border-top: 1px solid var(--line); font-size: 1rem; color: var(--brand-dark); }
+.calc__grid > .calc__sub:first-child { border-top: 0; margin-top: 0; padding-top: 0; }
+.calc__note { grid-column: 1 / -1; margin: 0; }
