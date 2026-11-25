@@ -18,6 +18,13 @@ class ShopTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // Тесты не должны обращаться к настоящему Google Диску, даже если он настроен в .env
+        config(['shop.drive.root_id' => null]);
+    }
+
     private function product(int $stock = 5): Product
     {
         $cat = Category::create(['slug' => 'test', 'name_uk' => 'Тест', 'name_ru' => 'Тест', 'sort' => 1]);
@@ -327,7 +334,7 @@ class ShopTest extends TestCase
         $this->assertStringStartsWith('11', $product->sku); // 10000-й блок категории, подкатегория — 11000…
 
         // Товар прямо в существующей категории
-        $this->actingAs($admin)->post(route('admin.products.store'), $base + ['category_top' => $top->id, 'category_id' => 'self'])->assertRedirect();
+        $this->actingAs($admin)->post(route('admin.products.store'), $base + ['category_top' => (string) $top->id, 'category_id' => 'self'])->assertRedirect();
         $this->assertSame($top->id, Product::latest('id')->first()->category_id);
 
         // Ошибка формы (нет названия новой категории) — ничего не создаётся
@@ -341,7 +348,7 @@ class ShopTest extends TestCase
         $admin = User::factory()->create(['is_admin' => true]);
         $cat = Category::create(['slug' => 'h', 'name_uk' => 'Х', 'name_ru' => 'Х', 'sort' => 1, 'sku_start' => 10000]);
         $ny = \App\Models\Holiday::where('name_ru', 'Новый год')->first();
-        $base = ['name_uk' => 'Т', 'name_ru' => 'Т', 'price' => 50, 'stock' => 1, 'is_active' => 1, 'category_top' => $cat->id, 'category_id' => 'self'];
+        $base = ['name_uk' => 'Т', 'name_ru' => 'Т', 'price' => 50, 'stock' => 1, 'is_active' => 1, 'category_top' => (string) $cat->id, 'category_id' => 'self'];
 
         $this->actingAs($admin)->get(route('admin.holidays.index'))->assertOk()->assertSee('Новый год');
         $this->actingAs($admin)->get(route('admin.products.create'))->assertOk()->assertSee('Праздники и поводы');
