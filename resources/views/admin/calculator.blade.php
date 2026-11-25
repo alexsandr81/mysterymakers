@@ -42,15 +42,8 @@
             <p class="muted calc__note">Площадь, длину реза и площадь гравировки берите из раскладки. «Площадь из раскладки» — сколько см² листа занимает изделие вместе с зазорами между деталями; тогда галочку «обрезки» обычно не нужно ставить, они уже учтены. Для режима «габариты» галочка включается сама.</p>
 
             <h4 class="calc__sub">🖨 3D-печать (филамент)</h4>
-            <label>Филамент
-                <select id="c-filament">
-                    @foreach($filaments as $f)
-                        <option value="{{ $f->id }}">{{ $f->name }}</option>
-                    @endforeach
-                </select>
-            </label>
             <label>Расход филамента, г <small class="muted">вес изделия с поддержками и отходами, из слайсера</small> <input type="number" id="c-grams" min="0" step="any" value="0"></label>
-            <p class="muted calc__note">Цена за грамм берётся из таблицы «Филамент» ниже: <strong id="c-fprice-note">—</strong>.</p>
+            <p class="muted calc__note">Цена филамента: <strong id="c-fprice-note">—</strong> за грамм (меняется в параметрах расчёта ниже). Катушка 1 кг за 700 грн — это 0,7 грн/г.</p>
 
             <h4 class="calc__sub">📦 Общее</h4>
             <label>Прочее на изделие, грн <small class="muted">упаковка, фурнитура, покраска</small> <input type="number" id="c-extra" min="0" step="any" value="0"></label>
@@ -62,7 +55,7 @@
                 <tr><td>Материал (с учётом обрезков)</td><td id="r-material">—</td></tr>
                 <tr><td>Резка</td><td id="r-cut">—</td></tr>
                 <tr><td>Гравировка</td><td id="r-engr">—</td></tr>
-                <tr><td>Филамент <span id="r-fname"></span> (<span id="r-grams">0</span> г)</td><td id="r-filament">—</td></tr>
+                <tr><td>Филамент (<span id="r-grams">0</span> г)</td><td id="r-filament">—</td></tr>
                 <tr><td>Прочее</td><td id="r-extra">—</td></tr>
                 <tr><td><strong>Себестоимость</strong></td><td id="r-cost"><strong>—</strong></td></tr>
                 <tr><td>С накладными расходами</td><td id="r-over">—</td></tr>
@@ -82,6 +75,8 @@
                 <input type="number" name="calc_waste" min="10" max="100" step="any" value="{{ old('calc_waste', $fmt($p['calc_waste'])) }}" required></label>
             <label>Гравировка, грн за см²
                 <input type="number" name="calc_engr_rate" min="0" step="any" value="{{ old('calc_engr_rate', $fmt($p['calc_engr_rate'])) }}" required></label>
+            <label>Филамент для 3D-печати, грн за грамм <small class="muted">цена катушки ÷ вес катушки в граммах</small>
+                <input type="number" name="calc_filament_price" min="0" step="any" value="{{ old('calc_filament_price', $fmt($p['calc_filament_price'])) }}" required></label>
             <label>Накладные расходы, % <small class="muted">электричество, износ станка и принтера, аренда</small>
                 <input type="number" name="calc_overhead" min="0" step="any" value="{{ old('calc_overhead', $fmt($p['calc_overhead'])) }}" required></label>
             <label>Наценка, %
@@ -117,30 +112,6 @@
         </div>
         <p><button type="button" class="btn" id="mat-add">+ Добавить материал</button></p>
 
-        <h3>Филамент (3D-печать)</h3>
-        <p class="muted">Цена катушки и её вес. Цена за грамм считается сама и подставляется в расчёт, когда вы выбираете филамент и вводите граммы.</p>
-        <div class="table-wrap">
-        <table class="table calc__materials" id="fil-table">
-            <thead><tr><th>Филамент</th><th>Цена катушки, грн</th><th>Вес катушки, г</th><th>Грн за грамм</th><th>Что за катушка / ссылка</th><th>Цена проверена</th><th>Удалить</th></tr></thead>
-            <tbody>
-            @php $frows = old('filaments', $filaments->map(fn ($f) => ['id' => $f->id, 'name' => $f->name, 'spool_price' => $fmt($f->spool_price), 'spool_g' => $f->spool_g, 'link' => $f->link])->all()); @endphp
-            @foreach($frows as $i => $f)
-                @php $fdate = !empty($f['id']) ? optional($filaments->firstWhere('id', $f['id']))->price_date : null; @endphp
-                <tr>
-                    <td><input type="hidden" name="filaments[{{ $i }}][id]" value="{{ $f['id'] ?? '' }}"><input type="text" name="filaments[{{ $i }}][name]" value="{{ $f['name'] }}" required></td>
-                    <td><input type="number" step="any" name="filaments[{{ $i }}][spool_price]" value="{{ $f['spool_price'] }}" required class="w-md"></td>
-                    <td><input type="number" name="filaments[{{ $i }}][spool_g]" value="{{ $f['spool_g'] }}" required class="w-md"></td>
-                    <td class="nowrap js-pergram">—</td>
-                    <td><input type="text" name="filaments[{{ $i }}][link]" value="{{ $f['link'] ?? '' }}"></td>
-                    <td class="{{ $fdate ? 'muted' : 'text-warn' }}">{{ $fdate ? $fdate->format('d.m.Y') : (empty($f['id']) ? 'сегодня' : 'не проверялась') }}</td>
-                    <td><input type="checkbox" name="filaments[{{ $i }}][delete]" value="1"></td>
-                </tr>
-            @endforeach
-            </tbody>
-        </table>
-        </div>
-        <p><button type="button" class="btn" id="fil-add">+ Добавить филамент</button></p>
-
         <div><button type="submit" class="btn btn--accent btn--lg">Сохранить параметры</button></div>
     </form>
 </div>
@@ -149,9 +120,8 @@
 (function () {
     var $ = function (id) { return document.getElementById(id); };
     var tbody = document.querySelector('#mat-table tbody');
-    var ftbody = document.querySelector('#fil-table tbody');
-    var PARAMS = ['calc_waste', 'calc_engr_rate', 'calc_overhead', 'calc_margin', 'calc_min_price', 'calc_round'];
-    var P = {}, M = [], F = [];
+    var PARAMS = ['calc_waste', 'calc_engr_rate', 'calc_filament_price', 'calc_overhead', 'calc_margin', 'calc_min_price', 'calc_round'];
+    var P = {}, M = [];
     var num = function (el) { return parseFloat(String(el && el.value).replace(',', '.')) || 0; };
 
     // Параметры и материалы читаются прямо из полей формы, поэтому пересчёт идёт «на лету», до сохранения
@@ -171,20 +141,6 @@
         if (sel.innerHTML !== html) { sel.innerHTML = html; }
         if (M.some(function (m) { return m.id === cur; })) sel.value = cur;
         $('c-waste-pct').textContent = P.calc_waste;
-
-        // Филамент: цена за грамм = цена катушки / вес катушки
-        F = [];
-        Array.prototype.forEach.call(ftbody.rows, function (tr, idx) {
-            var f = function (name) { return tr.querySelector('[name$="[' + name + ']"]'); };
-            var pg = num(f('spool_g')) > 0 ? num(f('spool_price')) / num(f('spool_g')) : 0;
-            tr.querySelector('.js-pergram').textContent = pg.toLocaleString('ru-RU', {minimumFractionDigits: 2, maximumFractionDigits: 3}) + ' грн/г';
-            if (f('delete') && f('delete').checked) return;
-            F.push({ id: String(idx), label: f('name').value || 'Филамент', perGram: pg });
-        });
-        var fsel = $('c-filament'), fcur = fsel.value;
-        var fhtml = F.map(function (x) { return '<option value="' + x.id + '">' + x.label.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</option>'; }).join('');
-        if (fsel.innerHTML !== fhtml) { fsel.innerHTML = fhtml; }
-        if (F.some(function (x) { return x.id === fcur; })) fsel.value = fcur;
     }
     var n = function (id) { return parseFloat(String($(id).value).replace(',', '.')) || 0; };
     var money = function (v) { return v.toLocaleString('ru-RU', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' грн'; };
@@ -201,11 +157,8 @@
         }
         var engr = n('c-engr') * P.calc_engr_rate;
         var grams = n('c-grams');
-        var fil = F.find(function (x) { return String(x.id) === $('c-filament').value; });
-        var perGram = fil ? fil.perGram : 0;
-        var filament = grams * perGram;
-        $('c-fprice-note').textContent = fil ? fil.label + ': ' + perGram.toLocaleString('ru-RU', {minimumFractionDigits: 2, maximumFractionDigits: 3}) + ' грн/г' : 'добавьте филамент в таблицу';
-        $('r-fname').textContent = fil && grams > 0 ? fil.label : '';
+        var filament = grams * P.calc_filament_price;
+        $('c-fprice-note').textContent = money(P.calc_filament_price);
         $('r-grams').textContent = grams;
         $('r-filament').textContent = money(filament);
         var extra = n('c-extra');
@@ -227,7 +180,7 @@
         $('r-total').textContent = money(price * qty);
         $('r-warn').textContent = !m && (areaMm2 > 0 || n('c-cut') > 0) ? 'Для лазерной части добавьте хотя бы один материал.' : (m && areaMm2 > m.sw * m.sh ? '⚠ Изделие больше листа выбранного материала.' : '');
     }
-    ['c-material','c-filament','c-area','c-w','c-h','c-cut','c-engr','c-extra','c-qty','c-waste','c-grams'].forEach(function (id) { $(id).addEventListener('input', calc); });
+    ['c-material','c-area','c-w','c-h','c-cut','c-engr','c-extra','c-qty','c-waste','c-grams'].forEach(function (id) { $(id).addEventListener('input', calc); });
     $('c-mode').addEventListener('change', function () {
         var area = this.value === 'area';
         document.querySelectorAll('.js-area').forEach(function (e) { e.hidden = !area; });
@@ -239,20 +192,6 @@
     document.querySelector('form.calc__box').addEventListener('input', calc);
     document.querySelector('form.calc__box').addEventListener('change', calc);
     calc();
-
-    // Добавление строки филамента
-    $('fil-add').addEventListener('click', function () {
-        var i = ftbody.rows.length + 1000 + Math.floor(Math.random() * 1000);
-        var tr = document.createElement('tr');
-        tr.innerHTML =
-            '<td><input type="hidden" name="filaments[' + i + '][id]" value=""><input type="text" name="filaments[' + i + '][name]" required></td>' +
-            '<td><input type="number" step="any" name="filaments[' + i + '][spool_price]" required class="w-md"></td>' +
-            '<td><input type="number" name="filaments[' + i + '][spool_g]" value="1000" required class="w-md"></td>' +
-            '<td class="nowrap js-pergram">—</td>' +
-            '<td><input type="text" name="filaments[' + i + '][link]"></td><td class="muted">сегодня</td><td></td>';
-        ftbody.appendChild(tr);
-        calc();
-    });
 
     // Добавление строки материала
     $('mat-add').addEventListener('click', function () {
