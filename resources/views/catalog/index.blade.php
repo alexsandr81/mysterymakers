@@ -31,7 +31,7 @@
             @endforeach
         </ul>
 
-        <form method="GET" class="filters">
+        <form method="GET" class="filters" id="filters-form">
             <h3>{{ __('shop.filters') }}</h3>
             @if($q !== '')<input type="hidden" name="q" value="{{ $q }}">@endif
             <label>{{ __('shop.price_from') }}</label>
@@ -116,4 +116,32 @@
         @endif
     </section>
 </div>
+
+<script>
+// Фильтры применяются сразу: поставили галочку — список обновился (кнопка «Застосувати» остаётся как запасной вариант)
+(function () {
+    var form = document.getElementById('filters-form');
+    if (!form) return;
+    var key = 'mm_filters_scroll';
+    var timer;
+
+    function submitNow() {
+        clearTimeout(timer);
+        try { sessionStorage.setItem(key, String(window.scrollY)); } catch (e) {}
+        form.submit();
+    }
+
+    form.addEventListener('change', function (e) {
+        var t = e.target;
+        if (t.matches('input[type=checkbox]')) { submitNow(); }
+        else if (t.matches('input[type=number]')) { clearTimeout(timer); timer = setTimeout(submitNow, 600); }
+    });
+
+    // После перезагрузки возвращаем прокрутку туда же, где были
+    try {
+        var y = sessionStorage.getItem(key);
+        if (y !== null) { sessionStorage.removeItem(key); window.scrollTo(0, parseInt(y, 10) || 0); }
+    } catch (e) {}
+})();
+</script>
 @endsection
