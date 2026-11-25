@@ -644,3 +644,17 @@ a.stat:hover { border-color: var(--accent); }
 .bulk .bulk__all input { width: auto; }
 .form label[hidden] { display: none; }
 .form__cols[hidden] { display: none; }
+
+/* Категории и подкатегории в админке */
+.cat-row--top td { background: var(--tint); border-top: 2px solid var(--line); }
+.cat-row--top .cat-name { font-size: 1.02rem; }
+.cat-row--sub td { background: var(--surface); }
+.cat-row--sub .cat-name { padding-left: 28px; color: var(--muted, #7a6a58); }
+.cat-name__arrow { margin-right: 6px; opacity: .6; }
+.badge { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: .75rem; font-weight: 600; white-space: nowrap; }
+.badge--top { background: var(--brand); color: #fff; }
+.badge--sub { background: transparent; color: var(--brand); border: 1px solid var(--brand); }
+
+.holiday-pick { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; margin: 8px 0; }
+.holiday-pick .check { flex-direction: row; align-items: center; gap: 6px; font-weight: 400; display: flex; }
+.holiday-pick .check input { width: auto; }

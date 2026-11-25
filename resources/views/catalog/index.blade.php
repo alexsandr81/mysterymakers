@@ -42,6 +42,18 @@
             </div>
             <label class="check"><input type="checkbox" name="in_stock" value="1" @checked(request()->boolean('in_stock'))> {{ __('shop.only_in_stock') }}</label>
 
+            @if($holidays->isNotEmpty())
+                <div class="filter-group">
+                    <strong>{{ __('shop.holidays') }}</strong>
+                    @foreach($holidays as $h)
+                        <label class="check">
+                            <input type="checkbox" name="hol[]" value="{{ $h->id }}" @checked(in_array($h->id, $selectedHolidays, true))>
+                            {{ $h->name }}
+                        </label>
+                    @endforeach
+                </div>
+            @endif
+
             @if($diameters)
                 <div class="filter-group">
                     <strong>{{ __('shop.diameter') }}</strong>
@@ -69,7 +81,7 @@
 
             <input type="hidden" name="sort" value="{{ $sort }}">
             <button type="submit" class="btn btn--brand btn--block">{{ __('shop.apply') }}</button>
-            @if(request()->hasAny(['min', 'max', 'in_stock', 'attr', 'dia']))
+            @if(request()->hasAny(['min', 'max', 'in_stock', 'attr', 'dia', 'hol']))
                 <a href="{{ $category ? route('catalog.category', $category) : route('catalog') }}" class="reset-link">{{ __('shop.reset') }}</a>
             @endif
         </form>

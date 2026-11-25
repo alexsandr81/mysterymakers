@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Characteristic;
+use App\Models\Holiday;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -138,6 +139,8 @@ class ProductController extends Controller
             'categories' => Category::orderBy('sort')->get(),
             'characteristics' => Characteristic::with('values')->orderBy('sort')->orderBy('id')->get(),
             'selectedValues' => [],
+            'holidays' => Holiday::orderBy('sort')->orderBy('id')->get(),
+            'selectedHolidays' => [],
         ]);
     }
 
@@ -150,6 +153,7 @@ class ProductController extends Controller
 
         $product = Product::create($data);
         $product->characteristicValues()->sync($this->selectedValueIds($request));
+        $this->syncHolidays($product, $request);
         $note = \App\Services\DriveSync::note(\App\Services\DriveSync::product($product));
 
         return redirect()->route('admin.products.index')->with('status', 'Товар создан.' . $note);
@@ -162,6 +166,8 @@ class ProductController extends Controller
             'categories' => Category::orderBy('sort')->get(),
             'characteristics' => Characteristic::with('values')->orderBy('sort')->orderBy('id')->get(),
             'selectedValues' => $product->characteristicValues()->pluck('characteristic_values.id')->all(),
+            'holidays' => Holiday::orderBy('sort')->orderBy('id')->get(),
+            'selectedHolidays' => $product->holidays()->pluck('holidays.id')->all(),
         ]);
     }
 
@@ -180,6 +186,7 @@ class ProductController extends Controller
         $data['images'] = $this->arrangeImages(array_merge($kept, $new), $new, (string) $request->input('main_choice', ''));
         $product->update($data);
         $product->characteristicValues()->sync($this->selectedValueIds($request));
+        $this->syncHolidays($product, $request);
         $note = \App\Services\DriveSync::note(\App\Services\DriveSync::product($product->fresh()));
 
         return redirect()->route('admin.products.index')->with('status', 'Товар сохранён.' . $note);
@@ -199,6 +206,10 @@ class ProductController extends Controller
     {
         $data = $request->validate([
             // Категория: id, «new» (создать новую); подкатегория (category_id): id, «self» (прямо в категории) или «new»
+            'holidays' => ['nullable', 'array', 'max:100'],
+            'holidays.*' => ['integer', 'exists:holidays,id'],
+            'new_holiday_uk' => ['nullable', 'string', 'max:255', 'required_with:new_holiday_ru'],
+            'new_holiday_ru' => ['nullable', 'string', 'max:255', 'required_with:new_holiday_uk'],
             'category_top' => ['nullable', 'string', 'max:20'],
             'category_id' => ['required', 'string', 'max:20'],
             'new_cat_uk' => ['nullable', 'string', 'max:255', 'required_if:category_top,new'],
@@ -224,7 +235,7 @@ class ProductController extends Controller
             'char.*' => ['nullable', 'integer', 'exists:characteristic_values,id'],
         ]);
 
-        unset($data['images'], $data['char']);
+        unset($data['images'], $data['char'], $data['holidays'], $data['new_holiday_uk'], $data['new_holiday_ru']);
 
         $data['category_id'] = $this->resolveCategory($request, $data);
         unset($data['category_top'], $data['new_cat_uk'], $data['new_cat_ru'], $data['new_sub_uk'], $data['new_sub_ru']);
@@ -243,6 +254,21 @@ class ProductController extends Controller
         $data['is_active'] = $request->boolean('is_active');
 
         return $data;
+    }
+
+    /** Праздники товара: отмеченные галочками + при необходимости новый, созданный прямо в форме */
+    private function syncHolidays(Product $product, Request $request): void
+    {
+        $ids = array_map('intval', (array) $request->input('holidays', []));
+
+        $uk = trim((string) $request->input('new_holiday_uk', ''));
+        $ru = trim((string) $request->input('new_holiday_ru', ''));
+        if ($uk !== '' && $ru !== '') {
+            $existing = Holiday::all()->first(fn ($h) => mb_strtolower($h->name_ru) === mb_strtolower($ru));
+            $ids[] = ($existing ?? Holiday::create(['name_uk' => $uk, 'name_ru' => $ru, 'sort' => (int) Holiday::max('sort') + 1, 'is_active' => true]))->id;
+        }
+
+        $product->holidays()->sync(array_values(array_unique($ids)));
     }
 
     /**

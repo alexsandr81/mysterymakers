@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Characteristic;
+use App\Models\Holiday;
 use App\Models\Product;
 use Illuminate\Http\Request;
 
@@ -57,6 +58,12 @@ class CatalogController extends Controller
             $query->whereIn('size_diameter', $diameters);
         }
 
+        // Фильтр по праздникам: ?hol[]=<id> (значения объединяются по «ИЛИ»)
+        $holidayIds = $this->selectedIds($request->query('hol'));
+        if ($holidayIds) {
+            $query->whereHas('holidays', fn ($w) => $w->whereIn('holidays.id', $holidayIds));
+        }
+
         $sort = $request->query('sort', 'new');
         [$column, $direction] = self::SORTS[$sort] ?? self::SORTS['new'];
         $query->orderBy($column, $direction);
@@ -70,6 +77,8 @@ class CatalogController extends Controller
             'selectedValues' => collect($selected)->flatten()->all(),
             'diameters' => $this->availableDiameters($category),
             'selectedDiameters' => $diameters,
+            'holidays' => $this->availableHolidays($category),
+            'selectedHolidays' => $holidayIds,
         ]);
     }
 
@@ -125,6 +134,29 @@ class CatalogController extends Controller
         }
 
         return $query->distinct()->orderBy('size_diameter')->pluck('size_diameter')->map(fn ($d) => (int) $d)->all();
+    }
+
+    /** Праздники, у которых есть активные товары в текущей категории (скрытые не показываем) */
+    private function availableHolidays(?Category $category)
+    {
+        return Holiday::where('is_active', true)
+            ->whereHas('products', function ($products) use ($category) {
+                $products->where('products.is_active', true);
+                if ($category) {
+                    $products->whereIn('products.category_id', $category->selfAndChildrenIds());
+                }
+            })
+            ->orderBy('sort')->orderBy('id')->get();
+    }
+
+    /** Список положительных целых из параметра адресной строки; мусор игнорируется */
+    private function selectedIds(mixed $raw): array
+    {
+        if (! is_array($raw)) {
+            return [];
+        }
+
+        return array_values(array_unique(array_map('intval', array_filter($raw, fn ($v) => is_numeric($v) && (int) $v > 0))));
     }
 
     /** ?dia из адресной строки → список целых чисел; мусор игнорируется */

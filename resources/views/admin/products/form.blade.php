@@ -149,6 +149,30 @@
         </label>
     </div>
 
+    <div>
+        <strong>Праздники и поводы</strong> <span class="muted">(можно выбрать несколько — по ним работает фильтр в каталоге)</span>
+        @php $chosenHol = old('holidays') !== null ? array_map('intval', (array) old('holidays')) : $selectedHolidays; @endphp
+        <div class="holiday-pick">
+            @foreach($holidays as $h)
+                <label class="check"><input type="checkbox" name="holidays[]" value="{{ $h->id }}" @checked(in_array($h->id, $chosenHol, true))> {{ $h->name_ru }}</label>
+            @endforeach
+            <button type="button" class="link-btn" id="new-holiday-btn">＋ Новый праздник</button>
+        </div>
+        <div class="form__cols" id="new-holiday" @if(!old('new_holiday_uk') && !old('new_holiday_ru')) hidden @endif>
+            <label>Новый праздник (укр.) <input type="text" name="new_holiday_uk" value="{{ old('new_holiday_uk') }}" maxlength="255"></label>
+            <label>Новый праздник (рус.) <input type="text" name="new_holiday_ru" value="{{ old('new_holiday_ru') }}" maxlength="255"></label>
+        </div>
+        @error('new_holiday_uk')<p class="text-warn">{{ $message }}</p>@enderror
+        @error('new_holiday_ru')<p class="text-warn">{{ $message }}</p>@enderror
+    </div>
+    <script>
+        document.getElementById('new-holiday-btn').addEventListener('click', function () {
+            var box = document.getElementById('new-holiday');
+            box.hidden = !box.hidden;
+            if (!box.hidden) box.querySelector('input').focus();
+        });
+    </script>
+
     @if($characteristics->isNotEmpty())
         @php
             // После ошибки валидации показываем то, что человек уже выбрал

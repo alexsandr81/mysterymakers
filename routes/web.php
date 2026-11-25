@@ -113,6 +113,7 @@ Route::middleware(SetLocale::class)->group(function () {
         Route::resource('pages', Admin\PageController::class)->except('show');
         Route::resource('banners', Admin\BannerController::class)->except('show');
         Route::resource('characteristics', Admin\CharacteristicController::class)->except('show');
+        Route::resource('holidays', Admin\HolidayController::class)->except('show');
         Route::post('/orders/{order}/paid', [Admin\OrderController::class, 'togglePaid'])->name('orders.paid');
         Route::get('/orders/poll', [Admin\OrderController::class, 'poll'])->name('orders.poll');
         Route::get('/orders', [Admin\OrderController::class, 'index'])->name('orders.index');

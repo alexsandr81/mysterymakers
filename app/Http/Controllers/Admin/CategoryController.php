@@ -21,7 +21,7 @@ class CategoryController extends Controller
             return view('admin.categories.index', ['categories' => $this->tree(), 'sort' => null, 'dir' => $dir]);
         }
 
-        $query = Category::with('parent')->withCount('products');
+        $query = Category::with('parent')->withCount(['products', 'children']);
         switch ($sort) {
             case 'name':
                 $query->orderBy('name_ru', $dir);
@@ -49,7 +49,7 @@ class CategoryController extends Controller
     /** Список «дерево»: родитель, затем его подкатегории; внутри уровня — по порядку сортировки */
     private function tree()
     {
-        $all = Category::with('parent')->withCount('products')->orderBy('sort')->orderBy('id')->get();
+        $all = Category::with('parent')->withCount(['products', 'children'])->orderBy('sort')->orderBy('id')->get();
         $out = collect();
         foreach ($all->whereNull('parent_id') as $parent) {
             $out->push($parent);
@@ -91,7 +91,7 @@ class CategoryController extends Controller
     public function create()
     {
         return view('admin.categories.form', [
-            'category' => new Category(['sort' => 0]),
+            'category' => new Category(['sort' => 0, 'parent_id' => request()->integer('parent_id') ?: null]),
             'parents' => Category::whereNull('parent_id')->orderBy('sort')->get(),
         ]);
     }

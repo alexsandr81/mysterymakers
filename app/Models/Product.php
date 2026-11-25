@@ -51,6 +51,12 @@ class Product extends Model
         return $this->belongsToMany(CharacteristicValue::class, 'characteristic_value_product');
     }
 
+    /** Праздники и поводы, к которым подходит товар */
+    public function holidays(): BelongsToMany
+    {
+        return $this->belongsToMany(Holiday::class);
+    }
+
     public function reviews(): HasMany
     {
         return $this->hasMany(Review::class);

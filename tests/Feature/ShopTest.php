@@ -314,4 +314,27 @@ class ShopTest extends TestCase
         $this->actingAs($admin)->post(route('admin.products.store'), $base + ['category_top' => 'new', 'category_id' => 'self'])->assertSessionHasErrors('new_cat_uk');
         $this->assertSame($before, Category::count());
     }
+
+    public function test_holidays_assigned_in_product_and_filtered_in_catalog(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $cat = Category::create(['slug' => 'h', 'name_uk' => 'Х', 'name_ru' => 'Х', 'sort' => 1, 'sku_start' => 10000]);
+        $ny = \App\Models\Holiday::where('name_ru', 'Новый год')->first();
+        $base = ['name_uk' => 'Т', 'name_ru' => 'Т', 'price' => 50, 'stock' => 1, 'is_active' => 1, 'category_top' => $cat->id, 'category_id' => 'self'];
+
+        $this->actingAs($admin)->get(route('admin.holidays.index'))->assertOk()->assertSee('Новый год');
+        $this->actingAs($admin)->get(route('admin.products.create'))->assertOk()->assertSee('Праздники и поводы');
+
+        // Один товар: Новый год + новый праздник прямо из формы. Второй: без праздников.
+        $this->actingAs($admin)->post(route('admin.products.store'), ['name_uk' => 'Ялинка', 'name_ru' => 'Ёлка'] + $base + ['holidays' => [$ny->id], 'new_holiday_uk' => 'Хелловін', 'new_holiday_ru' => 'Хэллоуин'])->assertRedirect();
+        $this->actingAs($admin)->post(route('admin.products.store'), ['name_uk' => 'Шкатулка', 'name_ru' => 'Шкатулка'] + $base)->assertRedirect();
+
+        $elka = Product::where('name_ru', 'Ёлка')->first();
+        $this->assertSame(2, $elka->holidays()->count());
+        $this->assertTrue(\App\Models\Holiday::where('name_ru', 'Хэллоуин')->exists());
+
+        // В фильтре видны только праздники, у которых есть товары; выбор «Новый год» оставляет один товар
+        $this->withSession(['locale' => 'ru'])->get('/catalog')->assertOk()->assertSee('Праздник / повод')->assertSee('Хэллоуин')->assertDontSee('Пасха');
+        $this->withSession(['locale' => 'ru'])->get('/catalog?hol[]=' . $ny->id)->assertOk()->assertSee('Ёлка')->assertDontSee('Шкатулка');
+    }
 }
