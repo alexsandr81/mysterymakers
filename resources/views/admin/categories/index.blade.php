@@ -27,6 +27,12 @@
 
 @include('admin.partials.col-picker', ['table' => 'categories', 'cols' => ['type' => 'Тип', 'name_uk' => 'Название (укр.)', 'parent' => 'Родитель', 'products' => 'Товаров', 'sku' => 'Артикулы с', 'sort' => 'Порядок на сайте']])
 
+@if(! $sort && $categories->whereNotNull('parent_id')->isNotEmpty())
+    <p class="cat-bulk">
+        <button type="button" class="btn btn--sm" id="cats-expand">▾ Развернуть все</button>
+        <button type="button" class="btn btn--sm" id="cats-collapse">▸ Свернуть все</button>
+    </p>
+@endif
 <div class="table-wrap">
 <table class="table table--compact" data-tools="categories">
     <thead><tr><th data-col="type">Тип</th><th data-col="name">{{ $th('name', 'Название (рус.)') }}</th><th data-col="name_uk">{{ $th('name_uk', 'Название (укр.)') }}</th><th data-col="parent">{{ $th('parent', 'Родитель') }}</th><th data-col="products">{{ $th('products', 'Товаров') }}</th><th data-col="sku">{{ $th('sku', 'Артикулы с') }}</th><th data-col="sort">{{ $th('sort', 'Порядок на сайте') }}</th><th data-col="act" data-nores></th></tr></thead>
@@ -37,7 +43,7 @@
         $lastIds = $categories->groupBy('parent_id')->map(fn ($g) => $g->last()->id);
     @endphp
     @foreach($categories as $c)
-        <tr class="{{ $c->parent_id ? 'cat-row cat-row--sub' : 'cat-row cat-row--top' }}">
+        <tr class="{{ $c->parent_id ? 'cat-row cat-row--sub' : 'cat-row cat-row--top' }}" @if($c->parent_id && ! $sort) data-parent="{{ $c->parent_id }}" @endif>
             <td data-col="type">
                 @if($c->parent_id)
                     <span class="badge badge--sm badge--sub">Подкатегория</span>
@@ -49,6 +55,13 @@
                 @if($c->parent_id)
                     <span class="cat-name__arrow">↳</span>{{ $c->name_ru }}
                 @else
+                    @if(! $sort)
+                        @if($c->children_count)
+                            <button type="button" class="cat-toggle" data-id="{{ $c->id }}" aria-expanded="false" title="Показать или скрыть подкатегории">▸</button>
+                        @else
+                            <span class="cat-toggle cat-toggle--empty"></span>
+                        @endif
+                    @endif
                     📁 <strong>{{ $c->name_ru }}</strong>
                     <span class="muted">{{ $c->children_count ? '· подкатегорий: ' . $c->children_count : '' }}</span>
                 @endif
@@ -88,4 +101,37 @@
 </table>
 </div>
 <script src="{{ asset('js/table-tools.js') }}"></script>
+@unless($sort)
+<script>
+    // Подкатегории раскрываются галочкой рядом с категорией; что открыто — запоминается в браузере
+    (function () {
+        var table = document.querySelector('table[data-tools=categories]'), KEY = 'mm_cats_open', open = {};
+        try { open = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) {}
+        @if(session('open_category')) open[{{ (int) session('open_category') }}] = true; @endif
+        function save() { try { localStorage.setItem(KEY, JSON.stringify(open)); } catch (e) {} }
+        function paint() {
+            table.querySelectorAll('tr[data-parent]').forEach(function (r) { r.hidden = !open[r.dataset.parent]; });
+            table.querySelectorAll('.cat-toggle[data-id]').forEach(function (b) {
+                var o = !!open[b.dataset.id];
+                b.setAttribute('aria-expanded', o ? 'true' : 'false');
+                b.textContent = o ? '▾' : '▸';
+            });
+        }
+        table.addEventListener('click', function (e) {
+            var b = e.target.closest('.cat-toggle[data-id]');
+            if (!b) return;
+            open[b.dataset.id] = !open[b.dataset.id];
+            save(); paint();
+        });
+        function all(state) {
+            table.querySelectorAll('.cat-toggle[data-id]').forEach(function (b) { open[b.dataset.id] = state; });
+            save(); paint();
+        }
+        var ex = document.getElementById('cats-expand'), co = document.getElementById('cats-collapse');
+        if (ex) ex.addEventListener('click', function () { all(true); });
+        if (co) co.addEventListener('click', function () { all(false); });
+        save(); paint();
+    })();
+</script>
+@endunless
 @endsection

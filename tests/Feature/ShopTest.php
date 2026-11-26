@@ -612,6 +612,28 @@ class ShopTest extends TestCase
         $this->assertSame('MY-7', $p->fresh()->sku);
     }
 
+    public function test_categories_tree_has_collapsible_subcategories(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $top = Category::create(['slug' => 'k', 'name_uk' => 'Коробки', 'name_ru' => 'Коробки', 'sort' => 1, 'sku_start' => 10000]);
+        $sub = Category::create(['parent_id' => $top->id, 'slug' => 'kr', 'name_uk' => 'Круглі', 'name_ru' => 'Круглые', 'sort' => 1, 'sku_start' => 11000]);
+        Category::create(['slug' => 'e', 'name_uk' => 'Пустая', 'name_ru' => 'Пустая', 'sort' => 2, 'sku_start' => 20000]);
+
+        // Дерево: у категории с подкатегориями есть галочка, а строка подкатегории привязана к родителю
+        $this->actingAs($admin)->get(route('admin.categories.index'))->assertOk()
+            ->assertSee('data-id="' . $top->id . '"', false)
+            ->assertSee('data-parent="' . $top->id . '"', false)
+            ->assertSee('Развернуть все');
+
+        // Плоский список при сортировке — без галочек
+        $this->actingAs($admin)->get(route('admin.categories.index', ['sort' => 'name']))->assertOk()
+            ->assertDontSee('data-parent=', false)->assertDontSee('Развернуть все');
+
+        // После создания подкатегории её родитель раскрывается
+        $this->actingAs($admin)->post(route('admin.categories.store'), ['name_uk' => 'Нова', 'name_ru' => 'Новая', 'sort' => 2, 'parent_id' => $top->id])
+            ->assertRedirect(route('admin.categories.index'))->assertSessionHas('open_category', $top->id);
+    }
+
     public function test_site_fonts_setting(): void
     {
         $admin = User::factory()->create(['is_admin' => true]);

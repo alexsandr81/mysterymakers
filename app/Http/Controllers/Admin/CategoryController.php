@@ -110,7 +110,7 @@ class CategoryController extends Controller
         $category = Category::create($data);
         $note = DriveSync::note(DriveSync::category($category));
 
-        return redirect()->route('admin.categories.index')->with('status', 'Категория создана.' . $note);
+        return redirect()->route('admin.categories.index')->with('status', 'Категория создана.' . $note)->with('open_category', $category->parent_id);
     }
 
     public function edit(Category $category)
@@ -170,7 +170,7 @@ class CategoryController extends Controller
                 . ($failed ? " Папки на Google Диске не переименованы у товаров: $failed (подробности: storage/logs/laravel.log; команда shop:drive-sync исправит их позже)." : '');
         }
 
-        return redirect()->route('admin.categories.index')->with('status', 'Категория сохранена.' . $shifted . $note);
+        return redirect()->route('admin.categories.index')->with('status', 'Категория сохранена.' . $shifted . $note)->with('open_category', $category->parent_id);
     }
 
     /**

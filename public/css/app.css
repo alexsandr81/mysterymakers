@@ -760,3 +760,10 @@ h1, h2, h3, h4, .hero h1 { font-family: var(--font-heading, inherit); }
 /* Страницы ошибок 403 / 404 */
 .err-page { text-align: center; padding: 70px 0; }
 .err-page__code { font-size: 4.5rem; font-weight: 700; color: var(--accent); line-height: 1; }
+
+/* Категории: подкатегории раскрываются галочкой */
+.cat-toggle { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; margin-right: 6px; padding: 0; vertical-align: middle; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--text); font-size: .85rem; line-height: 1; cursor: pointer; }
+button.cat-toggle:hover { background: var(--tint); border-color: var(--brand); }
+.cat-toggle--empty { border-color: transparent; background: transparent; cursor: default; }
+.cat-row[hidden] { display: none; }
+.cat-bulk { display: flex; gap: 8px; margin: 0 0 10px; }
