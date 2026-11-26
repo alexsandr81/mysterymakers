@@ -197,7 +197,7 @@ class CategoryController extends Controller
             ->pluck('sku_start');
         foreach ($siblings as $s) {
             if ($new <= $s + $size - 1 && $s <= $newEnd) {
-                $result['error'] = "Новый блок артикулов $new–$newEnd пересекается с блоком другой категории (начало $s). Выберите другое число.";
+                $result['error'] = "Новый блок артикулов {$new}–{$newEnd} пересекается с блоком другой категории (начало {$s}). Выберите другое число.";
 
                 return $result;
             }
@@ -206,7 +206,7 @@ class CategoryController extends Controller
         $clash = Product::whereNotIn('id', $products->pluck('id'))->pluck('sku')
             ->first(fn ($s) => ctype_digit((string) $s) && (int) $s >= $new && (int) $s <= $newEnd);
         if ($clash !== null) {
-            $result['error'] = "В новом диапазоне $new–$newEnd уже есть артикул $clash другого товара. Выберите другое число.";
+            $result['error'] = "В новом диапазоне {$new}–{$newEnd} уже есть артикул {$clash} другого товара. Выберите другое число.";
         }
 
         return $result;

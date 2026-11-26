@@ -1,7 +1,7 @@
 {{--
   Логотип-печать MysteryMakers (круглая, слои фанеры, монограмма MM шрифтом Cinzel Decorative).
   Параметры: $variant = 'mini' (без надписи по кольцу — для шапки и подвала) или 'full' (с надписью, для страниц входа),
-             $size — размер в пикселях, $label — подпись для скринридеров (нужна, если рядом нет названия сайта).
+             $size — размер в пикселях, $logoLabel — подпись для скринридеров (нужна, если рядом нет названия сайта).
   Шрифт Cinzel Decorative подключается в layouts/app.blade.php; без интернета буквы нарисуются запасным шрифтом Georgia.
 --}}
 @php
@@ -11,7 +11,7 @@
     $mmFont = "'Cinzel Decorative', Georgia, serif";
 @endphp
 <svg class="logo-seal" width="{{ $size }}" height="{{ $size }}" viewBox="-113 -113 226 226" xmlns="http://www.w3.org/2000/svg"
-     @if(!empty($label)) role="img" aria-label="{{ $label }}" @else aria-hidden="true" @endif focusable="false">
+     @if(!empty($logoLabel)) role="img" aria-label="{{ $logoLabel }}" @else aria-hidden="true" @endif focusable="false">
     <circle r="113" fill="#3a2a1c"/>
     @if($variant === 'full')
         <defs>

@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="center-box">
-    <div class="auth-logo">@include('partials.logo-seal', ['variant' => 'full', 'size' => 132, 'label' => \App\Models\Setting::siteName()])</div>
+    <div class="auth-logo">@include('partials.logo-seal', ['variant' => 'full', 'size' => 132, 'logoLabel' => \App\Models\Setting::siteName()])</div>
     <h1>{{ __('shop.forgot_password') }}</h1>
     <p class="muted">{{ __('shop.forgot_hint') }}</p>
     <form action="{{ route('password.email') }}" method="POST" class="form">

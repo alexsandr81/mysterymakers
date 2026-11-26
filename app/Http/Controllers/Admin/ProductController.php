@@ -312,14 +312,14 @@ class ProductController extends Controller
             $target = \App\Models\Category::findOrFail($data['category_id']);
             $start = (int) $target->sku_start;
             $current = (string) ($product?->sku ?? '');
-            $inBlock = $current !== '' && ctype_digit($current) && $start > 0 && (int) $current >= $start && (int) $current <= $start + $target->skuBlockSize() - 1;
+            $inBlock = $current !== '' && ctype_digit($current) && $start > 0 && (int) $current >= $start && (int) $current <= $start + \App\Models\Category::SUB_BLOCK - 1;
             $data['sku'] = $inBlock ? $current : $target->nextSku();
         }
         // Товар переехал в другую категорию (подкатегорию), а артикул не меняли руками — номер должен быть из блока новой категории
         if ($product && (int) $data['category_id'] !== (int) $product->category_id && (string) $data['sku'] === (string) $product->sku && ctype_digit((string) $product->sku)) {
             $target = \App\Models\Category::findOrFail($data['category_id']);
             $start = (int) $target->sku_start;
-            $inBlock = $start > 0 && (int) $product->sku >= $start && (int) $product->sku <= $start + $target->skuBlockSize() - 1;
+            $inBlock = $start > 0 && (int) $product->sku >= $start && (int) $product->sku <= $start + \App\Models\Category::SUB_BLOCK - 1;
             if (! $inBlock) {
                 $data['sku'] = $target->nextSku();
             }

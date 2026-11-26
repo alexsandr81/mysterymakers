@@ -388,7 +388,7 @@ class ShopTest extends TestCase
         $this->withSession(['locale' => 'ru'])->get(route('product', $p))->assertOk()->assertSee('name="quantity"', false);
 
         // Метка возвращается после правки модератора; ✔ и массовая отметка у администратора её снимают
-        $this->actingAs($mod)->put(route('admin.products.update', $p), $base + ['name_ru' => 'Шкатулка 2', 'price' => 450])->assertRedirect();
+        $this->actingAs($mod)->put(route('admin.products.update', $p), array_merge($base, ['name_ru' => 'Шкатулка 2', 'price' => 450]))->assertRedirect();
         $this->assertTrue($p->fresh()->needs_review);
         $this->actingAs($admin)->get(route('admin.products.index', ['review' => 1]))->assertOk()->assertSee('проверить')->assertSee('Шкатулка 2');
         $this->actingAs($admin)->post(route('admin.products.reviewed', $p))->assertRedirect();
@@ -501,7 +501,7 @@ class ShopTest extends TestCase
 
     public function test_logo_seal_is_shown_in_header_login_and_favicon(): void
     {
-        $this->get('/')->assertOk()->assertSee('class="logo-seal"', false)->assertSee('favicon.svg', false)->assertSee('Cinzel+Decorative', false);
+        $this->get('/')->assertOk()->assertSee('class="logo-seal"', false)->assertDontSee('aria-label="RU"', false)->assertSee('favicon.svg', false)->assertSee('Cinzel+Decorative', false);
         $this->get(route('login'))->assertOk()->assertSee('МАЙСТЕРНЯ З ФАНЕРИ', false)->assertSee('MYSTERY MAKERS', false);
         $this->assertFileExists(public_path('favicon.svg'));
     }
@@ -663,8 +663,8 @@ class ShopTest extends TestCase
         $admin = User::factory()->create(['is_admin' => true]);
         $form = ['site_name' => 'Mystery Makers', 'phone' => '+380501234567'];
 
-        // По умолчанию — системный шрифт, ничего с Google Fonts не подгружается
-        $this->get('/')->assertOk()->assertDontSee('fonts.googleapis.com', false);
+        // По умолчанию — системный шрифт: выбранные шрифты сайта с Google Fonts не подгружаются (кроме шрифта логотипа)
+        $this->get('/')->assertOk()->assertDontSee('family=Nunito', false)->assertDontSee('Playfair+Display', false);
 
         $this->actingAs($admin)->get(route('admin.settings.edit'))->assertOk()->assertSee('Шрифты')->assertSee('Playfair Display')->assertSee('Literata')->assertSee('Source Serif 4');
 
