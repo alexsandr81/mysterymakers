@@ -777,3 +777,5 @@ button.cat-toggle:hover { background: var(--tint); border-color: var(--brand); }
 .grp-row[hidden] { display: none; }
 
 .products-total { margin: -6px 0 12px; }
+
+.flash--big { font-size: 1.05rem; padding: 16px 18px; }

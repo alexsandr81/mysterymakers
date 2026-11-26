@@ -572,6 +572,13 @@ class ShopTest extends TestCase
         // Список копий показывает кнопки администратору
         $this->actingAs($admin)->get(route('admin.backups.index'))->assertOk()->assertSee('Восстановить')->assertSee('Загрузить');
 
+        // Запись о последнем восстановлении показывается на странице копий (и подтверждение после перехода с ?restored=1)
+        $state = storage_path('app/last-restore.json');
+        file_put_contents($state, json_encode(['file' => $name, 'backup_time' => time() - 3600, 'at' => time(), 'with_files' => true, 'files' => 7, 'safety' => 'shop-2000-01-02_000000.zip', 'note' => ''], JSON_UNESCAPED_UNICODE));
+        $this->actingAs($admin)->get(route('admin.backups.index', ['restored' => 1]))->assertOk()->assertSee('Резервная копия восстановлена')->assertSee('shop-2000-01-02_000000.zip')->assertSee('Фото из копии: 7');
+        $this->actingAs($admin)->get(route('admin.backups.index'))->assertOk()->assertSee('Последнее восстановление')->assertDontSee('Резервная копия восстановлена');
+        @unlink($state);
+
         @unlink($dir . '/' . $name);
     }
 

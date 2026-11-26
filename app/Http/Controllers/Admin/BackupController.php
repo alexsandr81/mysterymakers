@@ -16,6 +16,12 @@ class BackupController extends Controller
         return storage_path('backups');
     }
 
+    /** Запись о последнем восстановлении: лежит в storage (в копию не входит) и не зависит от сессии и базы */
+    private function stateFile(): string
+    {
+        return storage_path('app/last-restore.json');
+    }
+
     private function path(string $file): string
     {
         abort_unless(preg_match('/^shop-[0-9_-]+\.zip$/', $file) === 1, 404);
@@ -32,7 +38,9 @@ class BackupController extends Controller
             ->map(fn ($f) => ['name' => basename($f), 'size' => round(filesize($f) / 1024 / 1024, 2), 'time' => filemtime($f)])
             ->values();
 
-        return view('admin.backups', ['files' => $files, 'zip' => class_exists(\ZipArchive::class)]);
+        $lastRestore = is_file($this->stateFile()) ? json_decode((string) file_get_contents($this->stateFile()), true) : null;
+
+        return view('admin.backups', ['files' => $files, 'zip' => class_exists(\ZipArchive::class), 'lastRestore' => is_array($lastRestore) ? $lastRestore : null]);
     }
 
     public function store()
@@ -128,6 +136,8 @@ class BackupController extends Controller
             return back()->with('error', 'Не удалось создать страховочную копию текущего состояния, восстановление отменено: ' . trim(Artisan::output()));
         }
 
+        $safety = collect(glob($this->dir() . '/shop-*.zip') ?: [])->sortByDesc(fn ($f) => filemtime($f))->map(fn ($f) => basename($f))->first();
+
         // 3. Подменяем базу (соединение закрываем, остатки журнала SQLite убираем)
         DB::disconnect();
         @unlink($db . '-wal');
@@ -181,7 +191,14 @@ class BackupController extends Controller
         } catch (\Throwable $e) {
         }
 
-        return redirect()->route('admin.backups.index')->with('status', 'База восстановлена из копии ' . $file . ($request->boolean('with_files') ? ', фото: ' . $files : ', фото не трогали') . '. Состояние до восстановления сохранено отдельной копией в этом списке.' . $note);
+        // Запоминаем результат в файле: сессия после замены базы может сброситься, а подтверждение должно остаться на странице
+        @file_put_contents($this->stateFile(), json_encode([
+            'file' => $file, 'backup_time' => filemtime($path), 'at' => time(),
+            'with_files' => $request->boolean('with_files'), 'files' => $files,
+            'safety' => $safety, 'note' => trim($note),
+        ], JSON_UNESCAPED_UNICODE));
+
+        return redirect()->route('admin.backups.index', ['restored' => 1]);
     }
 
     /** Файл — настоящая SQLite-база без ошибок, и в ней есть таблицы магазина */
