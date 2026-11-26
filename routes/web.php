@@ -122,10 +122,12 @@ Route::middleware(SetLocale::class)->group(function () {
         Route::delete('/orders/{order}', [Admin\OrderController::class, 'destroy'])->name('orders.destroy');
         Route::patch('/orders/{order}/status', [Admin\OrderController::class, 'updateStatus'])->name('orders.status');
 
-        // Только администратор: пользователи и роли, журнал действий модератора, отметка «Проверено»
+        // Только администратор: пользователи и роли, журнал действий модератора, отметка «Проверено», загрузка и восстановление копий
         Route::middleware(EnsureAdmin::class)->group(function () {
             Route::resource('users', Admin\UserController::class)->only(['index', 'edit', 'update', 'destroy']);
             Route::get('/activity', [Admin\ActivityController::class, 'index'])->name('activity.index');
+            Route::post('/backups/upload', [Admin\BackupController::class, 'upload'])->name('backups.upload');
+            Route::post('/backups/{file}/restore', [Admin\BackupController::class, 'restore'])->name('backups.restore');
             Route::post('products/bulk-reviewed', [Admin\ProductController::class, 'bulkReviewed'])->name('products.bulk-reviewed');
             Route::post('products/{product}/reviewed', [Admin\ProductController::class, 'reviewed'])->name('products.reviewed');
         });

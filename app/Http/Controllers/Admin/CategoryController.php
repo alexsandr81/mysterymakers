@@ -4,7 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Models\Product;
 use App\Services\DriveSync;
+use App\Services\GoogleDrive;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -122,14 +125,91 @@ class CategoryController extends Controller
     {
         $data = $this->validated($request);
         $parentChanged = (int) ($data['parent_id'] ?? 0) !== (int) $category->parent_id;
+        $oldStart = (int) $category->sku_start;
+        $explicit = ! empty($data['sku_start']);
         // Пусто или родитель сменился, а число не трогали — подбираем блок заново (артикулы уже созданных товаров не меняются)
         if (empty($data['sku_start']) || ($parentChanged && (int) $data['sku_start'] === (int) $category->sku_start)) {
             $data['sku_start'] = Category::nextSkuStart($data['parent_id'] ?? null) ?? $category->sku_start;
         }
-        $category->update($data);
+
+        // Начало артикулов изменили (родитель тот же): сдвигаем на столько же подкатегории и артикулы товаров блока
+        $delta = (! $parentChanged && $explicit && $oldStart > 0 && (int) $data['sku_start'] !== $oldStart) ? (int) $data['sku_start'] - $oldStart : 0;
+        $plan = null;
+        if ($delta !== 0) {
+            $plan = $this->planSkuShift($category, $oldStart, $delta);
+            if ($plan['error']) {
+                return back()->withInput()->withErrors(['sku_start' => $plan['error']]);
+            }
+        }
+
+        DB::transaction(function () use ($category, $data, $plan, $delta) {
+            $category->update($data);
+            if ($plan) {
+                foreach ($plan['children'] as $child) {
+                    Category::whereKey($child->id)->update(['sku_start' => (int) $child->sku_start + $delta]);
+                }
+                foreach ($plan['products'] as $p) { // порядок подобран так, чтобы новые артикулы не сталкивались со старыми
+                    Product::whereKey($p->id)->update(['sku' => (string) ((int) $p->sku + $delta)]);
+                }
+            }
+        });
         $note = DriveSync::note(DriveSync::category($category));
 
-        return redirect()->route('admin.categories.index')->with('status', 'Категория сохранена.' . $note);
+        $shifted = '';
+        if ($plan) {
+            // Папки товаров на Google Диске называются «артикул название» — переименовываем
+            @set_time_limit(300);
+            $failed = 0;
+            foreach ($plan['products'] as $p) {
+                $product = Product::with('category')->find($p->id);
+                if ($product && ! DriveSync::product($product) && GoogleDrive::enabled()) {
+                    $failed++;
+                }
+            }
+            $shifted = sprintf(' Артикулы сдвинуты на %+d: подкатегорий — %d, товаров — %d.', $delta, $plan['children']->count(), $plan['products']->count())
+                . ($failed ? " Папки на Google Диске не переименованы у товаров: $failed (подробности: storage/logs/laravel.log; команда shop:drive-sync исправит их позже)." : '');
+        }
+
+        return redirect()->route('admin.categories.index')->with('status', 'Категория сохранена.' . $shifted . $note);
+    }
+
+    /**
+     * Что изменится, если сдвинуть начало артикулов категории на $delta: её подкатегории (у верхнего уровня)
+     * и товары с числовыми артикулами из старого блока. Вернёт ошибку, если новый диапазон занят.
+     */
+    private function planSkuShift(Category $category, int $old, int $delta): array
+    {
+        $size = $category->skuBlockSize();
+        $oldEnd = $old + $size - 1;
+        $new = $old + $delta;
+        $newEnd = $new + $size - 1;
+
+        $children = $category->parent_id ? collect() : $category->children()->whereNotNull('sku_start')->get();
+        $ids = array_merge([$category->id], $children->pluck('id')->all());
+        $products = Product::whereIn('category_id', $ids)->get(['id', 'sku'])
+            ->filter(fn ($p) => ctype_digit((string) $p->sku) && (int) $p->sku >= $old && (int) $p->sku <= $oldEnd)
+            ->sortBy(fn ($p) => (int) $p->sku * ($delta > 0 ? -1 : 1))->values();
+
+        $result = ['error' => null, 'children' => $children, 'products' => $products];
+
+        $siblings = Category::whereKeyNot($category->id)->whereNotNull('sku_start')
+            ->when($category->parent_id, fn ($q) => $q->where('parent_id', $category->parent_id), fn ($q) => $q->whereNull('parent_id'))
+            ->pluck('sku_start');
+        foreach ($siblings as $s) {
+            if ($new <= $s + $size - 1 && $s <= $newEnd) {
+                $result['error'] = "Новый блок артикулов $new–$newEnd пересекается с блоком другой категории (начало $s). Выберите другое число.";
+
+                return $result;
+            }
+        }
+
+        $clash = Product::whereNotIn('id', $products->pluck('id'))->pluck('sku')
+            ->first(fn ($s) => ctype_digit((string) $s) && (int) $s >= $new && (int) $s <= $newEnd);
+        if ($clash !== null) {
+            $result['error'] = "В новом диапазоне $new–$newEnd уже есть артикул $clash другого товара. Выберите другое число.";
+        }
+
+        return $result;
     }
 
     public function destroy(Category $category)

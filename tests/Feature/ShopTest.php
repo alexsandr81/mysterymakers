@@ -506,6 +506,75 @@ class ShopTest extends TestCase
         $this->assertFileExists(public_path('favicon.svg'));
     }
 
+    public function test_category_sku_change_shifts_subcategories_and_products(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $top = Category::create(['slug' => 't', 'name_uk' => 'Коробки', 'name_ru' => 'Коробки', 'sort' => 1, 'sku_start' => 10000]);
+        $sub = Category::create(['parent_id' => $top->id, 'slug' => 's', 'name_uk' => 'Круглі', 'name_ru' => 'Круглые', 'sort' => 1, 'sku_start' => 11000]);
+        $other = Category::create(['slug' => 'o', 'name_uk' => 'Іграшки', 'name_ru' => 'Игрушки', 'sort' => 2, 'sku_start' => 20000]);
+        $mk = fn ($cat, $sku, $slug) => Product::create(['category_id' => $cat->id, 'sku' => $sku, 'slug' => $slug, 'name_uk' => $slug, 'name_ru' => $slug, 'price' => 1, 'stock' => 1, 'is_active' => true]);
+        $a = $mk($top, '10000', 'a');
+        $b = $mk($sub, '11000', 'b');
+        $c = $mk($sub, '11001', 'c');
+        $manual = $mk($top, 'ABC-1', 'manual');
+        $row = fn ($cat, $start) => ['name_uk' => $cat->name_uk, 'name_ru' => $cat->name_ru, 'sort' => $cat->sort, 'sku_start' => $start] + ($cat->parent_id ? ['parent_id' => $cat->parent_id] : []);
+
+        // Новый блок пересекается с соседней категорией — ничего не меняется
+        $this->actingAs($admin)->put(route('admin.categories.update', $top), $row($top, 15000))->assertSessionHasErrors('sku_start');
+        $this->assertSame(10000, (int) $top->fresh()->sku_start);
+        $this->assertSame('11000', $b->fresh()->sku);
+
+        // Сдвиг вперёд на 20000 (блок 30000–39999 свободен)
+        $this->actingAs($admin)->put(route('admin.categories.update', $top), $row($top, 30000))->assertSessionHasNoErrors()->assertRedirect();
+        $this->assertSame(30000, (int) $top->fresh()->sku_start);
+        $this->assertSame(31000, (int) $sub->fresh()->sku_start);
+        $this->assertSame(20000, (int) $other->fresh()->sku_start);
+        $this->assertSame('30000', $a->fresh()->sku);
+        $this->assertSame('31000', $b->fresh()->sku);
+        $this->assertSame('31001', $c->fresh()->sku);
+        $this->assertSame('ABC-1', $manual->fresh()->sku); // нечисловые артикулы не трогаем
+
+        // И обратно, с пересечением старого и нового диапазонов (30000 → 30500)
+        $this->actingAs($admin)->put(route('admin.categories.update', $top), $row($top, 30500))->assertSessionHasNoErrors();
+        $this->assertSame('30500', $a->fresh()->sku);
+        $this->assertSame('31500', $b->fresh()->sku);
+        $this->assertSame(31500, (int) $sub->fresh()->sku_start);
+
+        // Если новый диапазон занят чужим артикулом — отказ
+        $mk($other, '50100', 'foreign');
+        $this->actingAs($admin)->put(route('admin.categories.update', $top), $row($top, 50000))->assertSessionHasErrors('sku_start');
+        $this->assertSame('30500', $a->fresh()->sku);
+
+        // Сохранение без изменения числа артикулы не двигает
+        $this->actingAs($admin)->put(route('admin.categories.update', $top), $row($top->fresh(), 30500))->assertSessionHasNoErrors();
+        $this->assertSame('30500', $a->fresh()->sku);
+    }
+
+    public function test_backup_restore_and_upload_are_admin_only_and_validated(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $mod = User::factory()->create(['is_moderator' => true]);
+
+        $dir = storage_path('backups');
+        @mkdir($dir, 0775, true);
+        $name = 'shop-2000-01-01_000000.zip';
+        file_put_contents($dir . '/' . $name, 'not a zip');
+
+        // Модератор не может ни восстановить, ни загрузить копию
+        $this->actingAs($mod)->post(route('admin.backups.restore', $name))->assertForbidden();
+        $this->actingAs($mod)->post(route('admin.backups.upload'))->assertForbidden();
+
+        // Администратор: испорченный архив отклоняется, данные не трогаются
+        $this->actingAs($admin)->post(route('admin.backups.restore', $name))->assertRedirect()->assertSessionHas('error');
+        $this->assertTrue(User::whereKey($admin->id)->exists());
+        // Чужое имя файла не принимается
+        $this->actingAs($admin)->post(route('admin.backups.restore', '..evil.zip'))->assertNotFound();
+        // Список копий показывает кнопки администратору
+        $this->actingAs($admin)->get(route('admin.backups.index'))->assertOk()->assertSee('Восстановить')->assertSee('Загрузить');
+
+        @unlink($dir . '/' . $name);
+    }
+
     public function test_site_fonts_setting(): void
     {
         $admin = User::factory()->create(['is_admin' => true]);
