@@ -393,12 +393,12 @@ class ShopTest extends TestCase
         $this->actingAs($admin)->get(route('admin.products.index', ['review' => 1]))->assertOk()->assertSee('проверить')->assertSee('Шкатулка 2');
         $this->actingAs($admin)->post(route('admin.products.reviewed', $p))->assertRedirect();
         $this->assertFalse($p->fresh()->needs_review);
-        $p->forceFill(['needs_review' => true])->save();
+        Product::whereKey($p->id)->update(['needs_review' => true]); // напрямую в базу: $p в памяти устарел, и save() ничего бы не записал
         $this->actingAs($admin)->post(route('admin.products.bulk-reviewed'), ['ids' => [$p->id]])->assertRedirect();
         $this->assertFalse($p->fresh()->needs_review);
 
         // Администратор без галочки «Проверено» оставляет метку
-        $p->forceFill(['needs_review' => true])->save();
+        Product::whereKey($p->id)->update(['needs_review' => true]); // напрямую в базу: $p в памяти устарел, и save() ничего бы не записал
         $this->actingAs($admin)->put(route('admin.products.update', $p), $base + ['price' => 450])->assertSessionHasNoErrors();
         $this->assertTrue($p->fresh()->needs_review);
 
