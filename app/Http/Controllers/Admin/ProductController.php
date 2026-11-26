@@ -23,6 +23,20 @@ class ProductController extends Controller
         $dir = $request->query('dir') === 'asc' ? 'asc' : 'desc';
 
         $onlyReview = $request->boolean('review') && $request->user()->is_admin;
+
+        // Без поиска, сортировки и фильтра — товары группами по категориям (раскрываются галочкой)
+        $grouped = $q === '' && ! $onlyReview && ! $request->has('sort') && $request->query('view') !== 'list';
+        if ($grouped) {
+            $all = Product::with(['category.parent', 'modifier'])->orderByRaw('length(sku)')->orderBy('sku')->orderBy('id')->get();
+            $products = new \Illuminate\Pagination\LengthAwarePaginator($all, $all->count(), max(1, $all->count()), 1, ['path' => $request->url()]);
+            $reviewCount = Product::where('needs_review', true)->count();
+
+            return view('admin.products.index', [
+                'products' => $products, 'q' => $q, 'sort' => '', 'dir' => $dir, 'onlyReview' => false, 'reviewCount' => $reviewCount,
+                'grouped' => true, 'cats' => Category::orderBy('sort')->orderBy('id')->get(),
+            ]);
+        }
+
         $products = Product::with(['category.parent', 'modifier'])
             ->when($onlyReview, fn ($query) => $query->where('needs_review', true))
             ->when($q !== '', function ($query) use ($q) {
@@ -36,7 +50,7 @@ class ProductController extends Controller
 
         $reviewCount = Product::where('needs_review', true)->count();
 
-        return view('admin.products.index', compact('products', 'q', 'sort', 'dir', 'onlyReview', 'reviewCount'));
+        return view('admin.products.index', compact('products', 'q', 'sort', 'dir', 'onlyReview', 'reviewCount') + ['grouped' => false, 'cats' => null]);
     }
 
     /** Сортировка списка товаров по клику на заголовок колонки (только из разрешённых полей) */

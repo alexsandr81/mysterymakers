@@ -767,3 +767,11 @@ button.cat-toggle:hover { background: var(--tint); border-color: var(--brand); }
 .cat-toggle--empty { border-color: transparent; background: transparent; cursor: default; }
 .cat-row[hidden] { display: none; }
 .cat-bulk { display: flex; gap: 8px; margin: 0 0 10px; }
+
+/* Товары: группы по категориям */
+.grp-row td { background: var(--tint); font-weight: 400; }
+.grp-row--top td { border-top: 2px solid var(--line); }
+.grp-row--sub td { background: var(--tint-accent); }
+.grp-row .grp-check { margin: 0 8px 0 2px; vertical-align: middle; }
+.grp-indent { display: inline-block; width: 22px; }
+.grp-row[hidden] { display: none; }

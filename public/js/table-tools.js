@@ -33,6 +33,9 @@
             Array.prototype.forEach.call(table.querySelectorAll('[data-col]'), function (el) {
                 el.hidden = hidden.indexOf(el.dataset.col) !== -1;
             });
+            // Строки-заголовки групп растягиваются на все видимые столбцы
+            var visible = heads.filter(function (th) { return !th.hidden; }).length || 1;
+            Array.prototype.forEach.call(table.querySelectorAll('td[data-fill]'), function (td) { td.colSpan = visible; });
         }
 
         function applyWidths() {

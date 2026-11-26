@@ -85,42 +85,64 @@
 
 @include('admin.partials.col-picker', ['table' => 'products', 'cols' => array_filter(['photo' => 'Фото', 'sku' => 'Артикул', 'category' => 'Категория', 'sub' => 'Подкатегория', 'price' => 'Цена', 'stock' => 'Остаток', 'active' => 'Активен', 'review' => 'Проверка', 'created' => 'Добавлен'])])
 
+@if($grouped)
+    <p class="cat-bulk">
+        <button type="button" class="btn btn--sm" id="grp-expand">▾ Развернуть все</button>
+        <button type="button" class="btn btn--sm" id="grp-collapse">▸ Свернуть все</button>
+        <a href="{{ route('admin.products.index', ['view' => 'list']) }}" class="btn btn--sm">☰ Списком</a>
+    </p>
+@elseif($q === '' && ! $onlyReview)
+    <p class="cat-bulk"><a href="{{ route('admin.products.index') }}" class="btn btn--sm">🗂 По категориям</a></p>
+@endif
+
 <div class="table-wrap">
 <table class="table table--compact" id="products-table" data-tools="products" data-default-hidden="created">
     <thead><tr><th data-col="chk" data-nores><input type="checkbox" id="bulk-toggle" title="Отметить всё на странице"></th><th data-col="photo" data-nores></th><th data-col="name">{{ $th('name', 'Название') }}</th><th data-col="sku">{{ $th('sku', 'Артикул') }}</th><th data-col="category">{{ $th('category', 'Категория') }}</th><th data-col="sub">{{ $th('sub', 'Подкатегория') }}</th><th data-col="price">{{ $th('price', 'Цена') }}</th><th data-col="stock">{{ $th('stock', 'Остаток') }}</th><th data-col="active">{{ $th('active', 'Актив.') }}</th><th data-col="review" data-nores>Проверка</th><th data-col="created">{{ $th('created', 'Добавлен') }}</th><th data-col="act" data-nores></th></tr></thead>
     <tbody>
+    @if($grouped)
+        @php $byCat = $products->getCollection()->groupBy('category_id'); @endphp
+        @foreach($cats->whereNull('parent_id') as $top)
+            @php
+                $direct = $byCat->get($top->id, collect());
+                $subs = $cats->where('parent_id', $top->id);
+                $topAll = $direct->concat($subs->flatMap(fn ($sc) => $byCat->get($sc->id, collect())));
+                $topReview = $topAll->where('needs_review', true)->count();
+            @endphp
+            @continue($topAll->isEmpty())
+            <tr class="grp-row grp-row--top" data-ghead="{{ $top->id }}">
+                <td colspan="12" data-fill>
+                    <button type="button" class="cat-toggle" data-key="c{{ $top->id }}" aria-expanded="false" title="Показать или скрыть товары">▸</button>
+                    <input type="checkbox" class="grp-check" data-scope="g" data-id="{{ $top->id }}" title="Отметить все товары этой категории (для массового изменения цены)">
+                    📁 <strong>{{ $top->name_ru }}</strong>
+                    <span class="badge badge--sm badge--top">{{ $topAll->count() }}</span>
+                    @if($isAdmin && $topReview)<span class="badge badge--sm badge--review" title="Ждут проверки">⏳ {{ $topReview }}</span>@endif
+                </td>
+            </tr>
+            @foreach($direct as $p)
+                @include('admin.products._row', ['p' => $p, 'isAdmin' => $isAdmin, 'attrs' => 'hidden'])
+            @endforeach
+            @foreach($subs as $sub)
+                @php $sp = $byCat->get($sub->id, collect()); @endphp
+                @continue($sp->isEmpty())
+                <tr class="grp-row grp-row--sub" data-g="{{ $top->id }}" data-shead="{{ $sub->id }}" hidden>
+                    <td colspan="12" data-fill>
+                        <span class="grp-indent"></span>
+                        <button type="button" class="cat-toggle" data-key="s{{ $sub->id }}" aria-expanded="false" title="Показать или скрыть товары подкатегории">▸</button>
+                        <input type="checkbox" class="grp-check" data-scope="s" data-id="{{ $sub->id }}" title="Отметить все товары этой подкатегории">
+                        <span class="cat-name__arrow">↳</span> <strong>{{ $sub->name_ru }}</strong>
+                        <span class="badge badge--sm badge--sub">{{ $sp->count() }}</span>
+                    </td>
+                </tr>
+                @foreach($sp as $p)
+                    @include('admin.products._row', ['p' => $p, 'isAdmin' => $isAdmin, 'attrs' => 'hidden'])
+                @endforeach
+            @endforeach
+        @endforeach
+    @else
     @foreach($products as $p)
-        <tr>
-            <td><input type="checkbox" name="ids[]" form="bulk-form" value="{{ $p->id }}" data-price="{{ (float) $p->price }}"></td>
-            <td class="thumb" data-col="photo"><img src="{{ $p->main_image }}" alt=""></td>
-            <td><a href="{{ route('product', $p) }}" target="_blank" title="Открыть страницу товара на сайте">{{ $p->name_ru }}</a></td>
-            <td data-col="sku"><a href="{{ route('product', $p) }}" target="_blank" title="Открыть страницу товара на сайте">{{ $p->sku }}</a></td>
-            @php($cat = $p->category)
-            @php($top = $cat->parent ?? $cat)
-            <td data-col="category"><span class="badge badge--sm badge--top">{{ $top->name_ru }}</span></td>
-            <td data-col="sub">@if($cat->parent_id)<span class="badge badge--sm badge--sub">{{ $cat->name_ru }}</span>@else<span class="muted" title="Товар лежит прямо в категории, без подкатегории">—</span>@endif</td>
-            <td data-col="price" class="nowrap">@if($p->has_price){{ Money::format($p->price) }}@else<span class="text-warn" title="Цена не задана: на сайте «Цена уточняется»">нет цены</span>@endif</td>
-            <td data-col="stock" class="{{ $p->stock < 5 ? 'text-warn' : '' }}">{{ $p->stock }}</td>
-            <td data-col="active">{{ $p->is_active ? '✓' : '—' }}</td>
-            <td data-col="review" class="nowrap">@if($p->needs_review)<span class="badge badge--sm badge--review" title="Менял: {{ $p->modifier?->name ?? '—' }}, {{ $p->updated_at?->format('d.m.Y H:i') }}">⏳ проверить</span>@endif</td>
-            <td data-col="created" class="muted nowrap">{{ $p->created_at?->format('d.m.Y') }}</td>
-            <td class="actions">
-                @if($p->drive_folder_id)
-                    <a href="{{ \App\Services\GoogleDrive::url($p->drive_folder_id) }}" target="_blank" title="Папка на Google Диске">📁</a>
-                @elseif(\App\Services\GoogleDrive::enabled())
-                    <form action="{{ route('admin.products.drive', $p) }}" method="POST">@csrf<button class="link-btn" title="Создать папку на Google Диске">📁+</button></form>
-                @endif
-                @if($isAdmin && $p->needs_review)
-                    <form action="{{ route('admin.products.reviewed', $p) }}" method="POST">@csrf<button class="link-btn review-ok" title="Проверено: снять метку">✔</button></form>
-                @endif
-                <a href="{{ route('admin.products.edit', $p) }}" title="Изменить">✎</a>
-                <form action="{{ route('admin.products.destroy', $p) }}" method="POST" onsubmit="return confirm('Удалить товар?')">
-                    @csrf @method('DELETE')
-                    <button class="link-btn link-btn--danger" title="Удалить">✕</button>
-                </form>
-            </td>
-        </tr>
+        @include('admin.products._row', ['p' => $p, 'isAdmin' => $isAdmin, 'attrs' => ''])
     @endforeach
+    @endif
     </tbody>
 </table>
 </div>
@@ -165,5 +187,48 @@
 })();
 
 </script>
+@if($grouped)
+<script>
+    // Товары по категориям: галочка рядом с названием раскрывает группу, что открыто — запоминается в браузере
+    (function () {
+        var table = document.getElementById('products-table'), KEY = 'mm_prod_groups', open = {};
+        try { open = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) {}
+        function save() { try { localStorage.setItem(KEY, JSON.stringify(open)); } catch (e) {} }
+        function paint() {
+            table.querySelectorAll('tbody tr').forEach(function (tr) {
+                var g = tr.dataset.g, s = tr.dataset.s;
+                if (tr.dataset.ghead !== undefined) { tr.hidden = false; return; }
+                if (tr.dataset.shead !== undefined) { tr.hidden = !open['c' + g]; return; }
+                tr.hidden = !(open['c' + g] && (!s || open['s' + s]));
+            });
+            table.querySelectorAll('.cat-toggle[data-key]').forEach(function (b) {
+                var o = !!open[b.dataset.key];
+                b.setAttribute('aria-expanded', o ? 'true' : 'false');
+                b.textContent = o ? '▾' : '▸';
+            });
+        }
+        table.addEventListener('click', function (e) {
+            var b = e.target.closest('.cat-toggle[data-key]');
+            if (!b) return;
+            open[b.dataset.key] = !open[b.dataset.key];
+            save(); paint();
+        });
+        // Галочка группы отмечает все её товары (даже свёрнутые) — удобно для массового изменения цены
+        table.addEventListener('change', function (e) {
+            var c = e.target.closest('.grp-check');
+            if (!c) return;
+            var attr = c.dataset.scope === 's' ? 'data-s' : 'data-g';
+            table.querySelectorAll('input[name="ids[]"][' + attr + '="' + c.dataset.id + '"]').forEach(function (b) { b.checked = c.checked; });
+        });
+        function all(state) {
+            table.querySelectorAll('.cat-toggle[data-key]').forEach(function (b) { open[b.dataset.key] = state; });
+            save(); paint();
+        }
+        document.getElementById('grp-expand').addEventListener('click', function () { all(true); });
+        document.getElementById('grp-collapse').addEventListener('click', function () { all(false); });
+        paint();
+    })();
+</script>
+@endif
 <div class="pager">{{ $products->links('partials.pagination') }}</div>
 @endsection

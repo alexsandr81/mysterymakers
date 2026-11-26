@@ -634,6 +634,30 @@ class ShopTest extends TestCase
             ->assertRedirect(route('admin.categories.index'))->assertSessionHas('open_category', $top->id);
     }
 
+    public function test_admin_products_grouped_by_category_and_flat_list(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $top = Category::create(['slug' => 'k', 'name_uk' => 'Коробки', 'name_ru' => 'Коробки', 'sort' => 1, 'sku_start' => 10000]);
+        $sub = Category::create(['parent_id' => $top->id, 'slug' => 'kr', 'name_uk' => 'Круглі', 'name_ru' => 'Круглые', 'sort' => 1, 'sku_start' => 11000]);
+        Category::create(['slug' => 'e', 'name_uk' => 'Пустая', 'name_ru' => 'Пустая', 'sort' => 2, 'sku_start' => 20000]);
+        $mk = fn ($cat, $sku, $name) => Product::create(['category_id' => $cat->id, 'sku' => $sku, 'slug' => 's' . $sku, 'name_uk' => $name, 'name_ru' => $name, 'price' => 10, 'stock' => 1, 'is_active' => true]);
+        $mk($top, '10000', 'Прямая коробка');
+        $mk($sub, '11000', 'Круглая коробка');
+
+        // По умолчанию — группы: заголовок категории, подкатегории, пустая категория не показывается
+        $this->actingAs($admin)->get(route('admin.products.index'))->assertOk()
+            ->assertSee('data-ghead="' . $top->id . '"', false)
+            ->assertSee('data-shead="' . $sub->id . '"', false)
+            ->assertSee('Прямая коробка')->assertSee('Круглая коробка')
+            ->assertDontSee('Пустая')->assertSee('Списком');
+
+        // Поиск, сортировка и явный список — плоская таблица с пагинацией
+        foreach ([['q' => 'Круглая'], ['sort' => 'name'], ['view' => 'list']] as $params) {
+            $this->actingAs($admin)->get(route('admin.products.index', $params))->assertOk()->assertDontSee('data-ghead=', false);
+        }
+        $this->actingAs($admin)->get(route('admin.products.index', ['view' => 'list']))->assertSee('По категориям');
+    }
+
     public function test_site_fonts_setting(): void
     {
         $admin = User::factory()->create(['is_admin' => true]);
