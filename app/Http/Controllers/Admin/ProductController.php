@@ -293,8 +293,13 @@ class ProductController extends Controller
         }
         unset($data['size_shape']);
         if (empty($data['sku'])) {
-            // Пустой артикул: для нового товара — следующий по категории, при редактировании остаётся прежний
-            $data['sku'] = $product?->sku ?: \App\Models\Category::findOrFail($data['category_id'])->nextSku();
+            // Артикул стёрли: у нового товара — следующий по категории; у существующего — оставляем, если он уже из блока
+            // его категории, иначе (товар перенесли или артикул ручной) присваиваем следующий свободный номер категории
+            $target = \App\Models\Category::findOrFail($data['category_id']);
+            $start = (int) $target->sku_start;
+            $current = (string) ($product?->sku ?? '');
+            $inBlock = $current !== '' && ctype_digit($current) && $start > 0 && (int) $current >= $start && (int) $current <= $start + $target->skuBlockSize() - 1;
+            $data['sku'] = $inBlock ? $current : $target->nextSku();
         }
         // Товар переехал в другую категорию (подкатегорию), а артикул не меняли руками — номер должен быть из блока новой категории
         if ($product && (int) $data['category_id'] !== (int) $product->category_id && (string) $data['sku'] === (string) $product->sku && ctype_digit((string) $product->sku)) {

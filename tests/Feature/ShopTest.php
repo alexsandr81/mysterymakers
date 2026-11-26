@@ -597,6 +597,13 @@ class ShopTest extends TestCase
         $this->actingAs($admin)->put(route('admin.products.update', $p), $form('20000', $b->id, 'self'))->assertSessionHasNoErrors();
         $this->assertSame('20000', $p->fresh()->sku);
 
+        // Артикул стёрли — берётся номер по текущей категории; если уже из её блока, остаётся прежний
+        $p->update(['sku' => '11206']);
+        $this->actingAs($admin)->put(route('admin.products.update', $p), $form('', $b->id, 'self'))->assertSessionHasNoErrors();
+        $this->assertSame('20000', $p->fresh()->sku);
+        $this->actingAs($admin)->put(route('admin.products.update', $p), $form('', $b->id, 'self'))->assertSessionHasNoErrors();
+        $this->assertSame('20000', $p->fresh()->sku);
+
         // Артикул ввели вручную — уважаем
         $this->actingAs($admin)->put(route('admin.products.update', $p), $form('MY-7', $a->id, 'self'))->assertSessionHasNoErrors();
         $this->assertSame('MY-7', $p->fresh()->sku);
