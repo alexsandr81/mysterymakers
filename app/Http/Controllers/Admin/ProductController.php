@@ -195,12 +195,15 @@ class ProductController extends Controller
         $kept = $images->diff($remove)->values()->all();
         $data['images'] = $this->arrangeImages(array_merge($kept, $new), $new, (string) $request->input('main_choice', ''));
         $data += $this->reviewFlags($request, $product);
+        $oldSku = $product->sku;
         $product->update($data);
         $product->characteristicValues()->sync($this->selectedValueIds($request));
         $this->syncHolidays($product, $request);
+        // Папка товара на Google Диске переименуется (она называется «артикул название») и переедет в папку новой категории
         $note = \App\Services\DriveSync::note(\App\Services\DriveSync::product($product->fresh()));
+        $skuNote = $oldSku !== $product->sku ? " Артикул изменён: $oldSku → {$product->sku} (по новой категории)." : '';
 
-        return redirect()->route('admin.products.index')->with('status', 'Товар сохранён.' . $note);
+        return redirect()->route('admin.products.index')->with('status', 'Товар сохранён.' . $skuNote . $note);
     }
 
     public function destroy(Product $product)
@@ -292,6 +295,15 @@ class ProductController extends Controller
         if (empty($data['sku'])) {
             // Пустой артикул: для нового товара — следующий по категории, при редактировании остаётся прежний
             $data['sku'] = $product?->sku ?: \App\Models\Category::findOrFail($data['category_id'])->nextSku();
+        }
+        // Товар переехал в другую категорию (подкатегорию), а артикул не меняли руками — номер должен быть из блока новой категории
+        if ($product && (int) $data['category_id'] !== (int) $product->category_id && (string) $data['sku'] === (string) $product->sku && ctype_digit((string) $product->sku)) {
+            $target = \App\Models\Category::findOrFail($data['category_id']);
+            $start = (int) $target->sku_start;
+            $inBlock = $start > 0 && (int) $product->sku >= $start && (int) $product->sku <= $start + $target->skuBlockSize() - 1;
+            if (! $inBlock) {
+                $data['sku'] = $target->nextSku();
+            }
         }
         if (! $isAdmin) {
             $data['price'] = $data['price'] ?? ($product?->price ?? 0);

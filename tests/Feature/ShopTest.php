@@ -575,6 +575,36 @@ class ShopTest extends TestCase
         @unlink($dir . '/' . $name);
     }
 
+    public function test_product_sku_follows_category_when_moved(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $a = Category::create(['slug' => 'a', 'name_uk' => 'А', 'name_ru' => 'А', 'sort' => 1, 'sku_start' => 10000]);
+        $b = Category::create(['slug' => 'b', 'name_uk' => 'Б', 'name_ru' => 'Б', 'sort' => 2, 'sku_start' => 20000]);
+        $sub = Category::create(['parent_id' => $b->id, 'slug' => 'bs', 'name_uk' => 'БП', 'name_ru' => 'БП', 'sort' => 1, 'sku_start' => 21000]);
+        $p = Product::create(['category_id' => $a->id, 'sku' => '10000', 'slug' => 'm', 'name_uk' => 'М', 'name_ru' => 'М', 'price' => 5, 'stock' => 1, 'is_active' => true]);
+        $form = fn ($sku, $top, $subId) => ['name_uk' => 'М', 'name_ru' => 'М', 'price' => 5, 'stock' => 1, 'is_active' => 1, 'sku' => $sku, 'category_top' => (string) $top, 'category_id' => $subId];
+
+        // Переносим в подкатегорию, артикул в форме не трогали — получает номер из блока подкатегории
+        $this->actingAs($admin)->put(route('admin.products.update', $p), $form('10000', $b->id, (string) $sub->id))->assertSessionHasNoErrors();
+        $this->assertSame($sub->id, $p->fresh()->category_id);
+        $this->assertSame('21000', $p->fresh()->sku);
+
+        // Обратно в категорию верхнего уровня
+        $this->actingAs($admin)->put(route('admin.products.update', $p), $form('21000', $b->id, 'self'))->assertSessionHasNoErrors();
+        $this->assertSame('20000', $p->fresh()->sku);
+
+        // Без смены категории артикул остаётся
+        $this->actingAs($admin)->put(route('admin.products.update', $p), $form('20000', $b->id, 'self'))->assertSessionHasNoErrors();
+        $this->assertSame('20000', $p->fresh()->sku);
+
+        // Артикул ввели вручную — уважаем
+        $this->actingAs($admin)->put(route('admin.products.update', $p), $form('MY-7', $a->id, 'self'))->assertSessionHasNoErrors();
+        $this->assertSame('MY-7', $p->fresh()->sku);
+        // Нечисловой (ручной) артикул при переносе не заменяется
+        $this->actingAs($admin)->put(route('admin.products.update', $p), $form('MY-7', $b->id, 'self'))->assertSessionHasNoErrors();
+        $this->assertSame('MY-7', $p->fresh()->sku);
+    }
+
     public function test_site_fonts_setting(): void
     {
         $admin = User::factory()->create(['is_admin' => true]);
