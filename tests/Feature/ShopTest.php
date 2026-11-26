@@ -651,6 +651,10 @@ class ShopTest extends TestCase
             ->assertSee('Прямая коробка')->assertSee('Круглая коробка')
             ->assertDontSee('Пустая')->assertSee('Списком');
 
+        // Общее количество товаров
+        $this->actingAs($admin)->get(route('admin.products.index'))->assertSee('Всего товаров: <strong>2</strong>', false)->assertSee('активных: <strong>2</strong>', false);
+        $this->actingAs($admin)->get(route('admin.products.index', ['q' => 'Круглая']))->assertSee('Всего товаров: <strong>2</strong>', false)->assertSee('показано по фильтру: <strong>1</strong>', false);
+
         // Поиск, сортировка и явный список — плоская таблица с пагинацией
         foreach ([['q' => 'Круглая'], ['sort' => 'name'], ['view' => 'list']] as $params) {
             $this->actingAs($admin)->get(route('admin.products.index', $params))->assertOk()->assertDontSee('data-ghead=', false);

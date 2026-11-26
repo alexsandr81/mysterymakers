@@ -34,6 +34,7 @@ class ProductController extends Controller
             return view('admin.products.index', [
                 'products' => $products, 'q' => $q, 'sort' => '', 'dir' => $dir, 'onlyReview' => false, 'reviewCount' => $reviewCount,
                 'grouped' => true, 'cats' => Category::orderBy('sort')->orderBy('id')->get(),
+                'totalAll' => $all->count(), 'activeAll' => $all->where('is_active', true)->count(),
             ]);
         }
 
@@ -50,7 +51,7 @@ class ProductController extends Controller
 
         $reviewCount = Product::where('needs_review', true)->count();
 
-        return view('admin.products.index', compact('products', 'q', 'sort', 'dir', 'onlyReview', 'reviewCount') + ['grouped' => false, 'cats' => null]);
+        return view('admin.products.index', compact('products', 'q', 'sort', 'dir', 'onlyReview', 'reviewCount') + ['grouped' => false, 'cats' => null, 'totalAll' => Product::count(), 'activeAll' => Product::where('is_active', true)->count()]);
     }
 
     /** Сортировка списка товаров по клику на заголовок колонки (только из разрешённых полей) */

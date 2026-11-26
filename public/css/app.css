@@ -775,3 +775,5 @@ button.cat-toggle:hover { background: var(--tint); border-color: var(--brand); }
 .grp-row .grp-check { margin: 0 8px 0 2px; vertical-align: middle; }
 .grp-indent { display: inline-block; width: 22px; }
 .grp-row[hidden] { display: none; }
+
+.products-total { margin: -6px 0 12px; }

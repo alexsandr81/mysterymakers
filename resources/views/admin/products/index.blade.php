@@ -10,6 +10,11 @@
     <a href="{{ route('admin.products.create') }}" class="btn btn--accent">+ Добавить товар</a>
 </div>
 
+<p class="muted products-total">
+    Всего товаров: <strong>{{ $totalAll }}</strong> · активных: <strong>{{ $activeAll }}</strong>@if($totalAll !== $activeAll) · скрытых: <strong>{{ $totalAll - $activeAll }}</strong>@endif
+    @unless($grouped)· показано по фильтру: <strong>{{ $products->total() }}</strong>@endunless
+</p>
+
 @include('admin.partials.drive-hint')
 
 <form method="GET" class="search search--admin">
