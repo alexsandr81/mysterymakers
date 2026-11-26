@@ -27,19 +27,12 @@
                     @endforeach
                 </select>
             </label>
-            <label>Как задать размер
-                <select id="c-mode">
-                    <option value="area" selected>Площадь из раскладки, см²</option>
-                    <option value="size">Габариты: ширина × высота, мм</option>
-                </select>
-            </label>
-            <label class="js-area">Площадь изделия в раскладке, см² <input type="number" id="c-area" min="0" step="any" value="0"></label>
-            <label class="js-size" hidden>Ширина изделия, мм <input type="number" id="c-w" min="0" step="any" value="0"></label>
-            <label class="js-size" hidden>Высота изделия, мм <input type="number" id="c-h" min="0" step="any" value="0"></label>
-            <label class="check-line"><input type="checkbox" id="c-waste"> Добавить обрезки листа (использование <span id="c-waste-pct">{{ $fmt($p['calc_waste']) }}</span>%)</label>
+            <label>Ширина изделия, мм <small class="muted">для круга — диаметр</small> <input type="number" id="c-w" min="0" step="any" value="0"></label>
+            <label>Высота изделия, мм <small class="muted">для круга — диаметр</small> <input type="number" id="c-h" min="0" step="any" value="0"></label>
+            <label class="check-line"><input type="checkbox" id="c-waste" checked> Добавить обрезки листа (использование <span id="c-waste-pct">{{ $fmt($p['calc_waste']) }}</span>%)</label>
             <label>Длина реза, мм <input type="number" id="c-cut" min="0" step="any" value="0"></label>
             <label>Площадь гравировки, см² <input type="number" id="c-engr" min="0" step="any" value="0"></label>
-            <p class="muted calc__note">Площадь, длину реза и площадь гравировки берите из раскладки. «Площадь из раскладки» — сколько см² листа занимает изделие вместе с зазорами между деталями; тогда галочку «обрезки» обычно не нужно ставить, они уже учтены. Для режима «габариты» галочка включается сама.</p>
+            <p class="muted calc__note">Габариты — прямоугольник, в который вписывается изделие (у круга это квадрат со стороной в диаметр). Обрезки листа добавляются галочкой. Длину реза и площадь гравировки берите из программы раскладки или САПР.</p>
 
             <h4 class="calc__sub">🖨 3D-печать (филамент)</h4>
             <label>Расход филамента, г <small class="muted">вес изделия с поддержками и отходами, из слайсера</small> <input type="number" id="c-grams" min="0" step="any" value="0"></label>
@@ -154,7 +147,7 @@
     function calc() {
         readForm();
         var m = M.find(function (x) { return String(x.id) === $('c-material').value; });
-        var areaMm2 = $('c-mode').value === 'area' ? n('c-area') * 100 : n('c-w') * n('c-h');
+        var areaMm2 = n('c-w') * n('c-h');
         var material = 0, cut = 0;
         if (m) {
             var usable = m.sw * m.sh * ($('c-waste').checked ? P.calc_waste / 100 : 1);
@@ -186,14 +179,7 @@
         $('r-total').textContent = money(price * qty);
         $('r-warn').textContent = !m && (areaMm2 > 0 || n('c-cut') > 0) ? 'Для лазерной части добавьте хотя бы один материал.' : (m && areaMm2 > m.sw * m.sh ? '⚠ Изделие больше листа выбранного материала.' : '');
     }
-    ['c-material','c-area','c-w','c-h','c-cut','c-engr','c-extra','c-qty','c-waste','c-grams'].forEach(function (id) { $(id).addEventListener('input', calc); });
-    $('c-mode').addEventListener('change', function () {
-        var area = this.value === 'area';
-        document.querySelectorAll('.js-area').forEach(function (e) { e.hidden = !area; });
-        document.querySelectorAll('.js-size').forEach(function (e) { e.hidden = area; });
-        $('c-waste').checked = !area; // габариты — прибавляем обрезки, раскладка — уже учтены
-        calc();
-    });
+    ['c-material','c-w','c-h','c-cut','c-engr','c-extra','c-qty','c-waste','c-grams'].forEach(function (id) { $(id).addEventListener('input', calc); });
     // Любое изменение в параметрах и таблице материалов сразу пересчитывает цену
     document.querySelector('form.calc__box').addEventListener('input', calc);
     document.querySelector('form.calc__box').addEventListener('change', calc);
