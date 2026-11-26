@@ -12,7 +12,7 @@
         <tr>
             <td style="background:#8b5a2b;border-radius:12px 12px 0 0;padding:22px 28px;">
                 @php $nameParts = preg_split('/\s+/u', trim(\App\Models\Setting::siteName()), 2); @endphp
-                <span style="font-size:26px;font-weight:bold;color:#ffffff;letter-spacing:.3px;">{{ $nameParts[0] }}@if(!empty($nameParts[1]))<span style="color:#f2b36b;"> {{ $nameParts[1] }}</span>@endif</span>
+                <span style="display:inline-block;width:40px;height:40px;line-height:34px;text-align:center;border-radius:50%;background:#e9d3b4;border:3px solid #3a2a1c;color:#3a2a1c;font-family:Georgia,serif;font-weight:bold;font-size:17px;letter-spacing:-1px;vertical-align:middle;margin-right:10px;">MM</span><span style="vertical-align:middle;font-size:26px;font-weight:bold;color:#ffffff;letter-spacing:.3px;">{{ $nameParts[0] }}@if(!empty($nameParts[1]))<span style="color:#f2b36b;"> {{ $nameParts[1] }}</span>@endif</span>
                 <div style="font-size:13px;color:#ecd9c2;margin-top:4px;">{{ \App\Models\Setting::tagline() }}</div>
             </td>
         </tr>

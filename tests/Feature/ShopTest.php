@@ -464,6 +464,13 @@ class ShopTest extends TestCase
         $this->actingAs($admin)->get(route('admin.products.create'))->assertOk()->assertSee('Новое значение')->assertSee('Новая характеристика');
     }
 
+    public function test_logo_seal_is_shown_in_header_login_and_favicon(): void
+    {
+        $this->get('/')->assertOk()->assertSee('class="logo-seal"', false)->assertSee('favicon.svg', false)->assertSee('Cinzel+Decorative', false);
+        $this->get(route('login'))->assertOk()->assertSee('МАЙСТЕРНЯ З ФАНЕРИ', false)->assertSee('MYSTERY MAKERS', false);
+        $this->assertFileExists(public_path('favicon.svg'));
+    }
+
     public function test_site_fonts_setting(): void
     {
         $admin = User::factory()->create(['is_admin' => true]);

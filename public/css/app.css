@@ -86,7 +86,8 @@ h3 { font-size: 1.05rem; margin: 1.2rem 0 .6rem; }
 
 .header { background: var(--surface); border-bottom: 1px solid var(--line); }
 .header__inner { display: flex; align-items: center; gap: 16px; padding-top: 14px; padding-bottom: 14px; flex-wrap: wrap; }
-.logo { font-size: 1.5rem; font-weight: 400; color: var(--link); letter-spacing: .3px; }
+.logo { display: inline-flex; align-items: center; gap: 10px; font-size: 1.5rem; font-weight: 400; color: var(--link); letter-spacing: .3px; }
+.logo .logo-seal { flex: none; }
 .logo b { color: var(--accent); }
 .logo:hover { text-decoration: none; color: var(--link); }
 .logo--footer { color: #f1e3cf; }
@@ -746,3 +747,6 @@ h1, h2, h3, h4, .hero h1 { font-family: var(--font-heading, inherit); }
 .spec-field { display: flex; flex-direction: column; gap: 6px; }
 .spec-new { display: flex; flex-direction: column; gap: 6px; }
 .spec-new[hidden] { display: none; }
+
+/* Логотип-печать на страницах входа */
+.auth-logo { display: flex; justify-content: center; margin-bottom: 14px; }

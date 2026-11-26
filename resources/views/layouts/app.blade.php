@@ -17,6 +17,10 @@
     <meta property="og:description" content="@yield('description', \App\Models\Setting::description() ?: $siteTagline)">
     <meta property="og:url" content="{{ url()->current() }}">
     @hasSection('og_image')<meta property="og:image" content="@yield('og_image')">@endif
+    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&display=swap">
     @stack('head')
     @include('partials.theme-head')
     @include('partials.fonts-head')
@@ -46,7 +50,7 @@
 
 <header class="header">
     <div class="container header__inner">
-        <a href="{{ route('home') }}" class="logo">{{ $nameParts[0] }}@if(!empty($nameParts[1]))<b>{{ $nameParts[1] }}</b>@endif</a>
+        <a href="{{ route('home') }}" class="logo">@include('partials.logo-seal', ['variant' => 'mini', 'size' => 46])<span>{{ $nameParts[0] }}@if(!empty($nameParts[1]))<b>{{ $nameParts[1] }}</b>@endif</span></a>
 
         <a href="{{ route('catalog') }}" class="btn btn--brand header__catalog">☰ {{ __('shop.catalog') }}</a>
 
@@ -106,7 +110,7 @@
 <footer class="footer">
     <div class="container footer__inner">
         <div>
-            <div class="logo logo--footer">{{ $nameParts[0] }}@if(!empty($nameParts[1]))<b>{{ $nameParts[1] }}</b>@endif</div>
+            <div class="logo logo--footer">@include('partials.logo-seal', ['variant' => 'mini', 'size' => 40])<span>{{ $nameParts[0] }}@if(!empty($nameParts[1]))<b>{{ $nameParts[1] }}</b>@endif</span></div>
             <p>{{ $siteTagline }}</p>
         </div>
         <div>
