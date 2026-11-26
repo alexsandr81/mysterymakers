@@ -42,7 +42,12 @@ class UserController extends Controller
             'phone' => ['nullable', 'regex:/^\+?\d{10,12}$/'],
             'password' => ['nullable', 'string', 'min:8'],
             'role' => ['required', Rule::in(['customer', 'moderator', 'admin'])],
+            'sections_present' => ['nullable', 'boolean'],
+            'sections' => ['nullable', 'array'],
+            'sections.*' => ['string', Rule::in(\App\Support\AdminSections::keys())],
         ]);
+        $sections = $request->boolean('sections_present') ? array_values(array_unique((array) ($data['sections'] ?? []))) : null;
+        unset($data['sections_present'], $data['sections']);
 
         $role = $data['role'];
         unset($data['role']);
@@ -60,6 +65,12 @@ class UserController extends Controller
         $user->fill($data);
         $user->is_admin = $isAdmin;
         $user->is_moderator = $role === 'moderator';
+        // Разделы админки: только у модератора. Форма не прислала список (sections_present нет) — оставляем как было
+        if ($role !== 'moderator') {
+            $user->admin_sections = null;
+        } elseif ($sections !== null) {
+            $user->admin_sections = $sections;
+        }
         $user->save();
 
         return redirect()->route('admin.users.index')->with('status', 'Пользователь сохранён');

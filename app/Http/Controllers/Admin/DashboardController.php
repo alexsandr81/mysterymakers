@@ -13,6 +13,11 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
+        // Модератору без раздела «Заказы» статистика продаж не нужна: показываем список доступных ему разделов
+        if (! $request->user()->canAccess('orders')) {
+            return view('admin.dashboard-lite');
+        }
+
         $days = in_array((int) $request->query('days'), [7, 30, 90], true) ? (int) $request->query('days') : 30;
         $from = today()->subDays($days - 1);
 

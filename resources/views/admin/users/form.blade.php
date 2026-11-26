@@ -30,10 +30,29 @@
                 <select name="role">
                     @php $curRole = old('role', $user->role()); @endphp
                     <option value="customer" @selected($curRole === 'customer')>Покупатель (без доступа к админке)</option>
-                    <option value="moderator" @selected($curRole === 'moderator')>Модератор (товары, категории, праздники, характеристики, баннеры, страницы; без цен, удаления и заказов)</option>
+                    <option value="moderator" @selected($curRole === 'moderator')>Модератор (разделы выбираются ниже; товары идут на проверку)</option>
                     <option value="admin" @selected($curRole === 'admin')>Администратор (полный доступ)</option>
                 </select>
             </label>
+            @php
+                $allowed = old('sections_present') ? (array) old('sections', []) : ($user->admin_sections ?? \App\Support\AdminSections::keys());
+            @endphp
+            <fieldset class="perm-box" id="perm-box" @if(old('role', $user->role()) !== 'moderator') hidden @endif>
+                <legend>Какие разделы видит модератор</legend>
+                <input type="hidden" name="sections_present" value="1">
+                <div class="perm-box__grid">
+                    @foreach(\App\Support\AdminSections::LIST as $key => [$icon, $label])
+                        <label class="check"><input type="checkbox" name="sections[]" value="{{ $key }}" @checked(in_array($key, $allowed, true))> {{ $icon }} {{ $label }}</label>
+                    @endforeach
+                </div>
+                <p class="muted">Дашборд открыт всегда. «Пользователи» и «Действия модератора» видит только администратор. Закрытый раздел пропадает из меню, а прямая ссылка на него не открывается.</p>
+            </fieldset>
+            <script>
+                (function () {
+                    var sel = document.querySelector('select[name=role]'), box = document.getElementById('perm-box');
+                    sel.addEventListener('change', function () { box.hidden = sel.value !== 'moderator'; });
+                })();
+            </script>
             @if($user->google_id)<p class="muted">Привязан вход через Google.</p>
             @endif
             <p class="muted">Избранных товаров: {{ $favoritesCount }}</p>

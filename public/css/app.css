@@ -750,3 +750,9 @@ h1, h2, h3, h4, .hero h1 { font-family: var(--font-heading, inherit); }
 
 /* Логотип-печать на страницах входа */
 .auth-logo { display: flex; justify-content: center; margin-bottom: 14px; }
+
+/* Пользователь: разделы админки для модератора */
+.perm-box { border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; margin: 4px 0; }
+.perm-box[hidden] { display: none; }
+.perm-box legend { padding: 0 6px; font-weight: 600; }
+.perm-box__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 6px 14px; margin-bottom: 8px; }

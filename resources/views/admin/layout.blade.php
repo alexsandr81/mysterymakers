@@ -18,26 +18,51 @@
                 $isAdmin = auth()->user()->is_admin;
                 $toReview = $isAdmin ? \App\Models\Product::where('needs_review', true)->count() : 0;
                 $actUnseen = $isAdmin ? \App\Models\Activity::unseenCount(auth()->user()) : 0;
-                $newOrders = \App\Models\Order::where('status', 'new')->count();
-                $pendingReviews = \App\Models\Review::where('status', 'pending')->count();
+                $can = fn ($section) => auth()->user()->canAccess($section);
+                $newOrders = $can('orders') ? \App\Models\Order::where('status', 'new')->count() : 0;
+                $pendingReviews = $can('reviews') ? \App\Models\Review::where('status', 'pending')->count() : 0;
             @endphp
             <a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">📊 Дашборд</a>
+            @if($can('orders'))
             <a href="{{ route('admin.orders.index') }}" class="{{ request()->routeIs('admin.orders.*') ? 'active' : '' }}">🛒 Заказы <span class="badge" id="orders-badge" @if(!$newOrders) hidden @endif>{{ $newOrders }}</span></a>
+            @endif
+            @if($can('products'))
             <a href="{{ route('admin.products.index') }}" class="{{ request()->routeIs('admin.products.*') ? 'active' : '' }}">📦 Товары@if($toReview) <span class="badge" title="Ждут проверки">{{ $toReview }}</span>@endif</a>
+            @endif
+            @if($can('reviews'))
             <a href="{{ route('admin.reviews.index') }}" class="{{ request()->routeIs('admin.reviews.*') ? 'active' : '' }}">💬 Отзывы@if($pendingReviews) <span class="badge">{{ $pendingReviews }}</span>@endif</a>
+            @endif
             @if($isAdmin)
             <a href="{{ route('admin.users.index') }}" class="{{ request()->routeIs('admin.users.*') ? 'active' : '' }}">👥 Пользователи</a>
             <a href="{{ route('admin.activity.index') }}" class="{{ request()->routeIs('admin.activity.*') ? 'active' : '' }}">🔔 Действия модератора <span class="badge" id="activity-badge" @if(!$actUnseen) hidden @endif>{{ $actUnseen }}</span></a>
             @endif
+            @if($can('categories'))
             <a href="{{ route('admin.categories.index') }}" class="{{ request()->routeIs('admin.categories.*') ? 'active' : '' }}">📂 Категории</a>
+            @endif
+            @if($can('holidays'))
             <a href="{{ route('admin.holidays.index') }}" class="{{ request()->routeIs('admin.holidays.*') ? 'active' : '' }}">🎉 Праздники</a>
+            @endif
+            @if($can('characteristics'))
             <a href="{{ route('admin.characteristics.index') }}" class="{{ request()->routeIs('admin.characteristics.*') ? 'active' : '' }}">🏷 Характеристики</a>
+            @endif
+            @if($can('banners'))
             <a href="{{ route('admin.banners.index') }}" class="{{ request()->routeIs('admin.banners.*') ? 'active' : '' }}">🖼 Баннеры</a>
+            @endif
+            @if($can('pages'))
             <a href="{{ route('admin.pages.index') }}" class="{{ request()->routeIs('admin.pages.*') ? 'active' : '' }}">📄 Страницы</a>
+            @endif
+            @if($can('settings'))
             <a href="{{ route('admin.settings.edit') }}" class="{{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">⚙ Настройки</a>
+            @endif
+            @if($can('calculator'))
             <a href="{{ route('admin.calculator.index') }}" class="{{ request()->routeIs('admin.calculator.*') ? 'active' : '' }}">🧮 Калькулятор</a>
+            @endif
+            @if($can('novaposhta'))
             <a href="{{ route('admin.novaposhta.edit') }}" class="{{ request()->routeIs('admin.novaposhta.*') ? 'active' : '' }}">📦 Новая Почта</a>
+            @endif
+            @if($can('backups'))
             <a href="{{ route('admin.backups.index') }}" class="{{ request()->routeIs('admin.backups.*') ? 'active' : '' }}">💾 Копии</a>
+            @endif
             <a href="{{ route('home') }}">↩ На сайт</a>
         </nav>
         @include('partials.theme-button', ['class' => 'link-btn link-btn--light', 'title' => 'Тема'])
@@ -92,7 +117,7 @@
     paintBtn();
 
     function showCount(n) {
-        badge.textContent = n; badge.hidden = !n;
+        if (badge) { badge.textContent = n; badge.hidden = !n; }
         document.title = (n ? '(' + n + ') ' : '') + baseTitle;
     }
     showCount({{ (int) $newOrders }});
@@ -120,7 +145,7 @@
                 }
             }).catch(function () {});
     }
-    setInterval(poll, 20000);
+    @if($can('orders'))setInterval(poll, 20000);@endif
 })();
 </script>
 </body>

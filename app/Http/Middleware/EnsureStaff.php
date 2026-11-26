@@ -6,7 +6,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-/** Доступ в админку: администратор или модератор */
+/** Доступ в админку: администратор или модератор (модератор — только в разрешённые разделы) */
 class EnsureStaff
 {
     public function handle(Request $request, Closure $next): Response
@@ -15,6 +15,17 @@ class EnsureStaff
 
         if (!$user || !$user->isStaff()) {
             abort(403);
+        }
+
+        // Модератору доступны только разделы, которые открыл администратор (дашборд — всегда)
+        if (! $user->is_admin) {
+            $name = (string) $request->route()?->getName();
+            if ($name !== 'admin.dashboard') {
+                $section = \App\Support\AdminSections::fromRoute($name);
+                if ($section === null || ! $user->canAccess($section)) {
+                    abort(403);
+                }
+            }
         }
 
         return $next($request);

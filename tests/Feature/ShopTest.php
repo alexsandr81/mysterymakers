@@ -406,6 +406,41 @@ class ShopTest extends TestCase
         $this->actingAs($admin)->put(route('admin.products.update', $p), $base)->assertSessionHasErrors('price');
     }
 
+    public function test_admin_chooses_which_sections_moderator_sees(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $mod = User::factory()->create(['is_moderator' => true]);
+        $form = ['name' => $mod->name, 'email' => $mod->email, 'role' => 'moderator', 'sections_present' => '1'];
+
+        // По умолчанию (список не задавали) модератору открыто всё
+        $this->assertNull($mod->admin_sections);
+        $this->actingAs($mod)->get(route('admin.calculator.index'))->assertOk();
+
+        // Администратор оставляет только товары и категории
+        $this->actingAs($admin)->put(route('admin.users.update', $mod), $form + ['sections' => ['products', 'categories']])->assertSessionHasNoErrors();
+        $this->assertSame(['products', 'categories'], $mod->fresh()->admin_sections);
+
+        $this->actingAs($mod->fresh())->get(route('admin.products.index'))->assertOk();
+        $this->actingAs($mod->fresh())->get(route('admin.categories.index'))->assertOk();
+        foreach (['admin.orders.index', 'admin.reviews.index', 'admin.calculator.index', 'admin.settings.edit', 'admin.backups.index', 'admin.users.index'] as $name) {
+            $this->actingAs($mod->fresh())->get(route($name))->assertForbidden();
+        }
+        // Дашборд открыт всегда, закрытых разделов в меню нет
+        $this->actingAs($mod->fresh())->get(route('admin.dashboard'))->assertOk()->assertSee('Товары')->assertDontSee('Калькулятор')->assertDontSee('Заказы');
+
+        // Неизвестный раздел отклоняется; форма без списка ничего не меняет
+        $this->actingAs($admin)->put(route('admin.users.update', $mod), $form + ['sections' => ['hacks']])->assertSessionHasErrors('sections.0');
+        $this->actingAs($admin)->put(route('admin.users.update', $mod), ['name' => $mod->name, 'email' => $mod->email, 'role' => 'moderator'])->assertRedirect();
+        $this->assertSame(['products', 'categories'], $mod->fresh()->admin_sections);
+
+        // Форма пользователя показывает выбор разделов
+        $this->actingAs($admin)->get(route('admin.users.edit', $mod))->assertOk()->assertSee('Какие разделы видит модератор');
+
+        // Роль не модератор — список сбрасывается
+        $this->actingAs($admin)->put(route('admin.users.update', $mod), ['name' => $mod->name, 'email' => $mod->email, 'role' => 'customer'])->assertRedirect();
+        $this->assertNull($mod->fresh()->admin_sections);
+    }
+
     public function test_admin_can_assign_roles(): void
     {
         $admin = User::factory()->create(['is_admin' => true]);
