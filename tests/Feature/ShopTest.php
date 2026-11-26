@@ -423,7 +423,7 @@ class ShopTest extends TestCase
         $this->actingAs($mod->fresh())->get(route('admin.products.index'))->assertOk();
         $this->actingAs($mod->fresh())->get(route('admin.categories.index'))->assertOk();
         foreach (['admin.orders.index', 'admin.reviews.index', 'admin.calculator.index', 'admin.settings.edit', 'admin.backups.index', 'admin.users.index'] as $name) {
-            $this->actingAs($mod->fresh())->get(route($name))->assertForbidden();
+            $this->actingAs($mod->fresh())->get(route($name))->assertForbidden()->assertSee('Нет доступа к этому разделу');
         }
         // Дашборд открыт всегда, закрытых разделов в меню нет
         $this->actingAs($mod->fresh())->get(route('admin.dashboard'))->assertOk()->assertSee('Товары')->assertDontSee('Калькулятор')->assertDontSee('Заказы');

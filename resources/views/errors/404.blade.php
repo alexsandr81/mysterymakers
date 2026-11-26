@@ -1,0 +1,5 @@
+@extends('errors.layout')
+@section('title', 'Страница не найдена')
+@section('code', '404')
+@section('heading', 'Страница не найдена')
+@section('text', 'Такой страницы нет или она была удалена. Проверьте адрес.')
