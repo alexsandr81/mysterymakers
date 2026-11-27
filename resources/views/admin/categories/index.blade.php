@@ -62,7 +62,7 @@
                             <span class="cat-toggle cat-toggle--empty"></span>
                         @endif
                     @endif
-                    📁 <strong>{{ $c->name_ru }}</strong>
+                    @if($c->drive_folder_id)<a href="{{ \App\Services\GoogleDrive::url($c->drive_folder_id) }}" target="_blank" rel="noopener" class="drive-link" title="Открыть папку на Google Диске">📁 <strong>{{ $c->name_ru }}</strong></a>@else📁 <strong>{{ $c->name_ru }}</strong>@endif
                     <span class="muted">{{ $c->children_count ? '· подкатегорий: ' . $c->children_count : '' }}</span>
                 @endif
             </td>

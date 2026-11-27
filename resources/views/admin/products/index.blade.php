@@ -118,7 +118,7 @@
                 <td colspan="12" data-fill>
                     <button type="button" class="cat-toggle" data-key="c{{ $top->id }}" aria-expanded="false" title="Показать или скрыть товары">▸</button>
                     <input type="checkbox" class="grp-check" data-scope="g" data-id="{{ $top->id }}" title="Отметить все товары этой категории (для массового изменения цены)">
-                    📁 <strong>{{ $top->name_ru }}</strong>
+                    @if($top->drive_folder_id)<a href="{{ \App\Services\GoogleDrive::url($top->drive_folder_id) }}" target="_blank" rel="noopener" class="drive-link" title="Открыть папку на Google Диске">📁 <strong>{{ $top->name_ru }}</strong></a>@else📁 <strong>{{ $top->name_ru }}</strong>@endif
                     <span class="badge badge--sm badge--top">{{ $topAll->count() }}</span>
                     @if($isAdmin && $topReview)<span class="badge badge--sm badge--review" title="Ждут проверки">⏳ {{ $topReview }}</span>@endif
                 </td>
@@ -134,7 +134,7 @@
                         <span class="grp-indent"></span>
                         <button type="button" class="cat-toggle" data-key="s{{ $sub->id }}" aria-expanded="false" title="Показать или скрыть товары подкатегории">▸</button>
                         <input type="checkbox" class="grp-check" data-scope="s" data-id="{{ $sub->id }}" title="Отметить все товары этой подкатегории">
-                        <span class="cat-name__arrow">↳</span> <strong>{{ $sub->name_ru }}</strong>
+                        <span class="cat-name__arrow">↳</span> @if($sub->drive_folder_id)<a href="{{ \App\Services\GoogleDrive::url($sub->drive_folder_id) }}" target="_blank" rel="noopener" class="drive-link" title="Открыть папку на Google Диске">📁 <strong>{{ $sub->name_ru }}</strong></a>@else📁 <strong>{{ $sub->name_ru }}</strong>@endif
                         <span class="badge badge--sm badge--sub">{{ $sp->count() }}</span>
                     </td>
                 </tr>

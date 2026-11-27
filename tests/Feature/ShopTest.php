@@ -724,6 +724,16 @@ class ShopTest extends TestCase
         $this->actingAs($admin)->get(route('product', $p))->assertOk();
     }
 
+    public function test_group_folder_links_to_drive(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $cat = Category::create(['slug' => 'dk', 'name_uk' => 'К', 'name_ru' => 'Папочная', 'sort' => 1, 'sku_start' => 10000]);
+        Category::whereKey($cat->id)->update(['drive_folder_id' => 'FOLDER123']);
+        Product::create(['name_uk' => 'Т', 'name_ru' => 'Т', 'slug' => 't', 'price' => 10, 'stock' => 1, 'is_active' => 1, 'category_id' => $cat->id]);
+        $this->actingAs($admin)->get(route('admin.products.index'))->assertOk()->assertSee('FOLDER123');
+        $this->actingAs($admin)->get(route('admin.categories.index'))->assertOk()->assertSee('FOLDER123');
+    }
+
     public function test_site_fonts_setting(): void
     {
         $admin = User::factory()->create(['is_admin' => true]);
