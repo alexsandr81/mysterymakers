@@ -160,7 +160,7 @@
             ⏳ <strong>Ждёт проверки.</strong>
             @if($product->modifier)Последним менял: {{ $product->modifier->name }}.@endif
             @if(auth()->user()->is_admin)
-                <label class="check"><input type="checkbox" name="reviewed" value="1" @checked(old('reviewed', true))> Проверено (снять метку при сохранении)</label>
+                <label class="check"><input type="checkbox" name="reviewed" value="1" @checked(old('reviewed', false))> Проверено (поставьте галочку и сохраните, чтобы снять метку)</label>
             @else
                 <span class="muted">После ваших изменений администратор ещё раз проверит товар.</span>
             @endif

@@ -734,6 +734,22 @@ class ShopTest extends TestCase
         $this->actingAs($admin)->get(route('admin.categories.index'))->assertOk()->assertSee('FOLDER123');
     }
 
+    public function test_admin_save_keeps_review_mark_unless_confirmed(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $cat = Category::create(['slug' => 'rv', 'name_uk' => 'К', 'name_ru' => 'К', 'sort' => 1, 'sku_start' => 10000]);
+        $p = Product::create(['category_id' => $cat->id, 'sku' => '10001', 'slug' => 'rv1', 'name_uk' => 'Т', 'name_ru' => 'Т', 'price' => 5, 'stock' => 1, 'is_active' => true]);
+        Product::whereKey($p->id)->update(['needs_review' => true]);
+        $base = ['name_uk' => 'Т', 'name_ru' => 'Т', 'price' => 5, 'stock' => 1, 'is_active' => 1, 'category_top' => (string) $cat->id, 'category_id' => 'self'];
+
+        $this->actingAs($admin)->get(route('admin.products.edit', $p))->assertOk()->assertDontSee('name="reviewed" value="1" checked', false);
+        $this->actingAs($admin)->put(route('admin.products.update', $p), $base)->assertSessionHasNoErrors();
+        $this->assertTrue((bool) Product::find($p->id)->needs_review);
+
+        $this->actingAs($admin)->put(route('admin.products.update', $p), $base + ['reviewed' => 1])->assertSessionHasNoErrors();
+        $this->assertFalse((bool) Product::find($p->id)->needs_review);
+    }
+
     public function test_site_fonts_setting(): void
     {
         $admin = User::factory()->create(['is_admin' => true]);
