@@ -362,7 +362,20 @@ class ProductController extends Controller
             return ['needs_review' => true, 'modified_by' => $user->id]; // каждое изменение модератора проверяет администратор
         }
 
+        // Администратор может и сам отправить товар на проверку («посмотрел, нет времени исправить»)
+        if ($request->boolean('to_review')) {
+            return ['needs_review' => true, 'modified_by' => $user->id];
+        }
+
         return ['needs_review' => (bool) ($product?->needs_review && ! $request->boolean('reviewed'))];
+    }
+
+    /** Администратор: отправить товар на проверку (напомнить себе вернуться к нему) */
+    public function toReview(Product $product)
+    {
+        Product::whereKey($product->id)->update(['needs_review' => true, 'modified_by' => auth()->id()]);
+
+        return back()->with('status', 'Отправлено на проверку: ' . $product->name_ru);
     }
 
     /** Администратор: «Проверено» для одного товара */

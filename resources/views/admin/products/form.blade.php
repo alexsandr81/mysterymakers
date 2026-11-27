@@ -167,6 +167,12 @@
         </div>
     @endif
 
+    @if(! $isNew && ! $product->needs_review && auth()->user()->is_admin)
+        <div class="review-box">
+            <label class="check"><input type="checkbox" name="to_review" value="1" @checked(old('to_review'))> ⏳ Отправить на проверку (вернуться к товару позже)</label>
+        </div>
+    @endif
+
     <div>
         <strong>Праздники и поводы</strong> <span class="muted">(можно выбрать несколько — по ним работает фильтр в каталоге)</span>
         @php $chosenHol = old('holidays') !== null ? array_map('intval', (array) old('holidays')) : $selectedHolidays; @endphp

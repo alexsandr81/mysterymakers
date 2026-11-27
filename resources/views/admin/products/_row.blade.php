@@ -23,6 +23,8 @@
         @endif
         @if($isAdmin && $p->needs_review)
             <form action="{{ route('admin.products.reviewed', $p) }}" method="POST">@csrf<button class="link-btn review-ok" title="Проверено: снять метку">✔</button></form>
+        @elseif($isAdmin)
+            <form action="{{ route('admin.products.to-review', $p) }}" method="POST">@csrf<button class="link-btn" title="Отправить на проверку">⏳</button></form>
         @endif
         <a href="{{ route('admin.products.edit', $p) }}" title="Изменить">✎</a>
         <form action="{{ route('admin.products.destroy', $p) }}" method="POST" onsubmit="return confirm('Удалить товар?')">

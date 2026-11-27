@@ -750,6 +750,23 @@ class ShopTest extends TestCase
         $this->assertFalse((bool) Product::find($p->id)->needs_review);
     }
 
+    public function test_admin_can_send_product_to_review(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $mod = User::factory()->create(['is_moderator' => true]);
+        $cat = Category::create(['slug' => 'tr', 'name_uk' => 'К', 'name_ru' => 'К', 'sort' => 1, 'sku_start' => 10000]);
+        $p = Product::create(['category_id' => $cat->id, 'sku' => '10001', 'slug' => 'tr1', 'name_uk' => 'Т', 'name_ru' => 'Т', 'price' => 5, 'stock' => 1, 'is_active' => true]);
+
+        $this->actingAs($mod)->post(route('admin.products.to-review', $p))->assertForbidden();
+        $this->actingAs($admin)->post(route('admin.products.to-review', $p))->assertRedirect();
+        $this->assertTrue((bool) Product::find($p->id)->needs_review);
+
+        Product::whereKey($p->id)->update(['needs_review' => false]);
+        $base = ['name_uk' => 'Т', 'name_ru' => 'Т', 'price' => 5, 'stock' => 1, 'is_active' => 1, 'category_top' => (string) $cat->id, 'category_id' => 'self'];
+        $this->actingAs($admin)->put(route('admin.products.update', $p), $base + ['to_review' => 1])->assertSessionHasNoErrors();
+        $this->assertTrue((bool) Product::find($p->id)->needs_review);
+    }
+
     public function test_site_fonts_setting(): void
     {
         $admin = User::factory()->create(['is_admin' => true]);

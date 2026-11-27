@@ -130,6 +130,7 @@ Route::middleware(SetLocale::class)->group(function () {
             Route::post('/backups/upload', [Admin\BackupController::class, 'upload'])->name('backups.upload');
             Route::post('/backups/{file}/restore', [Admin\BackupController::class, 'restore'])->name('backups.restore');
             Route::post('products/bulk-reviewed', [Admin\ProductController::class, 'bulkReviewed'])->name('products.bulk-reviewed');
+            Route::post('products/{product}/to-review', [Admin\ProductController::class, 'toReview'])->name('products.to-review');
             Route::post('products/{product}/reviewed', [Admin\ProductController::class, 'reviewed'])->name('products.reviewed');
         });
     });
