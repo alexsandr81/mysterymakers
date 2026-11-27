@@ -24,4 +24,14 @@ class ActivityController extends Controller
 
         return view('admin.activity', compact('items', 'moderators', 'userId', 'seenAt'));
     }
+
+    /** Очистить журнал: целиком или (если выбран модератор в фильтре) только его записи */
+    public function clear(Request $request)
+    {
+        $userId = (int) $request->input('user');
+        $count = Activity::when($userId, fn ($q) => $q->where('user_id', $userId))->delete();
+
+        return redirect()->route('admin.activity.index', array_filter(['user' => $userId]))
+            ->with('status', $count ? "Журнал очищен: удалено записей — $count." : 'Журнал уже пуст.');
+    }
 }

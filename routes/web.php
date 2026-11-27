@@ -126,6 +126,7 @@ Route::middleware(SetLocale::class)->group(function () {
         Route::middleware(EnsureAdmin::class)->group(function () {
             Route::resource('users', Admin\UserController::class)->only(['index', 'edit', 'update', 'destroy']);
             Route::get('/activity', [Admin\ActivityController::class, 'index'])->name('activity.index');
+            Route::delete('/activity', [Admin\ActivityController::class, 'clear'])->name('activity.clear');
             Route::post('/backups/upload', [Admin\BackupController::class, 'upload'])->name('backups.upload');
             Route::post('/backups/{file}/restore', [Admin\BackupController::class, 'restore'])->name('backups.restore');
             Route::post('products/bulk-reviewed', [Admin\ProductController::class, 'bulkReviewed'])->name('products.bulk-reviewed');

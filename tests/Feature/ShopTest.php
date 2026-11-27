@@ -669,6 +669,33 @@ class ShopTest extends TestCase
         $this->actingAs($admin)->get(route('admin.products.index', ['view' => 'list']))->assertSee('По категориям');
     }
 
+    public function test_admin_can_clear_activity_journal(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $mod = User::factory()->create(['is_moderator' => true, 'name' => 'Жена']);
+        $mod2 = User::factory()->create(['is_moderator' => true, 'name' => 'Помощник']);
+        $row = fn ($u, $label) => \App\Models\Activity::create(['user_id' => $u->id, 'user_name' => $u->name, 'label' => $label, 'subject' => 'Т', 'url' => null]);
+        $row($mod, 'Добавлен товар');
+        $row($mod, 'Изменён товар');
+        $row($mod2, 'Удалён товар');
+
+        $this->actingAs($admin)->get(route('admin.activity.index'))->assertOk()->assertSee('Очистить журнал');
+
+        // Модератор очистить журнал не может
+        $this->actingAs($mod)->delete(route('admin.activity.clear'))->assertForbidden();
+        $this->assertSame(3, \App\Models\Activity::count());
+
+        // С фильтром — только записи выбранного модератора
+        $this->actingAs($admin)->delete(route('admin.activity.clear'), ['user' => $mod->id])->assertRedirect()->assertSessionHas('status');
+        $this->assertSame(1, \App\Models\Activity::count());
+        $this->assertSame($mod2->id, \App\Models\Activity::first()->user_id);
+
+        // Без фильтра — весь журнал
+        $this->actingAs($admin)->delete(route('admin.activity.clear'))->assertRedirect();
+        $this->assertSame(0, \App\Models\Activity::count());
+        $this->actingAs($admin)->get(route('admin.activity.index'))->assertOk()->assertDontSee('Очистить журнал');
+    }
+
     public function test_site_fonts_setting(): void
     {
         $admin = User::factory()->create(['is_admin' => true]);

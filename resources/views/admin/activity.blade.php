@@ -5,6 +5,14 @@
 @section('content')
 <div class="admin-head">
     <h1>Действия модератора</h1>
+    @if($items->total() > 0)
+        @php $who = $userId ? ($moderators->firstWhere('id', $userId)?->name ?? 'выбранного модератора') : null; @endphp
+        <form action="{{ route('admin.activity.clear') }}" method="POST" onsubmit="return confirm('{{ $who ? 'Удалить из журнала все записи: ' . e($who) . '?' : 'Очистить журнал целиком? Все записи о действиях модераторов будут удалены без возможности восстановления.' }}')">
+            @csrf @method('DELETE')
+            <input type="hidden" name="user" value="{{ $userId ?: '' }}">
+            <button class="btn btn--danger">🗑 {{ $who ? 'Очистить записи: ' . $who : 'Очистить журнал' }}</button>
+        </form>
+    @endif
 </div>
 <p class="muted">Здесь записано всё, что делают пользователи с ролью «Модератор»: добавление, изменение и удаление. Новые записи подсвечены. Когда приходит новое действие, наверху появляется уведомление, а в меню счётчик.</p>
 
