@@ -696,6 +696,34 @@ class ShopTest extends TestCase
         $this->actingAs($admin)->get(route('admin.activity.index'))->assertOk()->assertDontSee('Очистить журнал');
     }
 
+    public function test_activity_links_are_relative_and_products_open_on_site(): void
+    {
+        $mod = User::factory()->create(['is_moderator' => true, 'name' => 'Жена']);
+        $cat = Category::create(['slug' => 'c', 'name_uk' => 'К', 'name_ru' => 'К', 'sort' => 1, 'sku_start' => 10000]);
+        $base = ['name_uk' => 'Скринька', 'name_ru' => 'Шкатулка', 'stock' => 3, 'is_active' => 1, 'category_top' => (string) $cat->id, 'category_id' => 'self'];
+
+        $this->actingAs($mod)->post(route('admin.products.store'), $base)->assertRedirect();
+        $p = Product::where('name_ru', 'Шкатулка')->first();
+        $this->actingAs($mod)->put(route('admin.products.update', $p), array_merge($base, ['price' => 100]))->assertRedirect();
+
+        // В журнале — путь без домена, ведущий на страницу товара на сайте
+        foreach (\App\Models\Activity::where('subject', 'Шкатулка')->get() as $a) {
+            $this->assertSame(route('product', $p, false), parse_url($a->url, PHP_URL_PATH));
+            $this->assertStringNotContainsString('http', (string) $a->url);
+        }
+
+        // Старая запись с полным адресом редактирования (на другом домене) тоже открывается на текущем сайте и ведёт на товар
+        $old = \App\Models\Activity::create(['user_id' => $mod->id, 'user_name' => 'Жена', 'label' => 'Изменён товар', 'subject' => 'Шкатулка', 'url' => 'https://old-domain.ngrok-free.dev/admin/products/' . $p->id . '/edit']);
+        $this->assertSame(route('product', $p, false), $old->link);
+        $old2 = \App\Models\Activity::create(['user_id' => $mod->id, 'user_name' => 'Жена', 'label' => 'Изменена категория', 'subject' => 'К', 'url' => 'https://old-domain.ngrok-free.dev/admin/categories/' . $cat->id . '/edit']);
+        $this->assertSame('/admin/categories/' . $cat->id . '/edit', $old2->link);
+
+        $admin = User::factory()->create(['is_admin' => true]);
+        $this->actingAs($admin)->get(route('admin.activity.index'))->assertOk()->assertSee('href="' . route('product', $p, false) . '"', false)->assertDontSee('old-domain');
+        // Страница товара открывается
+        $this->actingAs($admin)->get(route('product', $p))->assertOk();
+    }
+
     public function test_site_fonts_setting(): void
     {
         $admin = User::factory()->create(['is_admin' => true]);

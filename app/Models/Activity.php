@@ -23,6 +23,24 @@ class Activity extends Model
         return static::when($admin->activity_seen_at, fn ($q) => $q->where('created_at', '>', $admin->activity_seen_at))->count();
     }
 
+    /**
+     * Ссылка для журнала: всегда относительная (без домена), а старые записи с полным адресом и ссылкой на
+     * редактирование товара приводятся к странице товара на сайте.
+     */
+    public function getLinkAttribute(): ?string
+    {
+        if (! $this->url) {
+            return null;
+        }
+        $parts = parse_url($this->url);
+        $path = $parts['path'] ?? '/';
+        if (preg_match('~^/admin/products/(\d+)/edit$~', $path, $m) && ($product = Product::find((int) $m[1]))) {
+            return route('product', $product, false);
+        }
+
+        return $path . (isset($parts['query']) ? '?' . $parts['query'] : '');
+    }
+
     /** Одной строкой: «Жена: Изменён товар «Шкатулка»» */
     public function getTextAttribute(): string
     {

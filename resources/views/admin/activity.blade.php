@@ -35,7 +35,7 @@
             <td class="nowrap muted">{{ $a->created_at->format('d.m.Y H:i') }}</td>
             <td class="nowrap">{{ $a->user_name }}</td>
             <td>{{ $a->label }}</td>
-            <td>@if($a->url)<a href="{{ $a->url }}">{{ $a->subject ?: 'открыть' }}</a>@else{{ $a->subject ?: '—' }}@endif</td>
+            <td>@if($a->link)<a href="{{ $a->link }}" target="_blank">{{ $a->subject ?: 'открыть' }}</a>@else{{ $a->subject ?: '—' }}@endif</td>
         </tr>
     @empty
         <tr><td colspan="4" class="muted">Пока ничего нет. Записи появятся, когда модератор начнёт работать.</td></tr>

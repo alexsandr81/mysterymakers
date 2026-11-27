@@ -84,7 +84,8 @@ class LogStaffActions
                 $subject = $param->getAttribute('name_ru') ?? $param->getAttribute('name') ?? $param->getAttribute('title_ru')
                     ?? $param->getAttribute('title') ?? $param->getAttribute('number') ?? ('#' . $param->getKey());
                 if (! str_ends_with($name, '.destroy') && isset(self::EDIT_ROUTES[$param::class])) {
-                    $url = route(self::EDIT_ROUTES[$param::class], $param);
+                    // Адрес без домена: администратор может открыть журнал с другого адреса (localhost, ngrok), и полный адрес вёл бы на «чужой» сайт без его сессии
+                    $url = $param instanceof Product ? route('product', $param, false) : route(self::EDIT_ROUTES[$param::class], $param, false);
                 }
                 break;
             }
@@ -94,7 +95,7 @@ class LogStaffActions
             $subject = $request->input('name_ru') ?? $request->input('title_ru') ?? $request->input('name_uk') ?? $request->input('title_uk');
         }
         if ($name === 'products.store' && ($product = Product::latest('id')->first())) {
-            $url = route('admin.products.edit', $product); // только что созданный товар
+            $url = route('product', $product, false); // только что созданный товар — на сайте
         }
 
         Activity::create([
