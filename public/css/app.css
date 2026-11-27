@@ -782,7 +782,10 @@ button.cat-toggle:hover { background: var(--tint); border-color: var(--brand); }
 
 .drive-link{color:inherit;text-decoration:none}.drive-link:hover strong{text-decoration:underline}
 
-/* Иерархия в списке товаров: название товара категории — правее, товара подкатегории — ещё правее (чекбокс и фото не двигаем) */
+/* Иерархия в списке товаров: сдвиг на ту же ступень (33px), что у подкатегории относительно категории.
+   Чекбокс и фото сдвигаются визуально (transform), чтобы не менять ширину колонок; название получает отступ. */
 .row-edge { border-left: 3px solid var(--line); }
+.row-shift--1 > * { transform: translateX(33px); }
+.row-shift--2 > * { transform: translateX(66px); }
 .row-indent--1 { padding-left: 26px !important; }
-.row-indent--2 { padding-left: 52px !important; }
+.row-indent--2 { padding-left: 56px !important; }
