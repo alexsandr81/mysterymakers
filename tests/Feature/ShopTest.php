@@ -767,6 +767,16 @@ class ShopTest extends TestCase
         $this->assertTrue((bool) Product::find($p->id)->needs_review);
     }
 
+    public function test_grouped_products_are_indented_by_level(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $top = Category::create(['slug' => 'ih', 'name_uk' => 'К', 'name_ru' => 'Верх', 'sort' => 1, 'sku_start' => 10000]);
+        $sub = Category::create(['parent_id' => $top->id, 'slug' => 'ih-s', 'name_uk' => 'П', 'name_ru' => 'Под', 'sort' => 1]);
+        Product::create(['category_id' => $top->id, 'sku' => '10001', 'slug' => 'ih1', 'name_uk' => 'А', 'name_ru' => 'А', 'price' => 1, 'stock' => 1, 'is_active' => true]);
+        Product::create(['category_id' => $sub->id, 'sku' => '11001', 'slug' => 'ih2', 'name_uk' => 'Б', 'name_ru' => 'Б', 'price' => 1, 'stock' => 1, 'is_active' => true]);
+        $this->actingAs($admin)->get(route('admin.products.index'))->assertOk()->assertSee('row-indent--1', false)->assertSee('row-indent--2', false);
+    }
+
     public function test_site_fonts_setting(): void
     {
         $admin = User::factory()->create(['is_admin' => true]);

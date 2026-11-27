@@ -124,7 +124,7 @@
                 </td>
             </tr>
             @foreach($direct as $p)
-                @include('admin.products._row', ['p' => $p, 'isAdmin' => $isAdmin, 'attrs' => 'hidden'])
+                @include('admin.products._row', ['p' => $p, 'isAdmin' => $isAdmin, 'attrs' => 'hidden', 'indent' => 1])
             @endforeach
             @foreach($subs as $sub)
                 @php $sp = $byCat->get($sub->id, collect()); @endphp
@@ -139,7 +139,7 @@
                     </td>
                 </tr>
                 @foreach($sp as $p)
-                    @include('admin.products._row', ['p' => $p, 'isAdmin' => $isAdmin, 'attrs' => 'hidden'])
+                    @include('admin.products._row', ['p' => $p, 'isAdmin' => $isAdmin, 'attrs' => 'hidden', 'indent' => 2])
                 @endforeach
             @endforeach
         @endforeach

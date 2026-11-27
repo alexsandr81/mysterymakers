@@ -781,3 +781,8 @@ button.cat-toggle:hover { background: var(--tint); border-color: var(--brand); }
 .flash--big { font-size: 1.05rem; padding: 16px 18px; }
 
 .drive-link{color:inherit;text-decoration:none}.drive-link:hover strong{text-decoration:underline}
+
+/* Иерархия в списке товаров: товары категории — правее категории, товары подкатегории — ещё правее */
+.row-indent { border-left: 3px solid transparent; }
+.row-indent--1 { padding-left: 34px !important; border-left-color: var(--line); }
+.row-indent--2 { padding-left: 60px !important; border-left-color: var(--line); }
