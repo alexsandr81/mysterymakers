@@ -104,17 +104,9 @@ class ProductController extends Controller
             'value.gt' => 'Значение должно быть больше нуля.',
         ]);
 
-        if ($request->boolean('scope_all')) {
-            $q = trim((string) ($data['q'] ?? ''));
-            $query = Product::query()->when($q !== '', function ($query) use ($q) {
-                $like = '%' . str_replace(['%', '_'], ['\%', '\_'], $q) . '%';
-                $query->where(fn ($w) => $w->where('name_uk', 'like', $like)->orWhere('name_ru', 'like', $like)->orWhere('sku', 'like', $like));
-            });
-        } else {
-            if (empty($data['ids'])) {
-                return back()->withErrors(['bulk' => 'Отметьте товары галочками слева, у которых нужно изменить цену.']);
-            }
-            $query = Product::whereIn('id', $data['ids']);
+        $query = $this->bulkTargets($request, $data, 'scope_all');
+        if (! $query) {
+            return back()->withErrors(['bulk' => 'Отметьте товары галочками слева, у которых нужно изменить цену.']);
         }
 
         $value = (float) $data['value'];
@@ -154,6 +146,103 @@ class ProductController extends Controller
         }
 
         return back()->with('status', $msg);
+    }
+
+    /**
+     * Товары для массового действия: либо отмеченные галочками (ids), либо все из списка/поиска (флажок $allKey).
+     * Возвращает null, если ничего не выбрано.
+     */
+    private function bulkTargets(Request $request, array $data, string $allKey): ?\Illuminate\Database\Eloquent\Builder
+    {
+        if ($request->boolean($allKey)) {
+            $q = trim((string) ($data['q'] ?? ''));
+
+            return Product::query()->when($q !== '', function ($query) use ($q) {
+                $like = '%' . str_replace(['%', '_'], ['\\%', '\\_'], $q) . '%';
+                $query->where(fn ($w) => $w->where('name_uk', 'like', $like)->orWhere('name_ru', 'like', $like)->orWhere('sku', 'like', $like));
+            });
+        }
+        if (empty($data['ids'])) {
+            return null;
+        }
+
+        return Product::whereIn('id', $data['ids']);
+    }
+
+    /**
+     * Массовое изменение характеристики (материал, цвет, толщина…): заменить, добавить или убрать значение.
+     * У модератора товары уходят «на проверку», как и при обычном редактировании.
+     */
+    public function bulkCharacteristics(Request $request)
+    {
+        $data = $request->validate([
+            'ch_id' => ['required', 'integer', 'exists:characteristics,id'],
+            'ch_mode' => ['required', 'in:replace,add,remove'],
+            'ch_value' => ['nullable', 'integer'],
+            'ch_new_uk' => ['nullable', 'string', 'max:255'],
+            'ch_new_ru' => ['nullable', 'string', 'max:255'],
+            'ids' => ['nullable', 'array', 'max:2000'],
+            'ids.*' => ['integer'],
+            'q' => ['nullable', 'string', 'max:100'],
+        ], [
+            'ch_id.required' => 'Выберите характеристику.',
+        ]);
+
+        $char = Characteristic::findOrFail((int) $data['ch_id']);
+        $mode = $data['ch_mode'];
+        $newUk = trim((string) ($data['ch_new_uk'] ?? ''));
+        $newRu = trim((string) ($data['ch_new_ru'] ?? ''));
+        $valueId = null;
+
+        if ($newUk !== '' || $newRu !== '') {
+            if ($newUk === '' || $newRu === '') {
+                return back()->withErrors(['bulk_ch' => 'Для нового значения заполните оба языка: украинский и русский.'])->withInput();
+            }
+            if ($mode === 'remove') {
+                return back()->withErrors(['bulk_ch' => 'Для «Убрать» выберите существующее значение или оставьте пустым (уберутся все значения).'])->withInput();
+            }
+        } elseif (! empty($data['ch_value'])) {
+            $valueId = $char->values()->whereKey((int) $data['ch_value'])->value('id');
+            if (! $valueId) {
+                return back()->withErrors(['bulk_ch' => 'Это значение не относится к выбранной характеристике.'])->withInput();
+            }
+        } elseif ($mode !== 'remove') {
+            return back()->withErrors(['bulk_ch' => 'Выберите значение или впишите новое.'])->withInput();
+        }
+
+        $query = $this->bulkTargets($request, $data, 'ch_all');
+        if (! $query) {
+            return back()->withErrors(['bulk_ch' => 'Отметьте товары галочками слева или выберите «ко всем товарам списка».'])->withInput();
+        }
+
+        if ($newUk !== '') {
+            $valueId = $this->createValue($char, $newUk, $newRu);
+        }
+        $charValueIds = $char->values()->pluck('id')->all();
+        $ids = [];
+
+        foreach ($query->get() as $product) {
+            $rel = $product->characteristicValues();
+            match ($mode) {
+                'replace' => [$rel->detach($charValueIds), $rel->attach($valueId)],
+                'add' => $rel->syncWithoutDetaching([$valueId]),
+                default => $rel->detach($valueId ? [$valueId] : $charValueIds),
+            };
+            $ids[] = $product->id;
+        }
+
+        if ($ids && ! $request->user()->is_admin) {
+            Product::whereIn('id', $ids)->update(['needs_review' => true, 'modified_by' => $request->user()->id]);
+        }
+
+        $title = $char->name_ru;
+        $what = match ($mode) {
+            'replace' => "заменено на «" . ($valueId ? CharacteristicValue::find($valueId)?->value_ru : '') . "»",
+            'add' => "добавлено значение «" . CharacteristicValue::find($valueId)?->value_ru . "»",
+            default => $valueId ? "убрано значение «" . CharacteristicValue::find($valueId)?->value_ru . "»" : 'убраны все значения',
+        };
+
+        return back()->with('status', 'Характеристика «' . $title . '»: ' . $what . '. Товаров: ' . count($ids) . '.');
     }
 
     public function create()

@@ -78,6 +78,47 @@
 </form>
 </details>
 
+@php $bulkChars = \App\Models\Characteristic::with('values')->orderBy('sort')->orderBy('id')->get(); @endphp
+@if($bulkChars->isNotEmpty())
+<details class="bulk-wrap" @if($errors->has('bulk_ch')) open @endif>
+<summary>🏷 Массовое изменение характеристик</summary>
+<div class="bulk" id="bulk-ch">
+    <span class="muted">Выбрано: <b id="bulk-ch-count">0</b></span>
+    <label>Характеристика
+        <select name="ch_id" form="bulk-form" id="ch-id">
+            @foreach($bulkChars as $c)
+                <option value="{{ $c->id }}" @selected((int) old('ch_id') === $c->id)>{{ $c->name_ru }}</option>
+            @endforeach
+        </select>
+    </label>
+    <label>Действие
+        <select name="ch_mode" form="bulk-form" id="ch-mode">
+            <option value="replace" @selected(old('ch_mode') === 'replace')>Заменить значение на…</option>
+            <option value="add" @selected(old('ch_mode') === 'add')>Добавить значение…</option>
+            <option value="remove" @selected(old('ch_mode') === 'remove')>Убрать значение…</option>
+        </select>
+    </label>
+    <label>Значение
+        <select name="ch_value" form="bulk-form" id="ch-value">
+            <option value="">— выбрать —</option>
+            @foreach($bulkChars as $c)
+                @foreach($c->values as $v)
+                    <option value="{{ $v->id }}" data-char="{{ $c->id }}" @selected((int) old('ch_value') === $v->id)>{{ $v->value_ru }}</option>
+                @endforeach
+            @endforeach
+        </select>
+    </label>
+    <span class="muted">или новое:</span>
+    <label>укр. <input type="text" name="ch_new_uk" form="bulk-form" maxlength="255" value="{{ old('ch_new_uk') }}" placeholder="Дуб"></label>
+    <label>рус. <input type="text" name="ch_new_ru" form="bulk-form" maxlength="255" value="{{ old('ch_new_ru') }}" placeholder="Дуб"></label>
+    <label class="bulk__all"><input type="checkbox" name="ch_all" form="bulk-form" value="1"> Ко всем {{ $products->total() }} товарам{{ $q !== '' ? ' из поиска' : '' }}, не только отмеченным</label>
+    <button class="btn btn--brand" type="submit" form="bulk-form" formaction="{{ route('admin.products.bulk-characteristics') }}" formnovalidate data-chars="1">Применить</button>
+    <span class="muted">«Убрать» без значения снимает все значения этой характеристики.</span>
+    @error('bulk_ch')<span class="text-warn">{{ $message }}</span>@enderror
+</div>
+</details>
+@endif
+
 @if($isAdmin)
 <div class="review-filter">
     <a href="{{ route('admin.products.index', array_filter(['q' => $q])) }}" class="{{ $onlyReview ? '' : 'is-active' }}">Все товары</a>
@@ -170,6 +211,7 @@
     function refresh() {
         var c = checked();
         $('bulk-count').textContent = c.length;
+        if ($('bulk-ch-count')) $('bulk-ch-count').textContent = c.length;
         var v = parseFloat(String($('bulk-value').value).replace(',', '.')) || 0;
         $('bulk-preview').textContent = (c.length && v > 0) ? 'Пример: ' + fmt(parseFloat(c[0].dataset.price)) + ' → ' + fmt(newPrice(parseFloat(c[0].dataset.price))) + ' грн' : '';
     }
@@ -184,10 +226,28 @@
     ['bulk-value', 'bulk-mode', 'bulk-round'].forEach(function (id) { $(id).addEventListener('input', refresh); });
     form.addEventListener('submit', function (e) {
         if (e.submitter && e.submitter.dataset.review) { return; } // «Отметить проверенными» — не изменение цены
+        if (e.submitter && e.submitter.dataset.chars) { // массовое изменение характеристики
+            var chAll = form.querySelector('[name="ch_all"]').checked, k = checked().length;
+            if (!chAll && k === 0) { e.preventDefault(); alert('Отметьте товары галочками слева.'); return; }
+            var cs = $('ch-id'), ms = $('ch-mode');
+            if (!confirm('Характеристика «' + cs.options[cs.selectedIndex].text + '»: ' + ms.options[ms.selectedIndex].text + ' — для ' + (chAll ? 'ВСЕХ товаров списка' : 'выбранных товаров (' + k + ')') + '?')) e.preventDefault();
+            return;
+        }
         var all = $('bulk-all').checked, n = checked().length;
         if (!all && n === 0) { e.preventDefault(); alert('Отметьте товары галочками слева.'); return; }
         if (!confirm(all ? 'Изменить цену у ВСЕХ товаров списка?' : 'Изменить цену у выбранных товаров (' + n + ')?')) e.preventDefault();
     });
+    // Список значений показывает только значения выбранной характеристики
+    function syncChValues() {
+        var sel = $('ch-id'), vs = $('ch-value');
+        if (!sel || !vs) return;
+        Array.prototype.forEach.call(vs.options, function (o) {
+            var hide = o.dataset.char && o.dataset.char !== sel.value;
+            o.hidden = hide; o.disabled = hide;
+            if (hide && o.selected) vs.value = '';
+        });
+    }
+    if ($('ch-id')) { $('ch-id').addEventListener('change', syncChValues); syncChValues(); }
     refresh();
 })();
 

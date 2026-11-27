@@ -25,7 +25,7 @@ class LogStaffActions
     /** имя маршрута (без «admin.») => что показать в журнале */
     private const LABELS = [
         'products.store' => 'Добавлен товар', 'products.update' => 'Изменён товар', 'products.destroy' => 'Удалён товар',
-        'products.bulk-price' => 'Массовое изменение цен', 'products.drive' => 'Создана папка товара на Диске',
+        'products.bulk-price' => 'Массовое изменение цен', 'products.bulk-characteristics' => 'Массовое изменение характеристик', 'products.drive' => 'Создана папка товара на Диске',
         'categories.store' => 'Добавлена категория', 'categories.update' => 'Изменена категория', 'categories.destroy' => 'Удалена категория',
         'categories.move' => 'Изменён порядок категорий', 'categories.drive' => 'Создана папка категории на Диске',
         'pages.store' => 'Добавлена страница', 'pages.update' => 'Изменена страница', 'pages.destroy' => 'Удалена страница',

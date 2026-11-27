@@ -88,6 +88,7 @@ Route::middleware(SetLocale::class)->group(function () {
     // Админка: администратор и модератор (у модератора права те же; его действия пишутся в журнал, а товары идут «на проверку»)
     Route::prefix('admin')->name('admin.')->middleware(['auth', EnsureStaff::class, LogStaffActions::class])->group(function () {
         Route::get('/', [Admin\DashboardController::class, 'index'])->name('dashboard');
+        Route::post('products/bulk-characteristics', [Admin\ProductController::class, 'bulkCharacteristics'])->name('products.bulk-characteristics');
         Route::post('products/bulk-price', [Admin\ProductController::class, 'bulkPrice'])->name('products.bulk-price');
         Route::post('products/{product}/drive', [Admin\DriveController::class, 'product'])->name('products.drive');
         Route::post('categories/{category}/drive', [Admin\DriveController::class, 'category'])->name('categories.drive');

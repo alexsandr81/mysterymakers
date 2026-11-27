@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Mail\NewOrderAdmin;
 use App\Mail\OrderPlaced;
 use App\Models\Category;
+use App\Models\Characteristic;
+use App\Models\CharacteristicValue;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Review;
@@ -775,6 +777,63 @@ class ShopTest extends TestCase
         Product::create(['category_id' => $top->id, 'sku' => '10001', 'slug' => 'ih1', 'name_uk' => 'А', 'name_ru' => 'А', 'price' => 1, 'stock' => 1, 'is_active' => true]);
         Product::create(['category_id' => $sub->id, 'sku' => '11001', 'slug' => 'ih2', 'name_uk' => 'Б', 'name_ru' => 'Б', 'price' => 1, 'stock' => 1, 'is_active' => true]);
         $this->actingAs($admin)->get(route('admin.products.index'))->assertOk()->assertSee('row-indent--1', false)->assertSee('row-indent--2', false);
+    }
+
+    public function test_bulk_characteristics(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $mod = User::factory()->create(['is_moderator' => true]);
+        $cat = Category::create(['slug' => 'bc', 'name_uk' => 'К', 'name_ru' => 'К', 'sort' => 1, 'sku_start' => 10000]);
+        $mk = fn ($n) => Product::create(['category_id' => $cat->id, 'sku' => (string) (10000 + $n), 'slug' => 'bc' . $n, 'name_uk' => 'Т' . $n, 'name_ru' => 'Т' . $n, 'price' => 5, 'stock' => 1, 'is_active' => true]);
+        [$p1, $p2, $p3] = [$mk(1), $mk(2), $mk(3)];
+        $mat = Characteristic::create(['name_uk' => 'Матеріал', 'name_ru' => 'Материал', 'sort' => 1]);
+        $col = Characteristic::create(['name_uk' => 'Колір', 'name_ru' => 'Цвет', 'sort' => 2]);
+        $fan = CharacteristicValue::create(['characteristic_id' => $mat->id, 'value_uk' => 'Фанера', 'value_ru' => 'Фанера', 'sort' => 1]);
+        $mdf = CharacteristicValue::create(['characteristic_id' => $mat->id, 'value_uk' => 'МДФ', 'value_ru' => 'МДФ', 'sort' => 2]);
+        $red = CharacteristicValue::create(['characteristic_id' => $col->id, 'value_uk' => 'Червоний', 'value_ru' => 'Красный', 'sort' => 1]);
+        $p1->characteristicValues()->sync([$fan->id, $red->id]);
+        $p2->characteristicValues()->sync([$mdf->id]);
+        $vals = fn ($p) => $p->characteristicValues()->pluck('characteristic_values.id')->sort()->values()->all();
+
+        // Заменить материал у двух товаров на МДФ: цвет не трогаем
+        $this->actingAs($admin)->post(route('admin.products.bulk-characteristics'), ['ch_id' => $mat->id, 'ch_mode' => 'replace', 'ch_value' => $mdf->id, 'ids' => [$p1->id, $p3->id]])->assertSessionHasNoErrors();
+        $this->assertSame([$mdf->id, $red->id], $vals($p1));
+        $this->assertSame([$mdf->id], $vals($p3));
+        $this->assertSame([$mdf->id], $vals($p2));
+        $this->assertFalse((bool) Product::find($p1->id)->needs_review);
+
+        // Добавить фанеру (материалов станет два)
+        $this->actingAs($admin)->post(route('admin.products.bulk-characteristics'), ['ch_id' => $mat->id, 'ch_mode' => 'add', 'ch_value' => $fan->id, 'ids' => [$p3->id]]);
+        $this->assertSame([$fan->id, $mdf->id], $vals($p3));
+
+        // Новое значение создаётся и ставится
+        $this->actingAs($admin)->post(route('admin.products.bulk-characteristics'), ['ch_id' => $col->id, 'ch_mode' => 'replace', 'ch_new_uk' => 'Синій', 'ch_new_ru' => 'Синий', 'ids' => [$p1->id]]);
+        $blue = CharacteristicValue::where('value_ru', 'Синий')->first();
+        $this->assertNotNull($blue);
+        $this->assertSame($col->id, $blue->characteristic_id);
+        $this->assertContains($blue->id, $vals($p1));
+        $this->assertNotContains($red->id, $vals($p1));
+
+        // Чужое значение (другой характеристики) отклоняется
+        $this->actingAs($admin)->post(route('admin.products.bulk-characteristics'), ['ch_id' => $mat->id, 'ch_mode' => 'add', 'ch_value' => $red->id, 'ids' => [$p2->id]])->assertSessionHasErrors('bulk_ch');
+
+        // Убрать без значения — все значения материала у всех товаров списка
+        $this->actingAs($admin)->post(route('admin.products.bulk-characteristics'), ['ch_id' => $mat->id, 'ch_mode' => 'remove', 'ch_all' => 1]);
+        foreach ([$p1, $p2, $p3] as $p) {
+            $this->assertSame([], array_values(array_intersect($vals($p), [$fan->id, $mdf->id])));
+        }
+        $this->assertContains($blue->id, $vals($p1)); // цвет остался
+
+        // Без выбранных товаров — ошибка
+        $this->actingAs($admin)->post(route('admin.products.bulk-characteristics'), ['ch_id' => $mat->id, 'ch_mode' => 'replace', 'ch_value' => $fan->id])->assertSessionHasErrors('bulk_ch');
+
+        // Модератор может, но товары уходят на проверку
+        $this->actingAs($mod)->post(route('admin.products.bulk-characteristics'), ['ch_id' => $mat->id, 'ch_mode' => 'replace', 'ch_value' => $fan->id, 'ids' => [$p2->id]])->assertSessionHasNoErrors();
+        $this->assertTrue((bool) Product::find($p2->id)->needs_review);
+        $this->assertFalse((bool) Product::find($p3->id)->needs_review);
+
+        // Панель есть на странице товаров
+        $this->actingAs($admin)->get(route('admin.products.index'))->assertOk()->assertSee('Массовое изменение характеристик');
     }
 
     public function test_site_fonts_setting(): void
