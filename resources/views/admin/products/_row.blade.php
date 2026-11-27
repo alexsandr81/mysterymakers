@@ -4,9 +4,9 @@
     $top = $cat->parent ?? $cat;
 @endphp
 <tr data-g="{{ $top->id }}" data-s="{{ $cat->parent_id ? $cat->id : '' }}" {!! $attrs ?? '' !!}>
-    <td class="{{ ! empty($indent) ? 'row-indent row-indent--' . $indent : '' }}"><input type="checkbox" name="ids[]" form="bulk-form" value="{{ $p->id }}" data-price="{{ (float) $p->price }}" data-g="{{ $top->id }}" data-s="{{ $cat->parent_id ? $cat->id : '' }}"></td>
+    <td class="{{ ! empty($indent) ? 'row-edge' : '' }}"><input type="checkbox" name="ids[]" form="bulk-form" value="{{ $p->id }}" data-price="{{ (float) $p->price }}" data-g="{{ $top->id }}" data-s="{{ $cat->parent_id ? $cat->id : '' }}"></td>
     <td class="thumb" data-col="photo"><img src="{{ $p->main_image }}" alt=""></td>
-    <td><a href="{{ route('product', $p) }}" target="_blank" title="Открыть страницу товара на сайте">{{ $p->name_ru }}</a></td>
+    <td class="{{ ! empty($indent) ? 'row-indent row-indent--' . $indent : '' }}"><a href="{{ route('product', $p) }}" target="_blank" title="Открыть страницу товара на сайте">{{ $p->name_ru }}</a></td>
     <td data-col="sku"><a href="{{ route('product', $p) }}" target="_blank" title="Открыть страницу товара на сайте">{{ $p->sku }}</a></td>
         <td data-col="category"><span class="badge badge--sm badge--top">{{ $top->name_ru }}</span></td>
     <td data-col="sub">@if($cat->parent_id)<span class="badge badge--sm badge--sub">{{ $cat->name_ru }}</span>@else<span class="muted" title="Товар лежит прямо в категории, без подкатегории">—</span>@endif</td>

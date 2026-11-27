@@ -782,7 +782,7 @@ button.cat-toggle:hover { background: var(--tint); border-color: var(--brand); }
 
 .drive-link{color:inherit;text-decoration:none}.drive-link:hover strong{text-decoration:underline}
 
-/* Иерархия в списке товаров: товары категории — правее категории, товары подкатегории — ещё правее */
-.row-indent { border-left: 3px solid transparent; }
-.row-indent--1 { padding-left: 34px !important; border-left-color: var(--line); }
-.row-indent--2 { padding-left: 60px !important; border-left-color: var(--line); }
+/* Иерархия в списке товаров: название товара категории — правее, товара подкатегории — ещё правее (чекбокс и фото не двигаем) */
+.row-edge { border-left: 3px solid var(--line); }
+.row-indent--1 { padding-left: 26px !important; }
+.row-indent--2 { padding-left: 52px !important; }
