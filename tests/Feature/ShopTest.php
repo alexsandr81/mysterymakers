@@ -230,12 +230,13 @@ class ShopTest extends TestCase
 
         $m = \App\Models\CalcMaterial::first();
         $this->actingAs($admin)->put(route('admin.calculator.update'), [
-            'calc_waste' => 80, 'calc_engr_rate' => 0.5, 'calc_filament_price' => 0.9, 'calc_overhead' => 10, 'calc_margin' => 40, 'calc_min_price' => 0, 'calc_round' => 5,
+            'calc_waste' => 80, 'calc_engr_len_rate' => 12, 'calc_filament_price' => 0.9, 'calc_overhead' => 10, 'calc_margin' => 40, 'calc_min_price' => 0, 'calc_round' => 5,
             'materials' => [['id' => $m->id, 'name' => 'Фанера', 'thickness' => 3, 'sheet_w' => 1525, 'sheet_h' => 1525, 'sheet_price' => 900, 'cut_rate' => 6, 'link' => '']],
         ])->assertRedirect();
 
         $this->assertSame('80', Setting::get('calc_waste'));
         $this->assertSame('0.9', Setting::get('calc_filament_price'));
+        $this->assertSame('12', Setting::get('calc_engr_len_rate'));
         $this->assertEquals(900, $m->fresh()->sheet_price);
         $this->assertNotNull($m->fresh()->price_date); // цена изменилась — дата проверки обновилась
     }

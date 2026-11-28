@@ -31,8 +31,8 @@
             <label>Высота изделия, мм <small class="muted">для круга — диаметр</small> <input type="number" id="c-h" min="0" step="any" value="0"></label>
             <label class="check-line"><input type="checkbox" id="c-waste" checked> Добавить обрезки листа (использование <span id="c-waste-pct">{{ $fmt($p['calc_waste']) }}</span>%)</label>
             <label>Длина реза, мм <input type="number" id="c-cut" min="0" step="any" value="0"></label>
-            <label>Площадь гравировки, см² <input type="number" id="c-engr" min="0" step="any" value="0"></label>
-            <p class="muted calc__note">Габариты — прямоугольник, в который вписывается изделие (у круга это квадрат со стороной в диаметр). Обрезки листа добавляются галочкой. Длину реза и площадь гравировки берите из программы раскладки или САПР.</p>
+            <label>Длина гравировки, мм <small class="muted">суммарная длина линий гравировки</small> <input type="number" id="c-engr" min="0" step="any" value="0"></label>
+            <p class="muted calc__note">Габариты — прямоугольник, в который вписывается изделие (у круга это квадрат со стороной в диаметр). Обрезки листа добавляются галочкой. Длину реза и длину гравировки берите из программы раскладки или САПР.</p>
 
             <h4 class="calc__sub">🖨 3D-печать (филамент)</h4>
             <label>Расход филамента, г <small class="muted">вес изделия с поддержками и отходами, из слайсера</small> <input type="number" id="c-grams" min="0" step="any" value="0"></label>
@@ -69,8 +69,8 @@
         <div class="calc__grid">
             <label>Использование листа, % <small class="muted">остальное — обрезки и отходы</small>
                 <input type="number" name="calc_waste" min="10" max="100" step="any" value="{{ old('calc_waste', $fmt($p['calc_waste'])) }}" required></label>
-            <label>Гравировка, грн за см²
-                <input type="number" name="calc_engr_rate" min="0" step="any" value="{{ old('calc_engr_rate', $fmt($p['calc_engr_rate'])) }}" required></label>
+            <label>Гравировка, грн за метр <small class="muted">длины линий гравировки</small>
+                <input type="number" name="calc_engr_len_rate" min="0" step="any" value="{{ old('calc_engr_len_rate', $fmt($p['calc_engr_len_rate'])) }}" required></label>
             <label>Филамент для 3D-печати, грн за грамм <small class="muted">цена катушки ÷ вес катушки в граммах</small>
                 <input type="number" name="calc_filament_price" min="0" step="any" value="{{ old('calc_filament_price', $fmt($p['calc_filament_price'])) }}" required></label>
             <label>Накладные расходы, % <small class="muted">электричество, износ станка и принтера, аренда</small>
@@ -119,7 +119,7 @@
 (function () {
     var $ = function (id) { return document.getElementById(id); };
     var tbody = document.querySelector('#mat-table tbody');
-    var PARAMS = ['calc_waste', 'calc_engr_rate', 'calc_filament_price', 'calc_overhead', 'calc_margin', 'calc_min_price', 'calc_round'];
+    var PARAMS = ['calc_waste', 'calc_engr_len_rate', 'calc_filament_price', 'calc_overhead', 'calc_margin', 'calc_min_price', 'calc_round'];
     var P = {}, M = [];
     var num = function (el) { return parseFloat(String(el && el.value).replace(',', '.')) || 0; };
 
@@ -154,7 +154,7 @@
             material = usable > 0 ? areaMm2 / usable * m.price : 0;
             cut = n('c-cut') / 1000 * m.cut;
         }
-        var engr = n('c-engr') * P.calc_engr_rate;
+        var engr = n('c-engr') / 1000 * P.calc_engr_len_rate;
         var grams = n('c-grams');
         var filament = grams * P.calc_filament_price;
         $('c-fprice-note').textContent = money(P.calc_filament_price);
