@@ -12,7 +12,7 @@ class CalculatorController extends Controller
 {
     private const PARAMS = [
         'calc_waste' => ['min' => 10, 'max' => 100],
-        'calc_engr_len_rate' => ['min' => 0, 'max' => 10000],
+        'calc_engr_cm_rate' => ['min' => 0, 'max' => 10000],
         'calc_filament_price' => ['min' => 0, 'max' => 100],
         'calc_overhead' => ['min' => 0, 'max' => 500],
         'calc_margin' => ['min' => 0, 'max' => 1000],

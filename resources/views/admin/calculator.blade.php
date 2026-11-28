@@ -69,8 +69,8 @@
         <div class="calc__grid">
             <label>Использование листа, % <small class="muted">остальное — обрезки и отходы</small>
                 <input type="number" name="calc_waste" min="10" max="100" step="any" value="{{ old('calc_waste', $fmt($p['calc_waste'])) }}" required></label>
-            <label>Гравировка, грн за метр <small class="muted">длины линий гравировки</small>
-                <input type="number" name="calc_engr_len_rate" min="0" step="any" value="{{ old('calc_engr_len_rate', $fmt($p['calc_engr_len_rate'])) }}" required></label>
+            <label>Гравировка, грн за сантиметр <small class="muted">длины линий гравировки</small>
+                <input type="number" name="calc_engr_cm_rate" min="0" step="any" value="{{ old('calc_engr_cm_rate', $fmt($p['calc_engr_cm_rate'])) }}" required></label>
             <label>Филамент для 3D-печати, грн за грамм <small class="muted">цена катушки ÷ вес катушки в граммах</small>
                 <input type="number" name="calc_filament_price" min="0" step="any" value="{{ old('calc_filament_price', $fmt($p['calc_filament_price'])) }}" required></label>
             <label>Накладные расходы, % <small class="muted">электричество, износ станка и принтера, аренда</small>
@@ -119,7 +119,7 @@
 (function () {
     var $ = function (id) { return document.getElementById(id); };
     var tbody = document.querySelector('#mat-table tbody');
-    var PARAMS = ['calc_waste', 'calc_engr_len_rate', 'calc_filament_price', 'calc_overhead', 'calc_margin', 'calc_min_price', 'calc_round'];
+    var PARAMS = ['calc_waste', 'calc_engr_cm_rate', 'calc_filament_price', 'calc_overhead', 'calc_margin', 'calc_min_price', 'calc_round'];
     var P = {}, M = [];
     var num = function (el) { return parseFloat(String(el && el.value).replace(',', '.')) || 0; };
 
@@ -154,7 +154,7 @@
             material = usable > 0 ? areaMm2 / usable * m.price : 0;
             cut = n('c-cut') / 1000 * m.cut;
         }
-        var engr = n('c-engr') / 1000 * P.calc_engr_len_rate;
+        var engr = n('c-engr') / 10 * P.calc_engr_cm_rate; // длина в мм → см
         var grams = n('c-grams');
         var filament = grams * P.calc_filament_price;
         $('c-fprice-note').textContent = money(P.calc_filament_price);
